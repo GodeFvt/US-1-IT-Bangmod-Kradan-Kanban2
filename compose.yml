@@ -1,0 +1,74 @@
+services:
+  proxy:
+    container_name: us1-proxy
+    image: nginx:alpine
+    configs:
+      - source: proxyPublic_config
+        target: /etc/nginx/conf.d/public.conf
+      - source: proxyPrivate_config
+        target: /etc/nginx/conf.d/private.conf
+    depends_on:
+      - fe
+      - api
+    networks:
+      - taskproj-net
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+  fe:
+    container_name: us1-frontend
+    image: frontend:v2
+    build:
+      context: frontend
+    networks:
+      taskproj-net:
+        aliases:
+          - frontend
+    restart: unless-stopped
+
+  api:
+    container_name: us1-backend
+    image: backend:v2
+    environment:
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_URL=${DB_URL}
+    build:
+      context: backend
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      mysql-net:
+      taskproj-net:
+        aliases:
+          - backend
+    restart: unless-stopped
+
+  db:
+    container_name: us1-database
+    env_file: ../env.list
+    image: mysql/mysql-server
+    build:
+      context: database
+    volumes:
+      - db-vol:/var/lib/mysql
+    networks:
+      mysql-net:
+        aliases:
+          - database
+    restart: unless-stopped
+
+configs:
+  proxyPrivate_config:
+    file: proxy/private.conf
+  proxyPublic_config:
+    file: proxy/public.conf
+
+volumes:
+  db-vol:
+
+networks:
+  mysql-net:
+  taskproj-net:
