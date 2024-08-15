@@ -234,6 +234,22 @@ async function getLimit() {
     return undefined;
   }
 }
+
+async function loginAccount(username,password) {
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}/v2/statuses/limit`) ,{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return res.status;
+  } catch (error) {
+    return undefined;
+  }
+}
+
 export {
   getTaskByStatus,
   getTaskById,
@@ -249,4 +265,5 @@ export {
   getFilteredTask,
   toggleLimitTask,
   getLimit,
+  loginAccount,
 };
