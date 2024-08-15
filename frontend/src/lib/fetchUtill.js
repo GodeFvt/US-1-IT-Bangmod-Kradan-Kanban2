@@ -238,7 +238,7 @@ async function getLimit() {
 async function loginAccount(username,password) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses/limit`) ,{
+    res = await fetch(`${BASE_URL}/v2/login`) ,{
       method: "POST",
       headers: {
         "Content-Type": "application/json",

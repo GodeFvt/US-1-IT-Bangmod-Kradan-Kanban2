@@ -1,11 +1,14 @@
 <script setup>
 import { loginAccount } from "../lib/fetchUtill.js";
-import { onMounted, onUnmounted, ref, computed } from "vue";
+import { ref, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 // const pathIcon = ref("../../public/sleep.png");
 const toggleIcon = ref(false);
 const username = ref("");
 const password = ref("");
+const showMessage = ref(false);
+const router = useRouter();
+const route = useRoute();
 const pathIcon = computed(() => {
   if (toggleIcon.value) {
     return "../../public/open.png";
@@ -21,24 +24,30 @@ const typePassword = computed(() => {
     return "password";
   }
 });
+const isNotValid = computed(() => {
+  return username.value.length === 0 || password.value.length === 0;
+});
+
 const messageShow = ref("");
 async function signInOnClick(usernameParamiter, passwordParamiter) {
   console.log(usernameParamiter);
   console.log(passwordParamiter); 
+  
   let res;
-  if (username.length > 0 && password.length > 0) {
-    res = await loginAccount(username, password);
-  } else {
-     res = await validateInput(username, password);
-  }
-
-  if (res === 200) {
-    console.log("do nothing");
+  if (usernameParamiter.length > 0 && passwordParamiter.length > 0) {
+    res = await loginAccount(usernameParamiter, passwordParamiter);
+    if (res === 200) 
+  {
+    router.push({ name: "task"});
   } else if (res === 400 || res === 401) {
+    showMessage.value = true;
     messageShow.value = "Username or Password is incorrect..";
   } else {
+    showMessage.value = true;
     messageShow.value = "There is a problem.Please try again.";
   }
+  }
+  
 }
 </script>
 
@@ -69,6 +78,7 @@ async function signInOnClick(usernameParamiter, passwordParamiter) {
               type="text"
               class="itbkk-username bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring focus:ring-pink-500 focus:border-gray-100 block w-full p-2.5"
               placeholder="username"
+              maxlength="50"
               v-model="username"
             />
           </div>
@@ -80,7 +90,9 @@ async function signInOnClick(usernameParamiter, passwordParamiter) {
               <input
                 :type="typePassword"
                 placeholder="••••••••"
-                class="itbkk-password py-3 ps-4 pe-10 text-gray-900 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring focus:ring-pink-500 focus:border-gray-100 block w-full p-2.5"
+                maxlength="14"
+                v-model="password"
+                class="itbkk-password py-3 ps-4 pe-10 text-gray-900 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring focus:ring-pink-500 focus:border-gray-100 block w-full p-2.5 "
               />
               <button
                 @mousedown="toggleIcon = true"
@@ -111,10 +123,14 @@ async function signInOnClick(usernameParamiter, passwordParamiter) {
             <!-- <a href="#" class="text-sm font-medium text-primary-600 hover:underline text-white">Forgot password?</a> -->
           </div>
 
-          <button
+          <button :disabled="isNotValid"
             @click="signInOnClick(username, password)"
             type="submit"
-            class="itbkk-button-signin w-full text-white bg-pink-600 hover:bg-pink-700 focus:ring-4 focus:outline-none focus:ring-pink-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            :class="{
+              'bg-pink-600 hover:bg-pink-700 focus:ring-pink-300': !isNotValid,
+              'bg-gray-400 cursor-not-allowed': isNotValid
+            }"
+            class="itbkk-button-signin w-full text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:outline-none"
           >
             Sign in
           </button>
