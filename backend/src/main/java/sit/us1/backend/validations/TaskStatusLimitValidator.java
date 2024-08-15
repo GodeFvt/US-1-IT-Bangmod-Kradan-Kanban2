@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import sit.us1.backend.dtos.tasksDTO.StatusCountDTO;
 import sit.us1.backend.dtos.tasksDTO.TaskRequestDTO;
-import sit.us1.backend.entities.TaskLimit;
-import sit.us1.backend.entities.TaskStatus;
-import sit.us1.backend.repositories.TaskLimitRepository;
-import sit.us1.backend.repositories.TaskListRepository;
-import sit.us1.backend.repositories.TaskStatusRepository;
+import sit.us1.backend.entities.taskboard.TaskLimit;
+import sit.us1.backend.entities.taskboard.TaskStatus;
+import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
+import sit.us1.backend.repositories.taskboard.TaskListRepository;
+import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
 
 import java.util.Arrays;
 import java.util.Optional;

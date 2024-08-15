@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import sit.us1.backend.dtos.tasksDTO.StatusCountDTO;
-import sit.us1.backend.entities.TaskLimit;
+import sit.us1.backend.entities.taskboard.TaskLimit;
 import sit.us1.backend.exceptions.NotFoundException;
-import sit.us1.backend.repositories.TaskLimitRepository;
-import sit.us1.backend.repositories.TaskListRepository;
+import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
+import sit.us1.backend.repositories.taskboard.TaskListRepository;
 
 import java.util.Arrays;
 

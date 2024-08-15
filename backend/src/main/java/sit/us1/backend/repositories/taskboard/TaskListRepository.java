@@ -1,4 +1,4 @@
-package sit.us1.backend.repositories;
+package sit.us1.backend.repositories.taskboard;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import sit.us1.backend.dtos.tasksDTO.StatusCountDTO;
-import sit.us1.backend.entities.TaskList;
+import sit.us1.backend.entities.taskboard.TaskList;
 
 import java.util.List;
 

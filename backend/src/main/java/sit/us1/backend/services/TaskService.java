@@ -8,13 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import sit.us1.backend.dtos.tasksDTO.*;
-import sit.us1.backend.entities.TaskList;
-import sit.us1.backend.entities.TaskStatus;
+import sit.us1.backend.entities.taskboard.TaskList;
+import sit.us1.backend.entities.taskboard.TaskStatus;
 import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.exceptions.NotFoundException;
-import sit.us1.backend.repositories.TaskLimitRepository;
-import sit.us1.backend.repositories.TaskListRepository;
-import sit.us1.backend.repositories.TaskStatusRepository;
+import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
+import sit.us1.backend.repositories.taskboard.TaskListRepository;
+import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,9 @@
-package sit.us1.backend.repositories;
+package sit.us1.backend.repositories.taskboard;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import sit.us1.backend.dtos.limitsDTO.StatusLimitResponseDTO;
-import sit.us1.backend.entities.TaskStatus;
+import sit.us1.backend.entities.taskboard.TaskStatus;
 
 import java.util.List;
 import java.util.Optional;

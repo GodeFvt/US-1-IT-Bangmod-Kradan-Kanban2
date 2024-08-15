@@ -1,4 +1,4 @@
-package sit.us1.backend.entities;
+package sit.us1.backend.entities.taskboard;
 
 
 import jakarta.persistence.*;

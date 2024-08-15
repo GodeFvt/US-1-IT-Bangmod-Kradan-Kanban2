@@ -31,9 +31,14 @@ services:
     container_name: us1-backend
     image: backend:v2
     environment:
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_URL=${DB_URL}
+      - TASKBOARD_DB_USER=${TB_DB_USER}
+      - TASKBOARD_DB_PASSWORD=${TB_DB_PASSWORD}
+      - TASKBOARD_DB_URL=${TB_DB_URL}
+      - ACCOUNT_DB_USER=${AC_DB_USER}
+      - ACCOUNT_DB_PASSWOR=${AC_DB_PASSWORD}
+      - ACCOUNT_DB_URL=${AC_DB_URL}
+      - JWT_SECRET=${SECRET}
+      - JWT_ISSUER=${ISSUER}
     build:
       context: backend
     depends_on:
