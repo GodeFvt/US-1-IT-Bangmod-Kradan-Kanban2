@@ -26,17 +26,17 @@ public class WebSecurityConfig {
     JwtAuthFilter jwtAuthFilter;
     @Autowired
     JwtUserDetailsService jwtUserDetailsService;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(csrf -> csrf.disable())
-                .authorizeRequests(
-                        authorize -> authorize.requestMatchers("/login").permitAll()
+        httpSecurity.csrf(csrf -> csrf.disable()).authorizeRequests(authorize -> authorize.requestMatchers("/login").permitAll()
                                 .requestMatchers("/validate-token").permitAll()
                                 .requestMatchers("/statuses/**").permitAll()
                                 .requestMatchers("/tasks/**").permitAll()
+//                                .requestMatchers("/v2/**").hasAnyAuthority("STUDENT")
                                 .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(withDefaults());
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                                .httpBasic(withDefaults());
         return httpSecurity.build();
     }
 

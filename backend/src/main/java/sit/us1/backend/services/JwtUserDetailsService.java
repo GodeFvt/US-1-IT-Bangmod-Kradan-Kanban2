@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import sit.us1.backend.entities.account.AuthUser;
 import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.account.User;
 import sit.us1.backend.repositories.account.UserRepository;
@@ -20,13 +19,13 @@ import java.util.List;
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
     @Autowired
-    private UserRepository customerRepository;
+    private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
-        User user = customerRepository.findByUsername(userName);
+        User user = userRepository.findByUsername(userName);
         if (user == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, userName + " does not exist !!");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, userName + " does not exist !!");
         }
         List<GrantedAuthority> roles = new ArrayList<>();
         GrantedAuthority grantedAuthority = new GrantedAuthority() {
@@ -36,8 +35,7 @@ public class JwtUserDetailsService implements UserDetailsService {
             }
         };
         roles.add(grantedAuthority);
-        UserDetails userDetails = new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole().toString(), roles);
-        return userDetails;
+        return  new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole().toString(), roles);
     }
 }
 

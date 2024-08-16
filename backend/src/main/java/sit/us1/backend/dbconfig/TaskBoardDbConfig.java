@@ -1,4 +1,4 @@
-package sit.us1.backend;
+package sit.us1.backend.dbconfig;
 
 import jakarta.persistence.EntityManagerFactory;
 
