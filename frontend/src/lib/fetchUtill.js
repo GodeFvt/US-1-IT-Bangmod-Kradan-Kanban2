@@ -235,15 +235,16 @@ async function getLimit() {
   }
 }
 
-async function loginAccount(username,password) {
+async function loginAccount(user) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/login`) ,{
+    res = await fetch(`${BASE_URL}/v2/login` ,{
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-    };
+      body: JSON.stringify(user),
+    });
     return res.status;
   } catch (error) {
     return undefined;

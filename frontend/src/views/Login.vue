@@ -4,18 +4,16 @@ import { ref, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 // const pathIcon = ref("../../public/sleep.png");
 const toggleIcon = ref(false);
-const username = ref("");
-const password = ref("");
+const user = ref({
+  userName: "",
+  password: ""
+})
+// const username = ref("");
+// const password = ref("");
 const showMessage = ref(false);
 const router = useRouter();
 const route = useRoute();
-const pathIcon = computed(() => {
-  if (toggleIcon.value) {
-    return "../../public/open.png";
-  } else {
-    return "../../public/sleep.png";
-  }
-});
+
 
 const typePassword = computed(() => {
   if (toggleIcon.value) {
@@ -25,17 +23,15 @@ const typePassword = computed(() => {
   }
 });
 const isNotValid = computed(() => {
-  return username.value.length === 0 || password.value.length === 0;
+  return user.value.userName.length === 0 || user.value.password.length === 0;
 });
 
 const messageShow = ref("");
-async function signInOnClick(usernameParamiter, passwordParamiter) {
-  console.log(usernameParamiter);
-  console.log(passwordParamiter); 
+async function signInOnClick(userLogin) {
   
   let res;
-  if (usernameParamiter.length > 0 && passwordParamiter.length > 0) {
-    res = await loginAccount(usernameParamiter, passwordParamiter);
+  if (userLogin.userName.length > 0 && userLogin.password.length > 0) {
+    res = await loginAccount(userLogin);
     if (res === 200) 
   {
     router.push({ name: "task"});
@@ -79,7 +75,7 @@ async function signInOnClick(usernameParamiter, passwordParamiter) {
               class="itbkk-username bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring focus:ring-pink-500 focus:border-gray-100 block w-full p-2.5"
               placeholder="username"
               maxlength="50"
-              v-model="username"
+              v-model="user.userName"
             />
           </div>
           <div class="max-w-sm">
@@ -91,20 +87,10 @@ async function signInOnClick(usernameParamiter, passwordParamiter) {
                 :type="typePassword"
                 placeholder="••••••••"
                 maxlength="14"
-                v-model="password"
+                v-model="user.password"
                 class="itbkk-password py-3 ps-4 pe-10 text-gray-900 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring focus:ring-pink-500 focus:border-gray-100 block w-full p-2.5 "
               />
-              <button
-                @mousedown="toggleIcon = true"
-                @mouseup="toggleIcon = false"
-                type="button"
-                data-hs-toggle-password='{
-        "target": "#hs-toggle-password"
-      }'
-                class="absolute inset-y-0 end-0 flex items-center z-20 px-3 cursor-pointer text-gray-400 rounded-e-md focus:outline-none focus:text-blue-600 dark:text-neutral-600 dark:focus:text-blue-500"
-              >
-                <img class="w-8 h-8 mr-2" :src="pathIcon" alt="icon" />
-              </button>
+             
             </div>
           </div>
 
@@ -124,7 +110,7 @@ async function signInOnClick(usernameParamiter, passwordParamiter) {
           </div>
 
           <button :disabled="isNotValid"
-            @click="signInOnClick(username, password)"
+            @click="signInOnClick(user)"
             type="submit"
             :class="{
               'bg-pink-600 hover:bg-pink-700 focus:ring-pink-300': !isNotValid,

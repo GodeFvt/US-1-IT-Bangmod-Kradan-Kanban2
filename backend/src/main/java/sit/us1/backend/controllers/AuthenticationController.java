@@ -18,7 +18,7 @@ import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.services.JwtTokenUtil;
 import sit.us1.backend.services.JwtUserDetailsService;
 
-
+@CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
 @RestController
 //@RequestMapping("/authentications")
 public class AuthenticationController {
