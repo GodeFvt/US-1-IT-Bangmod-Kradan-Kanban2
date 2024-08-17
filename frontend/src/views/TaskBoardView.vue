@@ -25,6 +25,7 @@ import TaskTable from "../components/task/TaskTable.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
+import HeaderView from "./HeaderView.vue";
 
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
@@ -268,6 +269,7 @@ const countStatus = computed(() => {
 </script>
 
 <template>
+  <HeaderView />
   <div class="flex flex-col items-center">
     <!-- Task Status and Add Task Button -->
     <div class="flex flex-row w-3/4 mt-5 max-sm:w-full max-sm:px-2">

@@ -22,6 +22,8 @@ import { useStatusStore } from "../stores/statuses.js";
 import { useTaskStore } from "../stores/tasks.js";
 import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
+import HeaderView from "./HeaderView.vue";
+
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
 const router = useRouter();
@@ -310,6 +312,7 @@ async function clickRemove(index) {
 }
 </script>
 <template>
+  <HeaderView />
   <div class="flex flex-col items-center">
     <!-- Task Status and Add Task Button -->
     <div class="flex flex-row w-3/4 mt-5">
