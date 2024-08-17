@@ -33,8 +33,7 @@ async function signInOnClick(userLogin) {
     res = await loginAccount(userLogin);
     if (typeof res === 'object') 
   {
-    console.log(res)
-    localStorage.setItem('authToken', res);
+    localStorage.setItem('authToken', res.access_token);
     router.push({ name: "task"});
   } else if (res === 400 || res === 401) {
     console.log(localStorage);
