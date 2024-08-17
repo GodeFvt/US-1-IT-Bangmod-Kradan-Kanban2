@@ -235,6 +235,7 @@ async function getLimit() {
   }
 }
 
+
 async function loginAccount(user) {
   let res;
   try {
@@ -245,7 +246,11 @@ async function loginAccount(user) {
       },
       body: JSON.stringify(user),
     });
-    return res.status;
+    if(res.status ===200){
+      const token = await res.json();
+      return token
+    }
+    else {return res.status}
   } catch (error) {
     return undefined;
   }

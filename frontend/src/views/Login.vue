@@ -8,8 +8,6 @@ const user = ref({
   userName: "",
   password: ""
 })
-// const username = ref("");
-// const password = ref("");
 const showMessage = ref(false);
 const router = useRouter();
 const route = useRoute();
@@ -27,15 +25,19 @@ const isNotValid = computed(() => {
 });
 
 const messageShow = ref("");
+
+
 async function signInOnClick(userLogin) {
-  
   let res;
   if (userLogin.userName.length > 0 && userLogin.password.length > 0) {
     res = await loginAccount(userLogin);
-    if (res === 200) 
+    if (typeof res === 'object') 
   {
+    console.log(res)
+    localStorage.setItem('authToken', res);
     router.push({ name: "task"});
   } else if (res === 400 || res === 401) {
+    console.log(localStorage);
     showMessage.value = true;
     messageShow.value = "Username or Password is incorrect..";
   } else {

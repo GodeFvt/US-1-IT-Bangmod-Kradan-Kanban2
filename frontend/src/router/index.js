@@ -7,7 +7,7 @@ import Login from "../views/Login.vue"
 const routes = [
   {
     path: "/",
-    redirect: { name: "task" },
+    redirect: { name: "Login" },
   },
   {
     path: "/task",
@@ -74,6 +74,20 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   if (to.name === "EditStatus" && to.params.statusId === "1") {
     return { name: "ManageStatus" };
+  }
+});
+
+router.beforeEach((to, from,next) => {
+  
+  const isAuthenticated = !!localStorage.getItem('authToken');
+  if (isAuthenticated === false && to.name !== 'Login') {
+    next({ name: 'Login' });
+  }
+  else if(to.name ==='Login' && isAuthenticated ===true){
+    next({ name: 'task' });
+  }
+  else {
+    next();
   }
 });
 
