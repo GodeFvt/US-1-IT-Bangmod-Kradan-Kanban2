@@ -35,12 +35,12 @@ function signOut(){
 
 <template>
   <header>
-    <nav class="border-gray-200 px-4 lg:px-6 py-2.5 bg-gray-800 shadow-xl">
-      <div class="flex items-center mx-auto w-3/4">
+    <nav class="border-gray-200 px-4 lg:px-6 py-2.5 bg-gray-800 shadow-xl h-full">
+      <div class="flex items-center mx-auto w-[95%] h-full justify-between">
         <!-- Center: Task Board title -->
-        <div class="flex-1 text-center">
+        <div class="flex text-center">
           <span class="text-white text-3xl font-semibold whitespace-nowrap">
-            Task Board
+            US-1 Task Board
           </span>
         </div>
         
@@ -58,4 +58,5 @@ function signOut(){
   </header>
 </template>
 
-<style scoped></style>
+<style scoped>
+</style>
