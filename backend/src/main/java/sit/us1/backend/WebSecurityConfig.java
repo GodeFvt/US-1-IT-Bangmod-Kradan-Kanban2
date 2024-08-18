@@ -1,8 +1,10 @@
 package sit.us1.backend;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -12,7 +14,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.filters.JwtAuthFilter;
 import sit.us1.backend.services.JwtUserDetailsService;
 
@@ -29,12 +34,16 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(csrf -> csrf.disable()).authorizeRequests(authorize -> authorize.requestMatchers("/login").permitAll()
+        httpSecurity.csrf(csrf -> csrf.disable()).authorizeRequests(authorize -> authorize
+                                .requestMatchers("/login").permitAll()
                                 .requestMatchers("/validate-token").permitAll()
                                 .requestMatchers("/statuses/**").permitAll()
                                 .requestMatchers("/tasks/**").permitAll()
-//                                .requestMatchers("/v2/**").hasAnyAuthority("STUDENT")
+                                //.requestMatchers("/tasks/**").hasAnyAuthority("STUDENT")
+                                //.requestMatchers("/v2/**")
                                 .anyRequest().authenticated())
+                                .exceptionHandling(exceptionHandling -> exceptionHandling
+                                .accessDeniedHandler(accessDeniedHandler()))
                                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                                 .httpBasic(withDefaults());
         return httpSecurity.build();
@@ -56,5 +65,15 @@ public class WebSecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType("application/json");
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Access Denied", request.getRequestURI());
+            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+        };
     }
 }

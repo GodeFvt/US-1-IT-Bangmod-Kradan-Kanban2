@@ -33,13 +33,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String username = null;
         String jwtToken = null;
         if (requestTokenHeader != null) {
-            jwtToken = requestTokenHeader;
-            try {
-                username = jwtTokenUtil.getUsernameFromToken(jwtToken);
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-            } catch (ExpiredJwtException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            if (requestTokenHeader.startsWith("Bearer ")) {
+                jwtToken = requestTokenHeader.substring(7);
+                try {
+                    username = jwtTokenUtil.getUsernameFromToken(jwtToken);
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                } catch (ExpiredJwtException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                }
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JWT Token does not begin with Bearer String");
             }
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
