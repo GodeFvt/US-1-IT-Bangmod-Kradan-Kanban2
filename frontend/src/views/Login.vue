@@ -1,15 +1,18 @@
 <script setup>
 import { loginAccount } from "../lib/fetchUtill.js";
+import { useUserStore } from "../stores/user.js";
 import { ref, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import TaskStatusCard from "../components/status/TaskStatusCard.vue";
+import VueJwtDecode from 'vue-jwt-decode';
 import HeaderView from "./HeaderView.vue";
 const toggleIcon = ref(false);
 const user = ref({
   userName: "",
   password: "",
 });
+const userStore = useUserStore();
 const showMessage = ref(false);
 const router = useRouter();
 const route = useRoute();
@@ -32,10 +35,10 @@ async function signInOnClick(userLogin) {
   if (userLogin.userName.length > 0 && userLogin.password.length > 0) {
     res = await loginAccount(userLogin);
     if (typeof res === "object") {
-      localStorage.setItem("authToken", res.access_token);
+      const decodedToken = VueJwtDecode.decode(res.access_token);
+      userStore.setAuthToken(decodedToken);
       router.push({ name: "task" });
     } else if (res === 400 || res === 401) {
-      console.log(localStorage);
       showMessage.value = true;
       messageShow.value = "Username or Password is incorrect..";
     } else {
@@ -153,7 +156,7 @@ async function signInOnClick(userLogin) {
                 :class="{
                   'bg-pink-600 hover:bg-pink-700 focus:ring-pink-300':
                     !isNotValid,
-                  'bg-gray-400 cursor-not-allowed': isNotValid,
+                  'bg-gray-400 cursor-not-allowed disable': isNotValid,
                 }"
                 class="itbkk-button-signin w-full text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:outline-none"
               >

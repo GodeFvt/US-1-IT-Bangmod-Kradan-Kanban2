@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import TaskBoardView from "../views/TaskBoardView.vue";
 import NotFound from "../views/NotFound.vue";
 import TaskStatusView from "@/views/TaskStatusView.vue";
-import Login from "../views/Login.vue"
+import Login from "../views/Login.vue";
+import { useUserStore } from "../stores/user.js";
 
 const routes = [
   {
@@ -78,8 +79,10 @@ router.beforeEach((to, from) => {
 });
 
 router.beforeEach((to, from,next) => {
-  
-  const isAuthenticated = !!localStorage.getItem('authToken');
+  const userStore = useUserStore();
+  // const isAuthenticated = !!localStorage.getItem('authToken');
+  // const isAuthenticated = Object.keys(userStore.authToken).length > 0;
+  const isAuthenticated = !!userStore.authToken;
   if (isAuthenticated === false && to.name !== 'Login') {
     next({ name: 'Login' });
   }
