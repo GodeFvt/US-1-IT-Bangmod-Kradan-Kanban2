@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import sit.us1.backend.dtos.JwtDTO.JwtRequestUser;
 import sit.us1.backend.dtos.JwtDTO.JwtTokenResponseDTO;
 import sit.us1.backend.entities.account.CustomUserDetails;
+import sit.us1.backend.exceptions.UnauthorizedException;
 import sit.us1.backend.services.JwtTokenUtil;
 import sit.us1.backend.services.JwtUserDetailsService;
 
@@ -30,34 +32,31 @@ public class AuthenticationController {
     AuthenticationManager authenticationManager;
     @PostMapping("/login")
     public ResponseEntity<JwtTokenResponseDTO> login(@RequestBody @Valid JwtRequestUser jwtRequestUser) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(jwtRequestUser.getUserName(), jwtRequestUser.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(jwtRequestUser.getUserName(), jwtRequestUser.getPassword());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
         if (!authentication.isAuthenticated()) {
-            throw new UsernameNotFoundException("Invalid user or password");
+            System.out.println("Username or Password is incorrect.");
+            throw new UsernameNotFoundException("Username or Password is incorrect.");
         }
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String token = jwtTokenUtil.generateToken(userDetails);
-        JwtTokenResponseDTO jwtTokenResponseDTO = new JwtTokenResponseDTO();
-        jwtTokenResponseDTO.setAccess_token(token);
-        return ResponseEntity.ok(jwtTokenResponseDTO);
+        return ResponseEntity.ok(new JwtTokenResponseDTO(token));
     }
 
     @GetMapping("/validate-token")
     public ResponseEntity<Object> validateToken(@RequestHeader("Authorization") String requestTokenHeader) {
         Claims claims = null;
-        String jwtToken = null;
-        if (requestTokenHeader != null) {
-            jwtToken = requestTokenHeader;
+        if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
+            String jwtToken = requestTokenHeader.substring(7);
             try {
-                claims = jwtTokenUtil.getAllClaimsFromToken(jwtToken);
+               claims = jwtTokenUtil.getAllClaimsFromToken(jwtToken);
             } catch (IllegalArgumentException e) {
-                System.out.println("Unable to get JWT Token");
+                throw new UnauthorizedException("Unable to get JWT Token");
             } catch (ExpiredJwtException e) {
-                System.out.println("JWT Token has expired");
+                throw new UnauthorizedException("JWT Token has expired");
             }
         } else {
-            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "JWT Token is null");
+            throw new UnauthorizedException("JWT Token does not begin with Bearer String");
         }
         return ResponseEntity.ok(claims);
     }

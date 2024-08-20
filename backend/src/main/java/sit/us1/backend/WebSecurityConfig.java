@@ -13,9 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.filters.JwtAuthFilter;
@@ -32,22 +32,23 @@ public class WebSecurityConfig {
     @Autowired
     JwtUserDetailsService jwtUserDetailsService;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(csrf -> csrf.disable()).authorizeRequests(authorize -> authorize
-                                .requestMatchers("/login").permitAll()
-                                .requestMatchers("/validate-token").permitAll()
-                                .requestMatchers("/statuses/**").permitAll()
-                                .requestMatchers("/tasks/**").permitAll()
-                                //.requestMatchers("/tasks/**").hasAnyAuthority("STUDENT")
-                                //.requestMatchers("/v2/**")
-                                .anyRequest().authenticated())
-                                .exceptionHandling(exceptionHandling -> exceptionHandling
-                                .accessDeniedHandler(accessDeniedHandler()))
-                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                                .httpBasic(withDefaults());
-        return httpSecurity.build();
-    }
+
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+    httpSecurity.csrf(csrf -> csrf.disable())
+            .authorizeRequests(authorize -> authorize
+                    .requestMatchers("/login").permitAll()
+                    .requestMatchers("/validate-token").permitAll()
+                    .requestMatchers("/statuses/**").permitAll()
+                    .requestMatchers("/tasks/**").permitAll()
+                    .anyRequest().authenticated())
+                    .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                    .exceptionHandling(exceptionHandling -> exceptionHandling
+                    .authenticationEntryPoint(authenticationEntryPoint())
+                    .accessDeniedHandler(accessDeniedHandler()))
+            .httpBasic(withDefaults());
+    return httpSecurity.build();
+}
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -76,4 +77,16 @@ public class WebSecurityConfig {
             response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
         };
     }
+
+    @Bean
+    public AuthenticationEntryPoint authenticationEntryPoint() {
+        return (request, response, authException) -> {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType("application/json");
+            String message = authException.getMessage();
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), message, request.getRequestURI());
+            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+        };
+    }
+
 }
