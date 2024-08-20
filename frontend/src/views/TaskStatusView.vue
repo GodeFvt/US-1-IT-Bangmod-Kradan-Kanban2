@@ -312,198 +312,205 @@ async function clickRemove(index) {
 }
 </script>
 <template>
-  <HeaderView />
-  <div class="flex flex-col items-center">
+  <div class="flex flex-col w-full h-screen">
+    <!-- <div class="h-[8%]">
+        <HeaderView class="h-full" />
+      </div> -->
     <!-- Task Status and Add Task Button -->
-    <div class="flex flex-row w-3/4 mt-5">
-      <!-- Task Status Count -->
-      <div class="m-[2px] flex sm:items-center items-end">
-        <router-link :to="{ name: 'task' }">
+    <div class="flex flex-col items-center h-full gap-5 mt-2">
+      <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
+        <!-- Task Status Count -->
+        <div class="m-[2px] flex sm:items-center items-end">
+          <router-link :to="{ name: 'task' }">
+            <div
+              class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1"
+            >
+              Home
+            </div>
+          </router-link>
+          <div class="mx-2 text-slate-500">/</div>
+
+          <div class="text-gray-800 text-[1rem] font-bold">ManageStatus</div>
+        </div>
+
+        <!-- Filter -->
+        <div class="flex items-end w-full justify-end">
           <div
-            class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1"
+            class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
           >
-            Home
-          </div>
-        </router-link>
-        <div class="mx-2 text-slate-500">/</div>
+            <div class="">
+              <router-link :to="{ name: 'AddStatus' }">
+                <button
+                  class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                >
+                  Add Status
+                </button>
+              </router-link>
+            </div>
+            <!-- status setting -->
 
-        <div class="text-gray-800 text-[1rem] font-bold">ManageStatus</div>
-      </div>
-
-      <!-- Filter -->
-      <div class="flex items-end w-full justify-end">
-        <div
-          class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
-        >
-          <div class="">
-            <router-link :to="{ name: 'AddStatus' }">
+            <div class="m-[2px]" @click="showSettingModal = true">
               <button
-                class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
               >
-                Add Status
+                <SettingIcon />
               </button>
-            </router-link>
-          </div>
-          <!-- status setting -->
-
-          <div class="m-[2px]" @click="showSettingModal = true">
-            <button
-              class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
-            >
-              <SettingIcon />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Status Table -->
-    <TaskStatusTable
-      :allStatus="allStatus"
-      :showErrorMSG="showErrorMSG"
-      :showLoading="showLoading"
-      @remove-status="clickRemove"
-    ></TaskStatusTable>
-
-    <TaskStatusDetail
-      v-if="showDetail"
-      @user-action="closeStatus"
-      @addEdit="addEditStatus"
-      :status="status"
-      :isEdit="isEdit"
-      :showLoading="showLoading"
-    >
-    </TaskStatusDetail>
-
-    <ConfirmModal
-      v-if="showDeleteModal"
-      @user-action="showDeleteModal = false"
-      @confirm="removeStatus"
-      :index="indexToRemove"
-      :width="'w-[60vh]'"
-      :disabled="limitThisTask"
-      class="z-50"
-    >
-      <template #header>
-        <div class="flex justify-center">
-          <AlertSquareIcon class="w-16 h-16 opacity-40" />
-        </div>
-      </template>
-      <template #body>
-        <div v-if="showTranfer">
-          <div class="itbkk-message my-2">
-            There are {{ countTask }} tasks in {{ status.name }} status. In
-            order to delete this status, the system must transfer tasks in this
-            status to existing status. Transfer tasks to
-            {{
-              [...statusStore.allStatus]
-                .filter((e) => e.name !== status.name)
-                .map((e) => e.name)
-            }}
-          </div>
-          <div class="">
-            Tranfer to
-            <select
-              class="itbkk-status border-2 border-sky-400"
-              v-model="tranferStatus"
-            >
-              <option
-                v-for="statusStore in [...statusStore.allStatus].filter(
-                  (e) => e.name !== status.name
-                )"
-                selected="No Status"
-              >
-                {{ statusStore.name }}
-              </option>
-            </select>
-            <div class="text-rose-600" v-if="limitThisTask">
-              Cannot transfer to {{ tranferStatus }} status since it will exceed
-              the limit. Please choose another status to transfer to.
             </div>
           </div>
         </div>
-        <div v-else>
-          <div class="itbkk-message flex justify-center text-gray-800">
-            <span
-              >Do you want to delete the
-              <span class="break-all"> {{ status.name }} </span> status?</span
-            >
+      </div>
+
+      <div
+        class="flex justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+      >
+        <!-- Status Table -->
+        <TaskStatusTable
+          :allStatus="allStatus"
+          :showErrorMSG="showErrorMSG"
+          :showLoading="showLoading"
+          @remove-status="clickRemove"
+        ></TaskStatusTable>
+      </div>
+      <TaskStatusDetail
+        v-if="showDetail"
+        @user-action="closeStatus"
+        @addEdit="addEditStatus"
+        :status="status"
+        :isEdit="isEdit"
+        :showLoading="showLoading"
+      >
+      </TaskStatusDetail>
+
+      <ConfirmModal
+        v-if="showDeleteModal"
+        @user-action="showDeleteModal = false"
+        @confirm="removeStatus"
+        :index="indexToRemove"
+        :width="'w-[60vh]'"
+        :disabled="limitThisTask"
+        class="z-50"
+      >
+        <template #header>
+          <div class="flex justify-center">
+            <AlertSquareIcon class="w-16 h-16 opacity-40" />
+          </div>
+        </template>
+        <template #body>
+          <div v-if="showTranfer">
+            <div class="itbkk-message my-2">
+              There are {{ countTask }} tasks in {{ status.name }} status. In
+              order to delete this status, the system must transfer tasks in
+              this status to existing status. Transfer tasks to
+              {{
+                [...statusStore.allStatus]
+                  .filter((e) => e.name !== status.name)
+                  .map((e) => e.name)
+              }}
+            </div>
+            <div class="">
+              Tranfer to
+              <select
+                class="itbkk-status border-2 border-sky-400"
+                v-model="tranferStatus"
+              >
+                <option
+                  v-for="statusStore in [...statusStore.allStatus].filter(
+                    (e) => e.name !== status.name
+                  )"
+                  selected="No Status"
+                >
+                  {{ statusStore.name }}
+                </option>
+              </select>
+              <div class="text-rose-600" v-if="limitThisTask">
+                Cannot transfer to {{ tranferStatus }} status since it will
+                exceed the limit. Please choose another status to transfer to.
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            <div class="itbkk-message flex justify-center text-gray-800">
+              <span
+                >Do you want to delete the
+                <span class="break-all"> {{ status.name }} </span> status?</span
+              >
+            </div>
+          </div>
+        </template>
+        <template #confirm v-if="showTranfer">Transfer and Delete</template>
+      </ConfirmModal>
+    </div>
+    <div
+      class="fixed flex items-center w-full max-w-xs right-5 bottom-5"
+      v-if="showToast"
+    >
+      <Toast :toast="typeToast" @close-toast="showToast = false">
+        <template #message>
+          <span class="itbkk-message break-all">{{ messageToast }}</span>
+        </template>
+      </Toast>
+    </div>
+
+    <ConfirmModal
+      v-if="showSettingModal"
+      @user-action="confirmLimit"
+      :width="'w-[60vh]'"
+      :disabled="maximumTask > 30 || maximumTask <= 0"
+      class="itbkk-modal-setting z-50"
+    >
+      <template #header>
+        <div class="flex justify-center">
+          <span class="text-gray-800 font-bold text-[1.5rem]">
+            Status Settings
+          </span>
+        </div>
+      </template>
+      <template #body>
+        <span class="itbkk-message">
+          User can limit the number of task in status by setting the Maximum
+          task in each status ( except "No Status" and "Done" statuses. )
+        </span>
+        <div
+          class="flex flex-col items-center cursor-pointer gap-2 mt-2"
+          @click="toggleActive = !toggleActive"
+        >
+          <span>Limit task in this status</span>
+          <!-- Switch Container -->
+          <div
+            class="itbkk-limit-task w-12 h-[1.2rem] flex items-center bg-gray-300 rounded-full p-1"
+            :class="toggleActive ? 'bg-gray-500' : 'bg-gray-300'"
+          >
+            <!-- Switch -->
+            <div
+              class="w-6 h-6 rounded-full shadow-md transform ease-out duration-300"
+              :class="toggleActive ? 'translate-x-6 bg-black' : 'bg-gray-500'"
+            ></div>
+          </div>
+          <!-- Switch Container End -->
+        </div>
+        <div class="flex flex-col items-center mt-2 gap-2">
+          <span>Maximum tasks</span>
+          <input
+            type="number"
+            max="30"
+            min="0"
+            class="itbkk-max-task border border-black rounded-md px-1"
+            v-model="maximumTask"
+          />
+          <div v-if="maximumTask > 30 || maximumTask <= 0" class="text-red-500">
+            <p>maximumTask must be lees then 30 and more than 0</p>
           </div>
         </div>
       </template>
-      <template #confirm v-if="showTranfer">Transfer and Delete</template>
     </ConfirmModal>
-  </div>
-  <div
-    class="fixed flex items-center w-full max-w-xs right-5 bottom-5"
-    v-if="showToast"
-  >
-    <Toast :toast="typeToast" @close-toast="showToast = false">
-      <template #message>
-        <span class="itbkk-message break-all">{{ messageToast }}</span>
-      </template>
-    </Toast>
-  </div>
 
-  <ConfirmModal
-    v-if="showSettingModal"
-    @user-action="confirmLimit"
-    :width="'w-[60vh]'"
-    :disabled="maximumTask > 30 || maximumTask <= 0"
-    class="itbkk-modal-setting z-50"
-  >
-    <template #header>
-      <div class="flex justify-center">
-        <span class="text-gray-800 font-bold text-[1.5rem]">
-          Status Settings
-        </span>
-      </div>
-    </template>
-    <template #body>
-      <span class="itbkk-message">
-        User can limit the number of task in status by setting the Maximum task
-        in each status ( except "No Status" and "Done" statuses. )
-      </span>
-      <div
-        class="flex flex-col items-center cursor-pointer gap-2 mt-2"
-        @click="toggleActive = !toggleActive"
-      >
-        <span>Limit task in this status</span>
-        <!-- Switch Container -->
-        <div
-          class="itbkk-limit-task w-12 h-[1.2rem] flex items-center bg-gray-300 rounded-full p-1"
-          :class="toggleActive ? 'bg-gray-500' : 'bg-gray-300'"
-        >
-          <!-- Switch -->
-          <div
-            class="w-6 h-6 rounded-full shadow-md transform ease-out duration-300"
-            :class="toggleActive ? 'translate-x-6 bg-black' : 'bg-gray-500'"
-          ></div>
-        </div>
-        <!-- Switch Container End -->
-      </div>
-      <div class="flex flex-col items-center mt-2 gap-2">
-        <span>Maximum tasks</span>
-        <input
-          type="number"
-          max="30"
-          min="0"
-          class="itbkk-max-task border border-black rounded-md px-1"
-          v-model="maximumTask"
-        />
-        <div v-if="maximumTask > 30 || maximumTask <= 0" class="text-red-500">
-          <p>maximumTask must be lees then 30 and more than 0</p>
-        </div>
-      </div>
-    </template>
-  </ConfirmModal>
-
-  <limitModal
-    v-if="showListStatus"
-    @user-action="showListStatus = false"
-    :allTaskLimit="allTaskLimit"
-    class="z-50"
-  >
-  </limitModal>
+    <limitModal
+      v-if="showListStatus"
+      @user-action="showListStatus = false"
+      :allTaskLimit="allTaskLimit"
+      class="z-50"
+    >
+    </limitModal>
+  </div>
 </template>
 <style scoped></style>

@@ -1,8 +1,31 @@
 <script setup>
+import { ref, onMounted, watch, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import HeaderView from "./views/HeaderView.vue";
+import SideMenuView from "./views/SideMenuView.vue";
+const route = useRoute();
+
+const disabledSideMenu = ref(false);
+watch(
+  () => route.path,
+  (newPath, oldPath) => {
+    if (newPath === "/login") {
+      disabledSideMenu.value = true;
+    } else {
+      disabledSideMenu.value = false;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <router-view />
+  <div class="" :class="{ 'flex flex-row': !disabledSideMenu }">
+    <div class="" v-if="!disabledSideMenu">
+      <SideMenuView />
+    </div>
+    <router-view />
+  </div>
 </template>
 
 <style>
@@ -26,5 +49,15 @@
 ::-webkit-scrollbar-thumb:hover {
   --tw-bg-opacity: 1;
   background: rgb(31 41 55 / var(--tw-bg-opacity));
+}
+
+.task-row-wrapper {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 1.5s ease, opacity 1.5s ease;
+}
+.task-row-wrapper.slide-in {
+  transform: translateX(0);
+  opacity: 1;
 }
 </style>
