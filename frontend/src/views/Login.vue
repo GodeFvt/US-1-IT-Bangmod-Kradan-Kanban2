@@ -29,7 +29,7 @@ onMounted(() => {
     intervalId = setInterval(() => {
     animation();
     
-  }, 17000); 
+  }, 16000); 
 });
 
 function animation() {
