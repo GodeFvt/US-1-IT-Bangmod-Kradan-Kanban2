@@ -1,11 +1,11 @@
 <script setup>
 import { loginAccount } from "../lib/fetchUtill.js";
 import { useUserStore } from "../stores/user.js";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import TaskStatusCard from "../components/status/TaskStatusCard.vue";
-import VueJwtDecode from 'vue-jwt-decode';
+import VueJwtDecode from "vue-jwt-decode";
 import HeaderView from "./HeaderView.vue";
 const toggleIcon = ref(false);
 const user = ref({
@@ -15,7 +15,43 @@ const user = ref({
 const userStore = useUserStore();
 const showMessage = ref(false);
 const router = useRouter();
-const route = useRoute();
+
+const cardAnimate = ref("");
+const borderAnimate = ref("");
+const miniTaskBoardAnimate = ref("");
+const kanbanAnimate = ref("");
+let intervalId;
+let timeoutId;
+
+onMounted(() => {
+    animation();
+    
+    intervalId = setInterval(() => {
+    animation();
+    
+  }, 17000); 
+});
+
+function animation() {
+  console.log("play");
+  borderAnimate.value = `border-animate`;
+  cardAnimate.value = `card-animate`;
+  timeoutId = setTimeout(() => {
+      miniTaskBoardAnimate.value = `miniTaskBoard-animate`;
+    }, 6000);
+    timeoutId = setTimeout(() => {
+      console.log("kanban");
+      kanbanAnimate.value = `kanban`;
+    }, 7000);
+    timeoutId = setTimeout(() => {
+      console.log("kanbanToMiniTaskBoard");
+      kanbanAnimate.value = `kanbanToMiniTaskBoard`;
+    }, 15000);
+    timeoutId = setTimeout(() => {
+      console.log("miniTaskBoard-animate-show");
+      miniTaskBoardAnimate.value = `miniTaskBoard-animate-show`;
+    }, 16000);
+}
 
 const typePassword = computed(() => {
   if (toggleIcon.value) {
@@ -171,8 +207,21 @@ async function signInOnClick(userLogin) {
       </section>
 
       <section class="flex items-center bg-gray-500 col-span-2 max-lg:hidden">
-        <div class="kanban  mx-auto my-auto h-[65%] w-[75%]  z-10 rounded-lg shadow-lg  bg-gray-50">KANBAN BOARD</div>
-        <div class="mx-auto my-auto h-[65%] w-[75%] bg-gray-50 z-10 rounded-lg shadow-lg  miniTaskBoard-animate">
+        <div
+          class="mx-auto my-auto h-[30%] w-[75%] z-10 rounded-lg shadow-lg bg-gray-50 hidden"
+          :class="kanbanAnimate"
+        >
+          <div class="textAnimation"> 
+            <h1 class="text-7xl" data-text="INTEGRATED&nbsp;PROJECT">INTEGRATED PROJECT</h1>
+            <h1 class="text-5xl" data-text="KANBAN&nbsp;BOARD">KANBAN BOARD</h1> 
+          </div>
+
+        </div>
+        <div
+          class="mx-auto my-auto h-[65%] w-[75%] bg-gray-50 z-10 rounded-lg shadow-lg"
+          :class="miniTaskBoardAnimate"
+   
+        >
           <!-- header -->
           <header>
             <nav
@@ -216,7 +265,7 @@ async function signInOnClick(userLogin) {
                   <div class="dropdown dropdown-bottom">
                     <button
                       tabindex="0"
-                      class="flex gap-1 justify-center items-center bg-gray-200  text-gray-800 font-bold py-1 px-3 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                      class="flex gap-1 justify-center items-center bg-gray-200 text-gray-800 font-bold py-1 px-3 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
                     >
                       Filter
                     </button>
@@ -233,20 +282,22 @@ async function signInOnClick(userLogin) {
               </div>
             </div>
             <!-- Content -->
-            <div class="flex justify-center mt-4 gap-3 w-[95%] px-[10px]">
-              <div>
+            <div class="flex flex-col justify-center mt-4 gap-3 w-[95%] px-[10px]">
+              <div class="flex flex-row gap-1">
                 <button
-                  class="mb-1 w-[60px] bg-gray-800  text-white font-bold py-2 rounded-lg text-[12px]"
+                  class="mb-1 w-[60px] bg-gray-800 text-white font-bold py-2 rounded-lg text-[12px]"
                 >
                   Manage Status
                 </button>
 
                 <div
-                  class="flex flex-col gap-[0.2rem] w-full overflow-y-auto overflow-x-hidden pr-1"
+                  class="flex flex-row gap-[0.2rem] w-full overflow-y-auto overflow-x-hidden pr-1"
                 >
                   <TaskStatusCard
                     colorStatus="#828282"
-                    class="h-[40px] w-[60px] text-xs card-animate"
+                    class="h-[40px] w-[60px] text-xs"
+                    :class="cardAnimate"
+              
                   >
                     <template #count> 1 </template>
                     <template #status> No Status </template>
@@ -254,7 +305,9 @@ async function signInOnClick(userLogin) {
 
                   <TaskStatusCard
                     colorStatus="#FFFF66"
-                    class="h-[40px] w-[60px] text-xs card-animate"
+                    class="h-[40px] w-[60px] text-xs"
+                    :class="cardAnimate"
+                 
                   >
                     <template #count> 1 </template>
                     <template #status> To Do </template>
@@ -262,7 +315,9 @@ async function signInOnClick(userLogin) {
 
                   <TaskStatusCard
                     colorStatus="#0000FF"
-                    class="h-[40px] w-[60px] text-xs card-animate"
+                    class="h-[40px] w-[60px] text-xs"
+                    :class="cardAnimate"
+             
                   >
                     <template #count> 1 </template>
                     <template #status> In Progress </template>
@@ -270,7 +325,9 @@ async function signInOnClick(userLogin) {
 
                   <TaskStatusCard
                     colorStatus="#228B22"
-                    class="h-[40px] w-[60px] text-xs card-animate"
+                    class="h-[40px] w-[60px] text-xs"
+                    :class="cardAnimate"
+         
                   >
                     <template #count> 1 </template>
                     <template #status> Done </template>
@@ -279,12 +336,12 @@ async function signInOnClick(userLogin) {
               </div>
 
               <div
-                class="bg-white py-0 rounded-lg shadow-lg h-[22rem] max-h-800px  w-[100%] max-[1625px]:h-[90%]"
+                class="bg-white py-0 rounded-lg shadow-lg h-[18rem] max-h-800px w-[100%] max-[1625px]:h-[90%]"
               >
                 <!-- Task List -->
                 <table class="w-full bg-white">
-                  <thead class="bg-gray-100 ">
-                    <tr class="bg-white ">
+                  <thead class="bg-gray-100">
+                    <tr class="bg-white">
                       <th
                         class="w-[5%] px-2 max-[1400px]:px-3 max-[1207px]:px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
@@ -313,7 +370,11 @@ async function signInOnClick(userLogin) {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr class="bg-white  border-animate">
+                    <tr
+                      class="bg-white"
+                      :class="borderAnimate"
+                    
+                    >
                       <td
                         class="w-[5%] px-2 max-[1400px]:px-3 max-[1207px]:px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center"
                       >
@@ -344,7 +405,11 @@ async function signInOnClick(userLogin) {
                       </td>
                     </tr>
 
-                    <tr class="bg-white  border-animate">
+                    <tr
+                      class="bg-white"
+                      :class="borderAnimate"
+                    
+                    >
                       <td
                         class="w-[5%] px-2 max-[1400px]:px-3 max-[1207px]:px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center"
                       >
@@ -375,7 +440,11 @@ async function signInOnClick(userLogin) {
                       </td>
                     </tr>
 
-                    <tr class="bg-white  border-animate">
+                    <tr
+                      class="bg-white"
+                      :class="borderAnimate"
+                 
+                    >
                       <td
                         class="w-[5%] px-2 max-[1400px]:px-3 max-[1207px]:px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center"
                       >
@@ -406,7 +475,11 @@ async function signInOnClick(userLogin) {
                       </td>
                     </tr>
 
-                    <tr class="bg-white  border-animate">
+                    <tr
+                      class="bg-white"
+                      :class="borderAnimate"
+              
+                    >
                       <td
                         class="w-[5%] px-2 max-[1400px]:px-3-6 max-[1207px]:px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center"
                       >
@@ -455,16 +528,15 @@ input[type="password"]::-ms-reveal {
 
 @keyframes cardAnimation {
   0% {
-    transform: translateY(-8rem);
+    transform: translateX(-8rem);
     opacity: 0;
-   /* // box-shadow: rgba(255, 105, 180, 0.65) 0px 4px 16px, rgba(248, 200, 220, 0.75) 0px 8px 32px;  */
   }
-  50%{
+  50% {
     opacity: 0.75;
   }
   100% {
-    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px, rgba(0, 0, 0, 0.05) 0px 4px 8px; 
-    transform: translateY(0rem);
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px, rgba(0, 0, 0, 0.05) 0px 4px 8px;
+    transform: translateX(0rem);
     opacity: 1;
   }
 }
@@ -473,13 +545,13 @@ input[type="password"]::-ms-reveal {
   0% {
     transform: translateY(8rem);
     opacity: 0;
-   /* // box-shadow: rgba(255, 105, 180, 0.65) 0px 4px 16px, rgba(248, 200, 220, 0.75) 0px 8px 32px;  */
+    /* // box-shadow: rgba(255, 105, 180, 0.65) 0px 4px 16px, rgba(248, 200, 220, 0.75) 0px 8px 32px;  */
   }
-  50%{
+  50% {
     opacity: 0.75;
   }
   100% {
-    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px, rgba(0, 0, 0, 0.05) 0px 4px 8px; 
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px, rgba(0, 0, 0, 0.05) 0px 4px 8px;
     transform: translateY(0rem);
     opacity: 1;
   }
@@ -487,119 +559,197 @@ input[type="password"]::-ms-reveal {
 
 .card-animate {
   opacity: 0;
-  animation: cardAnimation  2s ease-in forwards;
+  animation: cardAnimation 2s ease-in forwards;
 }
-
 
 .card-animate:nth-child(1) {
   z-index: 30;
-  animation-delay: 2s;
+  animation-delay: 0s;
 }
 
 .card-animate:nth-child(2) {
   z-index: 20;
-  animation-delay: 3s;
-
+  animation-delay: 1s;
 }
 
 .card-animate:nth-child(3) {
   z-index: 10;
-  animation-delay: 6s; 
-
+  animation-delay: 2s;
 }
 .card-animate:nth-child(4) {
   z-index: 0;
-  animation-delay: 8s;
-
+  animation-delay: 3s;
 }
 
 .border-animate {
   opacity: 0;
-
-  animation: borderAnimation  3s ease-in forwards;
+  animation: borderAnimation 2s ease-in forwards;
 }
-
 
 .border-animate:nth-child(1) {
   animation-delay: 0s;
 }
 
 .border-animate:nth-child(2) {
-  animation-delay: 2s;
-
+  animation-delay: 1s;
 }
 
 .border-animate:nth-child(3) {
-  animation-delay: 4s; 
-
+  animation-delay: 2s;
 }
 .border-animate:nth-child(4) {
-  animation-delay: 6s;
-
+  animation-delay: 3s;
 }
 
-
- @keyframes taskBoardAnimation {
+@keyframes taskBoardAnimation {
   0% {
     opacity: 1;
-  }
-  50%{
-    opacity: 0.75;
+    transform: scale(1, 1);
   }
   100% {
     display: none;
-     transform:scale(1, 0);
+    opacity: 0;
+    transform: scale(1, 0);
   }
 }
- .miniTaskBoard-animate{
-  
+
+
+.miniTaskBoard-animate {
   opacity: 1;
-  animation: taskBoardAnimation  4s ease-in forwards;
-} 
+  animation: taskBoardAnimation 1s ease-in forwards;
+}
 
 @keyframes taskBoardAnimationOpacity {
   0% {
     opacity: 1;
   }
-  50%{
-    opacity: 0.50;
-  }
-  75% {
+  25% {
     display: none;
+    opacity: 0;
   }
   100% {
     display: none;
     opacity: 0;
   }
 }
-.miniTaskBoard-animate header,.miniTaskBoard-animate button,.miniTaskBoard-animate div,.miniTaskBoard-animate  nav{  
-  animation: taskBoardAnimationOpacity  4s ease-in forwards;
-} 
-
- /* @keyframes kanbanAnimation {
-  0% { 
-    display: none;
-
-    transform:scale(1, 0);
-  }
-   50% {
-    display: none;
-
-     transform:scale(1, 0.5);
-   }
-   75% {  
-     display: none;
-  transform:scale(1, 0.75);
+.miniTaskBoard-animate header,
+.miniTaskBoard-animate button,
+.miniTaskBoard-animate div,
+.miniTaskBoard-animate nav {
+  animation: taskBoardAnimationOpacity 1s ease-in forwards;
 }
+
+@keyframes kanbanAnimation {
+  0% {
+     transform: scale(1, 0);
+  }
+
   100% {
-    display: block;
-
-    transform:scale(1, 1);
+     transform: scale(1, 1);
   }
-} */
-.kanban {
-  display: none;
-
-  /* animation: kanbanAnimation  4s ease-in forwards; */
 }
+.kanban {
+  display: block;
+  animation: kanbanAnimation 1s ease-in forwards;
+}
+
+@keyframes kanbanAnimationText {
+  0% {
+    opacity: 0;
+   display: none;
+  }
+  25% {
+    display: none;
+    opacity: 0;
+  }
+  100% { 
+    opacity: 1;
+    display: block;
+  }
+}
+
+.kanban h1{
+  animation: kanbanAnimationText 1s ease-in forwards;
+}
+
+@keyframes animate {
+  0% {
+      width: 0%;
+  }
+  70% {
+      width: 100%;
+  }
+}
+.textAnimation h1{
+    position: relative;
+    -webkit-text-stroke: 0.2vw rgba(26, 26, 26, 0);
+    text-transform: uppercase;
+    margin-bottom: 1em;
+    color: rgba(255, 255, 255, 0);
+
+}
+.textAnimation h1::before {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    color: rgb(13, 13, 13);
+    -webkit-text-stroke: 0vw rgba(217, 103, 103, 0);
+    border-right: 2px solid #ff08f700;
+    overflow: hidden;
+    animation: animate 10s linear infinite;
+   -webkit-animation: animate 10s linear infinite; 
+
+}
+
+
+@keyframes kanbanAnimationToMiniTaskBoard {
+  0% {
+   transform: scale(1, 1);
+  }
+  75% {
+    opacity: 0;
+  }
+  100% {
+  opacity: 0;
+  display: none;
+  transform: scale(1, 0);
+  }
+}
+
+.kanbanToMiniTaskBoard {
+  display: block;
+  animation: kanbanAnimationToMiniTaskBoard 1s ease-in forwards;
+}
+
+@keyframes taskBoardAnimationShow {
+  0% { 
+     display: none;
+     opacity: 0;
+    transform: scale(1, 0);
+  }
+  25% {
+    display: none;
+     opacity: 0;
+  }
+  50% {
+    display: none;
+     opacity: 0;
+  }
+  75% {
+    display: block; 
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+.miniTaskBoard-animate-show {
+  opacity: 1;
+  animation: taskBoardAnimationShow 1s ease-in forwards;
+}
+
 </style>
