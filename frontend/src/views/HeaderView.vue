@@ -40,7 +40,7 @@ function signOut() {
     >
       <div class="flex items-center mx-auto w-[100%] h-full justify-between">
         <!-- Center: Task Board title -->
-        <div class="flex text-center">
+        <div class="flex text-center pl-14">
           <span class="text-white text-3xl font-semibold whitespace-nowrap">
             US-1 Kanban
           </span>
