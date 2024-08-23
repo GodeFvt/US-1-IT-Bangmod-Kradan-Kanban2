@@ -20,7 +20,7 @@ const props = defineProps({
 
 <template>
   <div
-    class="flex flex-wrap flex-row justify-center items-center p-2 bg-white rounded-md shadow-xl border-l-4"
+    class="flex flex-wrap flex-row justify-center items-center p-2 bg-white rounded-md border-l-4"
     :class="`${width} ${height}`"
     :style="{ 'border-color': colorStatus }"
   >
@@ -48,4 +48,6 @@ const props = defineProps({
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>

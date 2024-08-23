@@ -4,7 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import sit.us1.backend.repositories.TaskStatusRepository;
+import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
 
 import java.util.Arrays;
 

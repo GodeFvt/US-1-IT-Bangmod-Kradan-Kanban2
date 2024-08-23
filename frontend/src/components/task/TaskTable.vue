@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, onMounted, onUnmounted } from "vue";
 import MoreActionIcon from "../icon/MoreActionIcon.vue";
 import SortIcon from "../icon/SortIcon.vue";
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
@@ -31,6 +31,20 @@ const props = defineProps({
 const sortType = ref("default");
 const statusStore = useStatusStore();
 const taskFiltered = ref([]);
+const windowWidth = ref(window.innerWidth);
+
+const isVisible = ref([]);
+
+watch(
+  () => props.allTask,
+  () => {
+    props.allTask.forEach((task, index) => {
+      setTimeout(() => {
+        isVisible.value[index] = true;
+      }, (index + 1) * 150);
+    });
+  }
+);
 function getTextColor(hex) {
   if (hex.length !== 7 || hex[0] !== "#") {
     return "#000000";
@@ -58,6 +72,10 @@ watch(
   },
   { immediate: true, deep: true }
 );
+
+watch(windowWidth, () => {
+  taskFiltered.value.forEach((task) => updateBorderStyle(task));
+});
 
 function switchSortType() {
   if (sortType.value === "default") {
@@ -88,11 +106,36 @@ function sortByStatus() {
       break;
   }
 }
+
+function updateBorderStyle(name) {
+  if (windowWidth.value <= 780) {
+    return {
+      "border-color": statusStore.getColorStatus(name),
+      "border-bottom-color": "rgb(229 231 235 / 0.5)",
+    };
+  }
+}
+
+onMounted(() => {
+  const handleResize = () => {
+    windowWidth.value = window.innerWidth;
+  };
+  window.addEventListener("resize", handleResize);
+  handleResize();
+});
+
+onUnmounted(() => {
+  const handleResize = () => {
+    windowWidth.value = window.innerWidth;
+  };
+  window.addEventListener("resize", handleResize);
+  handleResize();
+});
 </script>
 
 <template>
   <!-- Table -->
-  <TaskTableLoading v-if="showLoading" />
+  <TaskTableLoading v-if="showLoading" class="w-full" />
 
   <div v-else class="w-full rounded-md shadow-xl">
     <table class="w-full rounded-md">
@@ -113,7 +156,7 @@ function sortByStatus() {
           </th>
           <th
             @click="switchSortType"
-            class="px-2 py-4 w-[10%] max-md:hidden cursor-pointer flex items-center justify-between"
+            class="px-2 py-4 w-[10%] max-md:hidden cursor-pointer flex items-center justify-center"
           >
             <div class="itbkk-status-sort flex gap-1">
               <span>Status</span>
@@ -133,13 +176,11 @@ function sortByStatus() {
         class="h-[60vh] max-sm:h-[50vh] flex flex-col items-center w-full overflow-x-hidden overflow-y-auto"
       >
         <tr
-          class="itbkk-item flex w-full items-center justify-center border-l-4 border-b"
-          :style="{
-            'border-color': statusStore.getColorStatus(task.status.name),
-            'border-bottom-color': 'rgb(229 231 235 / 0.5)',
-          }"
+          class="itbkk-item task-row-wrapper flex w-full items-center justify-center border-l-4 border-b"
+          :style="updateBorderStyle(task.status.name)"
           v-for="(task, index) in taskFiltered"
           :key="index"
+          :class="{ 'slide-in': isVisible[index] }"
         >
           <td class="px-6 py-4 max-md:hidden w-[5%]">
             {{ index + 1 }}
@@ -253,4 +294,6 @@ function sortByStatus() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>

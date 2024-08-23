@@ -25,6 +25,8 @@ import TaskTable from "../components/task/TaskTable.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
+import HeaderView from "./HeaderView.vue";
+import SideMenuView from "./SideMenuView.vue";
 
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
@@ -49,6 +51,18 @@ const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
+
+const countStatus = computed(() => {
+  return allTask.value.reduce(
+    (accumulator, currentValue) => {
+      accumulator[currentValue.status.name] =
+        (accumulator[currentValue.status.name] || 0) + 1;
+      statusStore.setNoOftask(accumulator);
+      return accumulator;
+    },
+    { "No Status": 0 }
+  );
+});
 
 onMounted(async () => {
   const resTask = await getFilteredTask();
@@ -78,6 +92,18 @@ onMounted(async () => {
   }
 
   showLoading.value = false;
+});
+
+const isVisible = ref([]);
+
+onMounted(() => {
+  const countStatusKeys = Object.keys(countStatus);
+
+  countStatusKeys.forEach((status, index) => {
+    setTimeout(() => {
+      isVisible.value[index] = true;
+    }, index * 150);
+  });
 });
 
 // react to route changes
@@ -253,244 +279,264 @@ async function removeTask(index, confirmDelete = false) {
     showToast.value = true;
   }
 }
-
-const countStatus = computed(() => {
-  return allTask.value.reduce(
-    (accumulator, currentValue) => {
-      accumulator[currentValue.status.name] =
-        (accumulator[currentValue.status.name] || 0) + 1;
-      statusStore.setNoOftask(accumulator);
-      return accumulator;
-    },
-    { "No Status": 0 }
-  );
-});
 </script>
 
 <template>
-  <div class="flex flex-col items-center">
-    <!-- Task Status and Add Task Button -->
-    <div class="flex flex-row w-3/4 mt-5 max-sm:w-full max-sm:px-2">
-      <div class="m-[2px] flex sm:items-center items-end">
-        <router-link :to="{ name: 'task' }">
-          <div
-            class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1 font-bold"
-          >
-            Home
-          </div>
-        </router-link>
-        <div class="mx-2 text-slate-500">/</div>
-      </div>
-      <!-- Filter -->
-      <div class="flex items-end w-full justify-end sm:mt-0 mt-5">
-        <div class="flex flex-row items-center gap-1">
-          <div class="">
-            <router-link :to="{ name: 'AddTask' }">
-              <button
-                class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-              >
-                Add Task
-              </button>
-            </router-link>
-          </div>
 
-          <!--DropDown-->
-          <div class="itbkk-status-filter dropdown dropdown-bottom">
-            <button
-              tabindex="0"
-              class="flex gap-1 justify-center items-center bg-gray-200 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-            >
-              Filter
+    <div class="flex flex-col w-full h-screen">
+      <!-- <div class="h-[8%]">
+        <HeaderView class="h-full" />
+      </div> -->
+      <div class="flex flex-col items-center h-full gap-5 mt-2">
+        <!-- Task Status and Add Task Button -->
+        <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
+          <div class="m-[2px] flex sm:items-center items-end">
+            <router-link :to="{ name: 'task' }">
               <div
-                v-if="statusFilter.length !== 0"
-                class="bg-gray-500 rounded-lg px-[0.3rem] text-white"
+                class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1 font-bold"
               >
-                {{ statusFilter.length }}
+                Home
               </div>
-              <div class="itbkk-filter-clear cursor-pointer hover:text-red-400">
-                <CloseIcon
-                  v-if="statusFilter.length !== 0"
-                  @click="statusFilter = []"
-                />
+            </router-link>
+            <div class="mx-2 text-slate-500">/</div>
+          </div>
+          <!-- Filter -->
+          <div class="flex items-end w-full justify-end sm:mt-0 mt-5">
+            <div class="flex flex-row items-center gap-1">
+              <div class="">
+                <router-link :to="{ name: 'AddTask' }">
+                  <button
+                    class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                  >
+                    Add Task
+                  </button>
+                </router-link>
               </div>
-            </button>
-            <ul
-              tabindex="0"
-              class="dropdown-content flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] z-50 h-64 overflow-y-auto overflow-x-hidden"
-            >
-              <li
-                v-for="status in statusStore.allStatus"
-                :key="status.name"
-                class="itbkk-filter-item p-2 hover:bg-gray-100 rounded-md"
-              >
-                <label class="itbkk-status-choice flex items-center">
-                  <input
-                    type="checkbox"
-                    :value="status.name"
-                    v-model="statusFilter"
-                    class="itbkk-filter-item-clear checkbox"
-                  />
-                  <span class="ml-2 break-all">{{ status.name }}</span>
-                </label>
-              </li>
-            </ul>
-          </div>
-          <!-- status setting -->
-          <div class="" @click="showSettingModal = true">
-            <button
-              class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
-            >
-              <SettingIcon />
-            </button>
+
+              <!--DropDown-->
+              <div class="itbkk-status-filter dropdown dropdown-bottom">
+                <button
+                  tabindex="0"
+                  class="flex gap-1 justify-center items-center bg-gray-200 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                >
+                  Filter
+                  <div
+                    v-if="statusFilter.length !== 0"
+                    class="bg-gray-500 rounded-lg px-[0.3rem] text-white"
+                  >
+                    {{ statusFilter.length }}
+                  </div>
+                  <div
+                    class="itbkk-filter-clear cursor-pointer hover:text-red-400"
+                  >
+                    <CloseIcon
+                      v-if="statusFilter.length !== 0"
+                      @click="statusFilter = []"
+                    />
+                  </div>
+                </button>
+                <ul
+                  tabindex="0"
+                  class="dropdown-content flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] z-50 h-64 overflow-y-auto overflow-x-hidden"
+                >
+                  <li
+                    v-for="status in statusStore.allStatus"
+                    :key="status.name"
+                    class="itbkk-filter-item p-2 hover:bg-gray-100 rounded-md"
+                  >
+                    <label class="itbkk-status-choice flex items-center">
+                      <input
+                        type="checkbox"
+                        :value="status.name"
+                        v-model="statusFilter"
+                        class="itbkk-filter-item-clear checkbox"
+                      />
+                      <span class="ml-2 break-all">{{ status.name }}</span>
+                    </label>
+                  </li>
+                </ul>
+              </div>
+              <!-- status setting -->
+              <div class="" @click="showSettingModal = true">
+                <button
+                  class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
+                >
+                  <SettingIcon />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Task Table -->
-    <div
-      class="flex justify-center mt-4 gap-3 w-3/4 max-sm:w-full max-sm:px-2 max-sm:gap-1"
-    >
-      <!-- Task Status Count -->
-      <div class="">
-        <router-link :to="{ name: 'ManageStatus' }">
-          <button
-            class="itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-          >
-            Manage Status
-          </button>
-        </router-link>
+        <!-- Task Table -->
         <div
-          class="flex flex-col gap-[0.2rem] h-[60vh] max-sm:h-[50vh] w-full overflow-y-auto overflow-x-hidden pr-1"
+          class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
         >
-          <div v-for="status in Object.keys(countStatus)" :key="status">
-            <TaskStatusCard :colorStatus="statusStore.getColorStatus(status)">
-              <template #count> {{ countStatus[status] }} </template>
-              <template #status> {{ status }} </template>
-            </TaskStatusCard>
-          </div>
-        </div>
-      </div>
-
-      <TaskTable
-        :statusFilter="statusFilter"
-        :allTask="allTask"
-        :showErrorMSG="showErrorMSG"
-        :showLoading="showLoading"
-        :allTaskLimit="allTaskLimit"
-        @remove-task="removeTask"
-      >
-      </TaskTable>
-    </div>
-
-    <TaskDetail
-      v-if="showDetail"
-      @user-action="closeTask"
-      @addEdit="addEditTask"
-      :task="task"
-      :isEdit="isEdit"
-      :showLoading="showLoading"
-      :allTaskLimit="allTaskLimit"
-    >
-    </TaskDetail>
-
-    <ConfirmModal
-      v-if="showDeleteModal"
-      @user-action="showDeleteModal = false"
-      @confirm="removeTask"
-      :index="indexToRemove"
-      class="z-50"
-      width="w-[42vh]"
-    >
-      <template #header>
-        <div class="flex justify-center">
-          <AlertSquareIcon class="w-16 h-16 opacity-40" />
-        </div>
-      </template>
-      <template #body>
-        <span class="itbkk-message">
-          Do you want to delete the task number
-        </span>
-        <span class="break-all">
-          : {{ indexToRemove + 1 }}<br />
-          <div class="flex justify-center">
-            "<span class="itbkk-message">{{ task.title }}</span
-            >"
-          </div>
-        </span>
-      </template>
-    </ConfirmModal>
-
-    <ConfirmModal
-      v-if="showSettingModal"
-      @user-action="confirmLimit"
-      :width="'w-[60vh]'"
-      :disabled="maximumTask > 30 || maximumTask <= 0"
-      class="itbkk-modal-setting z-50"
-    >
-      <template #header>
-        <div class="flex justify-center">
-          <span class="text-gray-800 font-bold text-[1.5rem]">
-            Status Settings
-          </span>
-        </div>
-      </template>
-      <template #body>
-        <span class="itbkk-message">
-          User can limit the number of task in status by setting the Maximum
-          task in each status ( except "No Status" and "Done" statuses. )
-        </span>
-        <div
-          class="flex flex-col items-center cursor-pointer gap-2 mt-2"
-          @click="toggleActive = !toggleActive"
-        >
-          <span>Limit task in this status</span>
-          <!-- Switch Container -->
-          <div
-            class="w-12 h-[1.2rem] flex items-center bg-gray-300 rounded-full p-1"
-            :class="toggleActive ? 'bg-gray-500' : 'bg-gray-300'"
-          >
-            <!-- Switch -->
+          <!-- Task Status Count -->
+          <div class="flex">
             <div
-              class="w-6 h-6 rounded-full shadow-md transform ease-out duration-300"
-              :class="toggleActive ? 'translate-x-6 bg-black' : 'bg-gray-500'"
-            ></div>
+              class="flex flex-row gap-[0.2rem] w-full overflow-y-auto overflow-x-hidden pr-1 drop-shadow-md"
+            >
+              <div class="z-50">
+                <router-link :to="{ name: 'ManageStatus' }">
+                  <button
+                    class="h-full itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                  >
+                    Manage Status
+                  </button>
+                </router-link>
+              </div>
+              <div
+                v-for="(status, index) in Object.keys(countStatus)"
+                :key="status"
+                :class="{ 'slide-in': isVisible[index] }"
+                class="task-status-wrapper z-0"
+              >
+                <TaskStatusCard
+                  :colorStatus="statusStore.getColorStatus(status)"
+                >
+                  <template #count>{{ countStatus[status] }}</template>
+                  <template #status>{{ status }}</template>
+                </TaskStatusCard>
+              </div>
+            </div>
           </div>
-          <!-- Switch Container End -->
-        </div>
-        <div class="flex flex-col items-center mt-2 gap-2">
-          <span>Maximum tasks</span>
-          <input
-            type="number"
-            max="30"
-            min="0"
-            class="itbkk-max-task border border-black rounded-md px-1"
-            v-model="maximumTask"
-          />
-          <div v-if="maximumTask > 30 || maximumTask <= 0" class="text-red-500">
-            <p>maximumTask must be lees then 30 and more than 0</p>
-          </div>
-        </div>
-      </template>
-    </ConfirmModal>
 
-    <limitModal
-      v-if="showListStatus"
-      @user-action="showListStatus = false"
-      :allTaskLimit="allTaskLimit"
-      class="z-50"
-    >
-    </limitModal>
-  </div>
-  <div
-    class="fixed flex items-center w-full max-w-xs right-5 bottom-5"
-    v-if="showToast"
-  >
-    <Toast :toast="typeToast" @close-toast="showToast = false">
-      <template #message>
-        <span class="itbkk-message break-all">{{ messageToast }}</span>
-      </template>
-    </Toast>
-  </div>
+          <TaskTable
+            :statusFilter="statusFilter"
+            :allTask="allTask"
+            :showErrorMSG="showErrorMSG"
+            :showLoading="showLoading"
+            :allTaskLimit="allTaskLimit"
+            @remove-task="removeTask"
+          >
+          </TaskTable>
+        </div>
+
+        <TaskDetail
+          v-if="showDetail"
+          @user-action="closeTask"
+          @addEdit="addEditTask"
+          :task="task"
+          :isEdit="isEdit"
+          :showLoading="showLoading"
+          :allTaskLimit="allTaskLimit"
+        >
+        </TaskDetail>
+
+        <ConfirmModal
+          v-if="showDeleteModal"
+          @user-action="showDeleteModal = false"
+          @confirm="removeTask"
+          :index="indexToRemove"
+          class="z-50"
+          width="w-[42vh]"
+        >
+          <template #header>
+            <div class="flex justify-center">
+              <AlertSquareIcon class="w-16 h-16 opacity-40" />
+            </div>
+          </template>
+          <template #body>
+            <span class="itbkk-message">
+              Do you want to delete the task number
+            </span>
+            <span class="break-all">
+              : {{ indexToRemove + 1 }}<br />
+              <div class="flex justify-center">
+                "<span class="itbkk-message">{{ task.title }}</span
+                >"
+              </div>
+            </span>
+          </template>
+        </ConfirmModal>
+
+        <ConfirmModal
+          v-if="showSettingModal"
+          @user-action="confirmLimit"
+          :width="'w-[60vh]'"
+          :disabled="maximumTask > 30 || maximumTask <= 0"
+          class="itbkk-modal-setting z-50"
+        >
+          <template #header>
+            <div class="flex justify-center">
+              <span class="text-gray-800 font-bold text-[1.5rem]">
+                Status Settings
+              </span>
+            </div>
+          </template>
+          <template #body>
+            <span class="itbkk-message">
+              User can limit the number of task in status by setting the Maximum
+              task in each status ( except "No Status" and "Done" statuses. )
+            </span>
+            <div
+              class="flex flex-col items-center cursor-pointer gap-2 mt-2"
+              @click="toggleActive = !toggleActive"
+            >
+              <span>Limit task in this status</span>
+              <!-- Switch Container -->
+              <div
+                class="w-12 h-[1.2rem] flex items-center bg-gray-300 rounded-full p-1"
+                :class="toggleActive ? 'bg-gray-500' : 'bg-gray-300'"
+              >
+                <!-- Switch -->
+                <div
+                  class="w-6 h-6 rounded-full shadow-md transform ease-out duration-300"
+                  :class="
+                    toggleActive ? 'translate-x-6 bg-black' : 'bg-gray-500'
+                  "
+                ></div>
+              </div>
+              <!-- Switch Container End -->
+            </div>
+            <div class="flex flex-col items-center mt-2 gap-2">
+              <span>Maximum tasks</span>
+              <input
+                type="number"
+                max="30"
+                min="0"
+                class="itbkk-max-task border border-black rounded-md px-1"
+                v-model="maximumTask"
+              />
+              <div
+                v-if="maximumTask > 30 || maximumTask <= 0"
+                class="text-red-500"
+              >
+                <p>maximumTask must be lees then 30 and more than 0</p>
+              </div>
+            </div>
+          </template>
+        </ConfirmModal>
+
+        <limitModal
+          v-if="showListStatus"
+          @user-action="showListStatus = false"
+          :allTaskLimit="allTaskLimit"
+          class="z-50"
+        >
+        </limitModal>
+      </div>
+      <div
+        class="fixed flex items-center w-full max-w-xs right-5 bottom-5"
+        v-if="showToast"
+      >
+        <Toast :toast="typeToast" @close-toast="showToast = false">
+          <template #message>
+            <span class="itbkk-message break-all">{{ messageToast }}</span>
+          </template>
+        </Toast>
+      </div>
+    </div>
 </template>
-<style scoped></style>
+<style scoped>
+.task-status-wrapper {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+.task-status-wrapper.slide-in {
+  transform: translateX(0);
+  opacity: 1;
+}
+</style>

@@ -1,6 +1,7 @@
 <script setup>
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
+import { ref, watch } from "vue";
 
 defineEmits(["removeStatus"]);
 const props = defineProps({
@@ -19,13 +20,25 @@ const props = defineProps({
 });
 
 const statusStore = useStatusStore();
+
+const isVisible = ref([]);
+watch(
+  () => props.allStatus,
+  () => {
+    props.allStatus.forEach((task, index) => {
+      setTimeout(() => {
+        isVisible.value[index] = true;
+      }, (index + 1) * 150);
+    });
+  }
+);
 </script>
 
 <template>
   <!-- Table -->
-  <TaskTableLoading v-if="showLoading" />
+  <TaskTableLoading v-if="showLoading" class="w-full" />
 
-  <div v-else class="m-4 w-3/4 rounded-md shadow-xl">
+  <div v-else class="w-full rounded-md shadow-xl">
     <table class="w-full rounded-md">
       <thead
         class="text-xs text-gray-700 uppercase bg-gray-50 w-full rounded-t-md"
@@ -51,16 +64,17 @@ const statusStore = useStatusStore();
         </tr>
       </thead>
       <tbody
-        class="h-[60vh] max-sm:h-[50vh] flex flex-col items-center overflow-y-auto w-full overflow-x-hidden"
+        class="h-[73vh] max-sm:h-[50vh] flex flex-col items-center overflow-y-auto w-full overflow-x-hidden"
       >
         <tr
-          class="itbkk-item flex w-full items-center justify-center bg-white border-l-4 border-b"
+          class="itbkk-item task-row-wrapper flex w-full items-center justify-center bg-white border-l-4 border-b"
           :style="{
             'border-color': statusStore.getColorStatus(status.name),
             'border-bottom-color': 'rgb(229 231 235 / 0.5)',
           }"
           v-for="(status, index) in allStatus"
           :key="index"
+          :class="{ 'slide-in': isVisible[index] }"
         >
           <td class="px-6 py-4 max-lg:hidden w-[5%]">
             {{ index + 1 }}

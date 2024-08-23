@@ -1,6 +1,5 @@
 package sit.us1.backend.controllers;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import jakarta.validation.groups.Default;
 import org.modelmapper.ModelMapper;
@@ -11,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import sit.us1.backend.dtos.statusesDTO.SimpleStatusDTO;
 import sit.us1.backend.dtos.limitsDTO.StatusLimitResponseDTO;
-import sit.us1.backend.entities.TaskLimit;
+import sit.us1.backend.entities.taskboard.TaskLimit;
 import sit.us1.backend.services.StatusService;
 import sit.us1.backend.validations.ValidStatusId;
 import sit.us1.backend.validations.ValidStatusLimit;

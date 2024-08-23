@@ -4,7 +4,7 @@ async function getFilteredTask([...filter] = "", sortBy = "id") {
   let res;
   try {
     res = await fetch(
-      `${BASE_URL}/v2/tasks?sortBy=${sortBy}&filterStatuses=${filter}`
+      `${BASE_URL}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`
     );
     if (res.status === 200) {
       const tasks = await res.json();
@@ -21,7 +21,7 @@ async function toggleLimitTask(maximum, isLimit) {
   let res;
   try {
     res = await fetch(
-      `${BASE_URL}/v2/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
+      `${BASE_URL}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
       {
         method: "PATCH",
         headers: {
@@ -44,7 +44,7 @@ async function toggleLimitTask(maximum, isLimit) {
 async function getTaskById(id) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/tasks/${id}`);
+    res = await fetch(`${BASE_URL}/tasks/${id}`);
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -59,7 +59,7 @@ async function getTaskById(id) {
 async function getTaskByStatus(statusid) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/tasks/count/status/${statusid}`);
+    res = await fetch(`${BASE_URL}/tasks/count/status/${statusid}`);
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -74,7 +74,7 @@ async function getTaskByStatus(statusid) {
 async function createTask(task) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/tasks`, {
+    res = await fetch(`${BASE_URL}/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +95,7 @@ async function createTask(task) {
 async function updateTask(task) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/tasks/${task.id}`, {
+    res = await fetch(`${BASE_URL}/tasks/${task.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -116,7 +116,7 @@ async function updateTask(task) {
 async function deleteTask(id) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/tasks/${id}`, {
+    res = await fetch(`${BASE_URL}/tasks/${id}`, {
       method: "DELETE",
     });
     return res.status;
@@ -128,7 +128,7 @@ async function deleteTask(id) {
 async function getAllStatus() {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses`);
+    res = await fetch(`${BASE_URL}/statuses`);
     if (res.status === 200) {
       const tasks = await res.json();
       return tasks;
@@ -143,7 +143,7 @@ async function getAllStatus() {
 async function getStatusById(id) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses/${id}`);
+    res = await fetch(`${BASE_URL}/statuses/${id}`);
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -158,7 +158,7 @@ async function getStatusById(id) {
 async function createStatus(Statuses) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses`, {
+    res = await fetch(`${BASE_URL}/statuses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -179,7 +179,7 @@ async function createStatus(Statuses) {
 async function updateStatus(Statuses) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses/${Statuses.id}`, {
+    res = await fetch(`${BASE_URL}/statuses/${Statuses.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -200,7 +200,7 @@ async function updateStatus(Statuses) {
 async function deleteStatus(id) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses/${id}`, {
+    res = await fetch(`${BASE_URL}/statuses/${id}`, {
       method: "DELETE",
     });
     return res.status;
@@ -211,7 +211,7 @@ async function deleteStatus(id) {
 async function deleteStatusAndTranfer(OldStatusId, newStatusId) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses/${OldStatusId}/${newStatusId}`, {
+    res = await fetch(`${BASE_URL}/statuses/${OldStatusId}/${newStatusId}`, {
       method: "DELETE",
     });
     return res.status;
@@ -223,7 +223,7 @@ async function deleteStatusAndTranfer(OldStatusId, newStatusId) {
 async function getLimit() {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/v2/statuses/limit`);
+    res = await fetch(`${BASE_URL}/statuses/limit`);
     if (res.status === 200) {
       const statusLimit = await res.json();
       return statusLimit;
@@ -234,6 +234,28 @@ async function getLimit() {
     return undefined;
   }
 }
+
+
+async function loginAccount(user) {
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}/login` ,{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    });
+    if(res.status ===200){
+      const token = await res.json();
+      return token
+    }
+    else {return res.status}
+  } catch (error) {
+    return undefined;
+  }
+}
+
 export {
   getTaskByStatus,
   getTaskById,
@@ -249,4 +271,5 @@ export {
   getFilteredTask,
   toggleLimitTask,
   getLimit,
+  loginAccount,
 };
