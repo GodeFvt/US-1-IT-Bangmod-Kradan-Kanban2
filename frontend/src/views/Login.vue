@@ -5,7 +5,6 @@ import { ref, computed, onMounted , onBeforeUnmount} from "vue";
 import { useRouter, useRoute } from "vue-router";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import TaskStatusCard from "../components/status/TaskStatusCard.vue";
-import VueJwtDecode from "vue-jwt-decode";
 import HeaderView from "./HeaderView.vue";
 const toggleIcon = ref(false);
 const user = ref({
@@ -15,7 +14,6 @@ const user = ref({
 const userStore = useUserStore();
 const showMessage = ref(false);
 const router = useRouter();
-
 const cardAnimate = ref("");
 const borderAnimate = ref("");
 const miniTaskBoardAnimate = ref("");
@@ -76,8 +74,8 @@ async function signInOnClick(userLogin) {
   if (userLogin.userName.length > 0 && userLogin.password.length > 0) {
     res = await loginAccount(userLogin);
     if (typeof res === "object") {
-      const decodedToken = VueJwtDecode.decode(res.access_token);
-      userStore.setAuthToken(decodedToken);
+      // const decodedToken = VueJwtDecode.decode(res.access_token);
+      userStore.setAuthToken(res.access_token);
       router.push({ name: "task" });
     } else if (res === 400 || res === 401) {
       showMessage.value = true;

@@ -1,22 +1,27 @@
 import { defineStore, acceptHMRUpdate } from "pinia";
+import VueJwtDecode from "vue-jwt-decode";
 
 export const useUserStore = defineStore("userStore", {
   state: () => ({
     authToken: (() => {
-      const token = JSON.parse(localStorage.getItem("authToken")) || null;
-      const currentTime = Math.floor(Date.now() / 1000); //แปลงจาก milisec to sec
-      if (token && token.exp < currentTime) {
-        localStorage.removeItem("authToken");
-        return null;
+      const token = localStorage.getItem("authToken") || null;
+      if (token) {
+        const decodeToken = VueJwtDecode.decode(token);
+        const currentTime = Math.floor(Date.now() / 1000); //แปลงจาก milisec to sec
+        if (decodeToken.exp < currentTime) {
+          localStorage.removeItem("authToken");
+          return null;
+        }
+        return decodeToken;
       }
-      return token;
     })(),
   }),
+  
   actions: {
     setAuthToken(token) {
-      console.log(token);
-      this.authToken = { ...token };
-      localStorage.setItem("authToken", JSON.stringify(token));
+      const decodeToken = VueJwtDecode.decode(token)
+      this.authToken = { ...decodeToken };
+      localStorage.setItem("authToken", token);
     },
     clearAuthToken() {
       this.authToken = null;
