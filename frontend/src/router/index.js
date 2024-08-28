@@ -80,8 +80,6 @@ router.beforeEach((to, from) => {
 
 router.beforeEach((to, from,next) => {
   const userStore = useUserStore();
-  // const isAuthenticated = !!localStorage.getItem('authToken');
-  // const isAuthenticated = Object.keys(userStore.authToken).length > 0;
   const isAuthenticated = !!userStore.authToken;
   if (isAuthenticated === false && to.name !== 'Login') {
     next({ name: 'Login' });

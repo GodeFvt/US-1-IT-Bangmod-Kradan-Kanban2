@@ -1,14 +1,26 @@
 const BASE_URL = import.meta.env.VITE_API_ROOT;
 
+
 async function getFilteredTask([...filter] = "", sortBy = "id") {
   let res;
+ const token = localStorage.getItem('authToken');
   try {
     res = await fetch(
-      `${BASE_URL}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`
+      `${BASE_URL}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`,
+       {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
     );
     if (res.status === 200) {
       const tasks = await res.json();
       return tasks;
+    }
+    if (res.status === 401) {
+      return res.status;
     } else {
       return undefined;
     }
@@ -19,12 +31,14 @@ async function getFilteredTask([...filter] = "", sortBy = "id") {
 
 async function toggleLimitTask(maximum, isLimit) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(
       `${BASE_URL}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
       {
         method: "PATCH",
         headers: {
+          'Authorization': `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
@@ -43,8 +57,15 @@ async function toggleLimitTask(maximum, isLimit) {
 
 async function getTaskById(id) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/tasks/${id}`);
+    res = await fetch(`${BASE_URL}/tasks/${id}`,{
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -58,8 +79,15 @@ async function getTaskById(id) {
 
 async function getTaskByStatus(statusid) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/tasks/count/status/${statusid}`);
+    res = await fetch(`${BASE_URL}/tasks/count/status/${statusid}`,{
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -73,10 +101,12 @@ async function getTaskByStatus(statusid) {
 
 async function createTask(task) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/tasks`, {
       method: "POST",
       headers: {
+        'Authorization': `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(task),
@@ -94,10 +124,12 @@ async function createTask(task) {
 
 async function updateTask(task) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/tasks/${task.id}`, {
       method: "PUT",
       headers: {
+        'Authorization': `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(task),
@@ -115,9 +147,14 @@ async function updateTask(task) {
 
 async function deleteTask(id) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/tasks/${id}`, {
       method: "DELETE",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
     return res.status;
   } catch (error) {
@@ -127,12 +164,24 @@ async function deleteTask(id) {
 
 async function getAllStatus() {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses`);
+    res = await fetch(`${BASE_URL}/statuses`,{
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    }
+  );
     if (res.status === 200) {
       const tasks = await res.json();
       return tasks;
-    } else {
+    } 
+    if (res.status === 401) {
+      return res.status;
+    } 
+    else {
       return undefined;
     }
   } catch (error) {
@@ -142,8 +191,17 @@ async function getAllStatus() {
 
 async function getStatusById(id) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses/${id}`);
+    res = await fetch(`${BASE_URL}/statuses/${id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -157,10 +215,12 @@ async function getStatusById(id) {
 
 async function createStatus(Statuses) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/statuses`, {
       method: "POST",
       headers: {
+        'Authorization': `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(Statuses),
@@ -178,10 +238,12 @@ async function createStatus(Statuses) {
 
 async function updateStatus(Statuses) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/statuses/${Statuses.id}`, {
       method: "PUT",
       headers: {
+        'Authorization': `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(Statuses),
@@ -199,9 +261,14 @@ async function updateStatus(Statuses) {
 
 async function deleteStatus(id) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/statuses/${id}`, {
       method: "DELETE",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
     return res.status;
   } catch (error) {
@@ -210,9 +277,14 @@ async function deleteStatus(id) {
 }
 async function deleteStatusAndTranfer(OldStatusId, newStatusId) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/statuses/${OldStatusId}/${newStatusId}`, {
       method: "DELETE",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
     return res.status;
   } catch (error) {
@@ -222,8 +294,17 @@ async function deleteStatusAndTranfer(OldStatusId, newStatusId) {
 
 async function getLimit() {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses/limit`);
+    res = await fetch(`${BASE_URL}/statuses/limit`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
     if (res.status === 200) {
       const statusLimit = await res.json();
       return statusLimit;
@@ -238,10 +319,12 @@ async function getLimit() {
 
 async function loginAccount(user) {
   let res;
+  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/login` ,{
       method: "POST",
       headers: {
+        'Authorization': `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(user),
@@ -250,7 +333,9 @@ async function loginAccount(user) {
       const token = await res.json();
       return token
     }
-    else {return res.status}
+    else {
+      return res.status
+    }
   } catch (error) {
     return undefined;
   }
