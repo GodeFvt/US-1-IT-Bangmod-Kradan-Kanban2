@@ -319,12 +319,10 @@ async function getLimit() {
 
 async function loginAccount(user) {
   let res;
-  const token= localStorage.getItem('authToken');
   try {
     res = await fetch(`${BASE_URL}/login` ,{
       method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(user),
