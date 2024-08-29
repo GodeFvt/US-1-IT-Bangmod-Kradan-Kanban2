@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed,onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   getAllStatus,
@@ -23,36 +23,53 @@ import { useTaskStore } from "../stores/tasks.js";
 import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import HeaderView from "./HeaderView.vue";
+import PopUp from "../components/modal/PopUp.vue";
 
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
 const router = useRouter();
 const route = useRoute();
+
+// data
 const allStatus = ref([]);
+const status = ref({});
+const allTaskLimit = ref([]); // allTask อันที่เกิน
+
+// show component
 const showErrorMSG = ref(false);
 const showLoading = ref(true);
 const showTranfer = ref(false);
-const status = ref({});
 const showDetail = ref(false);
 const showToast = ref(false);
 const showAddModal = ref(false);
-const isEdit = ref(false);
 const showDeleteModal = ref(false);
+const showPopUp = ref(false);
+
+
+const isEdit = ref(false);
+const toggleActive = ref(statusStore.isLimit);
 const indexToRemove = ref(-1);
 const messageToast = ref("");
 const typeToast = ref("");
 const showListStatus = ref(false);
-const allTaskLimit = ref([]); // allTask อันที่เกิน
 const maximumTask = ref(statusStore.maximumTask);
 const showSettingModal = ref(false);
-const toggleActive = ref(statusStore.isLimit);
+
 const tranferStatus = ref("No Status");
+
+// variable for 401
+const timeCount = ref(3);
+let intervals = [];
+
 
 onMounted(async () => {
   const resStatus = await getAllStatus();
   if (resStatus === undefined) {
     showErrorMSG.value = true;
-  } else {
+  } else if (resStatus === 401) {
+       // go login 
+       tokenPass();
+    } else {
     statusStore.setAllStatus(resStatus);
     allStatus.value = statusStore.allStatus;
   }
@@ -61,6 +78,10 @@ onMounted(async () => {
   statusStore.setNoOftask(countStatus.value);
   if (statusStore.maximumTask === undefined) {
     const resLimit = await getLimit();
+     if (resLimit === 401) {
+       // go login 
+       tokenPass();
+    }
     statusStore.setMaximumTaskStatus(resLimit.maximumTask);
     statusStore.setLimitStatus(resLimit.isLimit);
     maximumTask.value = statusStore.maximumTask;
@@ -70,13 +91,42 @@ onMounted(async () => {
     const resTask = await getFilteredTask();
     if (resTask === undefined) {
       showErrorMSG.value = true;
-    } else {
+    } else if (resTask === 401) {
+       // go login 
+       tokenPass();
+    }  else {
       taskStore.setAllTask(resTask);
     }
   }
 
   showLoading.value = false;
 });
+
+// for 401
+function tokenPass() { 
+   showPopUp.value = true
+    intervals.push(
+    setTimeout(() => {
+        router.push({ name: "Login" });
+    }, 3000)  
+    
+  );
+intervals.push(
+    setInterval(() => {
+      console.log("cheackk");
+      timeCount.value--;
+    }, 1000)
+  );
+  }
+
+onUnmounted(() => {
+  clearAllInterval();
+});
+function clearAllInterval() {
+  intervals.map((interval) => clearInterval(interval));
+  intervals = [];
+}
+
 
 //noOfTask ไม่มาด้วยเลยต้องมาset
 const countStatus = computed(() => {
@@ -98,7 +148,10 @@ watch(
       const res = await getStatusById(newId);
       if (res === 404 || res === 400) {
         router.push({ name: "TaskNotFound", params: { page: "Status" } });
-      } else {
+      }  else if (res === 401) {
+       // go login 
+       tokenPass();
+       } else {
         status.value = res;
         if (route.path === `/status/${newId}/edit`) {
           isEdit.value = true;
@@ -163,6 +216,9 @@ async function addStatus(newStatus) {
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the status could not be added`;
+    }  else if (res === 401) {
+       // go login 
+       tokenPass();
     } else {
       typeToast.value = "success";
       statusStore.addStatus(res);
@@ -177,7 +233,11 @@ async function editStatus(editedStatus) {
   if (res === 422 || res === 400 || res === 500 || res === 404) {
     typeToast.value = "warning";
     messageToast.value = `An error has occurred, the status does not exist`;
-  } else {
+  }  else if (res === 401) {
+       // go login 
+       tokenPass();
+    }  
+  else {
     typeToast.value = "success";
     const indexToUpdate = allStatus.value.findIndex(
       (status) => status.id === editedStatus.id
@@ -218,10 +278,14 @@ async function confirmLimit(action) {
     maximumTask.value = statusStore.maximumTask;
   } else if (toggleActive.value && action) {
     const res = await toggleLimitTask(maximumTask.value, true);
-    if (res.status === 400 || res.status === 404) {
+    if (res === 400 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred enable limit task`;
-    } else if (res.status === 500) {
+    }  else if (res === 401) {
+       // go login 
+       tokenPass();
+    } 
+    else if (res === 500) {
       typeToast.value = "denger";
       messageToast.value = `An error occurred.please try again.`;
     } else {
@@ -238,10 +302,14 @@ async function confirmLimit(action) {
     showToast.value = true;
   } else if (toggleActive.value === false && action) {
     const res = await toggleLimitTask(maximumTask.value, false);
-    if (res.status === 400 || res.status === 404) {
+    if (res === 400 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred disabled limit task`;
-    } else if (res.status === 500) {
+    }  else if (res === 401) {
+       // go login 
+       tokenPass();
+    }  
+    else if (res === 500) {
       typeToast.value = "denger";
       messageToast.value = `An error occurred.please try again.`;
     } else {
@@ -283,6 +351,9 @@ async function removeStatus(index, confirmDelete = false) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the status does not exist.`;
       statusStore.deleteStatus(index);
+    }  else if (res === 401) {
+       // go login 
+       tokenPass();
     } else {
       typeToast.value = "denger";
       messageToast.value = `An error occurred.please try again.`;
@@ -297,10 +368,13 @@ async function clickRemove(index) {
   status.value = allStatus.value[index];
   indexToRemove.value = index;
   const res = await getTaskByStatus(status.value.id);
-  if (res === 400) {
+  if (res === 400 || res === 404 || res === 500) {
     typeToast.value = "danger";
     messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
-  } else {
+  }  else if (res === 401) {
+       // go login 
+       tokenPass();
+    } else {
     if (res.count >= 1) {
       tranferStatus.value = "No Status";
       showTranfer.value = true;
@@ -511,6 +585,23 @@ async function clickRemove(index) {
       class="z-50"
     >
     </limitModal>
+    <PopUp v-if="showPopUp">
+          <template #message>  
+          <p class="l text-gray-700">
+            Oops! something went wrong. Whatever happened, it was probably our fault. please try Login again.
+            </p>
+          
+          </template>
+
+          <template #button>
+            <router-link :to="{ name: 'Login' }">
+            <button class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">
+              try Login again
+            </button>
+            </router-link>
+          </template>
+    </PopUp>
+
   </div>
 </template>
 <style scoped></style>
