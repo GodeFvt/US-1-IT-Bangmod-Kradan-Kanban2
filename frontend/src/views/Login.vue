@@ -76,7 +76,7 @@ async function signInOnClick(userLogin) {
     if (typeof res === "object") {
       // const decodedToken = VueJwtDecode.decode(res.access_token);
       userStore.setAuthToken(res.access_token);
-      router.push({ name: "task" });
+      router.push({ name: "board" });
     } else if (res === 400 || res === 401) {
       showMessage.value = true;
       messageShow.value = "Username or Password is incorrect.";

@@ -9,7 +9,7 @@ import { useUserStore } from "../stores/user.js";
 const routes = [
   {
     path: "/",
-    redirect: { name: "Login" },
+    redirect: { name: "board" },
   },
   {
     path: "/boards",
