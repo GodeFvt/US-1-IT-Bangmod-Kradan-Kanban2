@@ -6,4 +6,10 @@ public interface ValidationGroups {
 
     interface OnUpdate {
     }
+
+    interface OnDeleteStatus {
+    }
+
+    interface OnDeleteStatusAndTransfer {
+    }
 }

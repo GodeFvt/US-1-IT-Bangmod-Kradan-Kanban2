@@ -6,9 +6,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import sit.us1.backend.validations.ValidTaskStatusLimit;
 
+import java.beans.PropertyEditorSupport;
+
 @ValidTaskStatusLimit
 @Data
-public class TaskRequestDTO {
+public class TaskRequestDTO extends PropertyEditorSupport {
     private Integer id;
 
     @NotBlank
@@ -19,7 +21,7 @@ public class TaskRequestDTO {
     private String description;
     @Size(min = 0, max = 30)
     private String assignees;
-
+    private String boardId;
     private String status = "No Status";
 
 

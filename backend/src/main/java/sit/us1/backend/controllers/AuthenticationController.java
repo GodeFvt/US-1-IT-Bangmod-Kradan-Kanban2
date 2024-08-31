@@ -17,30 +17,23 @@ import sit.us1.backend.dtos.JwtDTO.JwtRequestUser;
 import sit.us1.backend.dtos.JwtDTO.JwtTokenResponseDTO;
 import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.exceptions.UnauthorizedException;
+import sit.us1.backend.services.AuthenticationService;
 import sit.us1.backend.services.JwtTokenUtil;
 import sit.us1.backend.services.JwtUserDetailsService;
+import sit.us1.backend.services.SecurityUtil;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
 @RestController
 //@RequestMapping("/authentications")
 public class AuthenticationController {
     @Autowired
-    JwtUserDetailsService jwtUserDetailsService;
-    @Autowired
     JwtTokenUtil jwtTokenUtil;
     @Autowired
-    AuthenticationManager authenticationManager;
+    AuthenticationService authenticationService;
+
     @PostMapping("/login")
     public ResponseEntity<JwtTokenResponseDTO> login(@RequestBody @Valid JwtRequestUser jwtRequestUser) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(jwtRequestUser.getUserName(), jwtRequestUser.getPassword());
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
-        if (!authentication.isAuthenticated()) {
-            System.out.println("Username or Password is incorrect.");
-            throw new UsernameNotFoundException("Username or Password is incorrect.");
-        }
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String token = jwtTokenUtil.generateToken(userDetails);
-        return ResponseEntity.ok(new JwtTokenResponseDTO(token));
+        return ResponseEntity.ok(new JwtTokenResponseDTO(authenticationService.login(jwtRequestUser)));
     }
 
     @GetMapping("/validate-token")

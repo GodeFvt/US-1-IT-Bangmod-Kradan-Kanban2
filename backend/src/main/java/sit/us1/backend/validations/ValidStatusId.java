@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 
 @Documented
 @Constraint(validatedBy = StatusIdValidator.class)
-@Target({ElementType.METHOD, ElementType.FIELD ,ElementType.PARAMETER})
+@Target({ElementType.METHOD, ElementType.FIELD ,ElementType.PARAMETER,ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidStatusId {
     String message() default "Status Id does not exist";

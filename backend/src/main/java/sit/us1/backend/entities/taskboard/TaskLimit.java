@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "tasklimit")
+@Table(name = "tasklimits")
 public class TaskLimit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,4 +19,5 @@ public class TaskLimit {
     private Integer maximumTask;
     @Column(name = "isLimit",nullable = false, columnDefinition = "TINYINT", length = 1)
     private Boolean isLimit;
+    private String boardId;
 }

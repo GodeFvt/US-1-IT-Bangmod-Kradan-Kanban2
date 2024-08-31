@@ -14,7 +14,6 @@ public class SimpleStatusDTO {
     private Integer id;
     @NotNull
     @NotBlank
-    @ValidUniqueStatusName(groups = ValidationGroups.OnCreate.class)
     @Size(max = 50)
     private String name;
     @Size(max = 200)

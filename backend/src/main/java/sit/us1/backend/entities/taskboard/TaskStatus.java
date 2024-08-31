@@ -17,7 +17,7 @@ import java.util.List;
 public class TaskStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(updatable = false, insertable = false ,name = "statusId")
+    @Column(name = "statusId")
     private Integer id;
     @Column(name = "statusName")
     private String name;
@@ -25,9 +25,8 @@ public class TaskStatus {
     private String description;
     @Column(name = "statusColor")
     private String color;
-
+    @Column(name = "boardId")
+    private String boardId;
     @OneToMany(mappedBy = "status" , fetch = FetchType.EAGER)
     private List<TaskList> taskList;
-
-
 }

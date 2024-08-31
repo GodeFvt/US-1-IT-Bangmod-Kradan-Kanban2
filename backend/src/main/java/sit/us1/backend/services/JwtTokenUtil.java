@@ -52,7 +52,7 @@ public class JwtTokenUtil implements Serializable {
         claims.put("name", userDetails.getName());
         claims.put("oid", userDetails.getOid());
         claims.put("email", userDetails.getEmail());
-        claims.put("role", userDetails.getRole());
+        claims.put("role", userDetails.getRole().toString());
         return doGenerateToken(claims, userDetails.getUsername());
     }
 

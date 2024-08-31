@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 
 @Documented
 @Constraint(validatedBy = UniqueStatusNameValidator.class)
-@Target( { ElementType.METHOD, ElementType.FIELD })
+@Target( { ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidUniqueStatusName {
     String message() default "Status name must be unique";
