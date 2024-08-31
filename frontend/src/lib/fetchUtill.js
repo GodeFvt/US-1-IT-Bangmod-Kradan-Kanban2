@@ -1,12 +1,12 @@
 const BASE_URL = import.meta.env.VITE_API_ROOT;
 
 
-async function getFilteredTask([...filter] = "", sortBy = "id") {
+async function getFilteredTask(boardId,[...filter] = "", sortBy = "id") {
   let res;
  const token = localStorage.getItem('authToken');
   try {
     res = await fetch(
-      `${BASE_URL}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`,
+      `${BASE_URL}/boards/${boardId}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`,
        {
         method: 'GET',
         headers: {
@@ -29,12 +29,12 @@ async function getFilteredTask([...filter] = "", sortBy = "id") {
   }
 }
 
-async function toggleLimitTask(maximum, isLimit) {
+async function toggleLimitTask(boardId,maximum, isLimit) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
     res = await fetch(
-      `${BASE_URL}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
+      `${BASE_URL}/boards/${boardId}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
       {
         method: "PATCH",
         headers: {
@@ -55,11 +55,11 @@ async function toggleLimitTask(maximum, isLimit) {
   }
 }
 
-async function getTaskById(id) {
+async function getTaskById(boardId,taskId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/tasks/${id}`,{
+    res = await fetch(`${BASE_URL}/boards/${boardId}/tasks/${taskId}`,{
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -77,11 +77,11 @@ async function getTaskById(id) {
   }
 }
 
-async function getTaskByStatus(statusid) {
+async function getTaskByStatus(boardId,statusId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/tasks/count/status/${statusid}`,{
+    res = await fetch(`${BASE_URL}/boards/${boardId}/tasks/count/status/${statusId}`,{
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -99,11 +99,11 @@ async function getTaskByStatus(statusid) {
   }
 }
 
-async function createTask(task) {
+async function createTask(boardId,task) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/tasks`, {
+    res = await fetch(`${BASE_URL}/boards/${boardId}/tasks`, {
       method: "POST",
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -122,11 +122,11 @@ async function createTask(task) {
   }
 }
 
-async function updateTask(task) {
+async function updateTask(boardId,task) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/tasks/${task.id}`, {
+    res = await fetch(`${BASE_URL}/boards/${boardId}/tasks/${task.id}`, {
       method: "PUT",
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -145,11 +145,11 @@ async function updateTask(task) {
   }
 }
 
-async function deleteTask(id) {
+async function deleteTask(boardId,taskId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/tasks/${id}`, {
+    res = await fetch(`${BASE_URL}/boards/${boardId}/tasks/${taskId}`, {
       method: "DELETE",
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -162,11 +162,11 @@ async function deleteTask(id) {
   }
 }
 
-async function getAllStatus() {
+async function getAllStatus(boardId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses`,{
+    res = await fetch(`${BASE_URL}/boards/${boardId}/statuses`,{
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -189,11 +189,11 @@ async function getAllStatus() {
   }
 }
 
-async function getStatusById(id) {
+async function getStatusById(boardId,statusId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses/${id}`,
+    res = await fetch(`${BASE_URL}/boards/${boardId}/statuses/${statusId}`,
       {
         method: 'GET',
         headers: {
@@ -213,11 +213,11 @@ async function getStatusById(id) {
   }
 }
 
-async function createStatus(Statuses) {
+async function createStatus(boardId,Statuses) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses`, {
+    res = await fetch(`${BASE_URL}/boards/${boardId}/statuses`, {
       method: "POST",
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -236,11 +236,11 @@ async function createStatus(Statuses) {
   }
 }
 
-async function updateStatus(Statuses) {
+async function updateStatus(boardId,Statuses) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses/${Statuses.id}`, {
+    res = await fetch(`${BASE_URL}/boards/${boardId}/statuses/${Statuses.id}`, {
       method: "PUT",
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -259,11 +259,11 @@ async function updateStatus(Statuses) {
   }
 }
 
-async function deleteStatus(id) {
+async function deleteStatus(boardId,statusId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses/${id}`, {
+    res = await fetch(`${BASE_URL}/boards/${boardId}/statuses/${statusId}`, {
       method: "DELETE",
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -275,11 +275,11 @@ async function deleteStatus(id) {
     return undefined;
   }
 }
-async function deleteStatusAndTranfer(OldStatusId, newStatusId) {
+async function deleteStatusAndTranfer(boardId,OldStatusId, newStatusId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses/${OldStatusId}/${newStatusId}`, {
+    res = await fetch(`${BASE_URL}/boards/${boardId}/statuses/${OldStatusId}/${newStatusId}`, {
       method: "DELETE",
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -292,11 +292,11 @@ async function deleteStatusAndTranfer(OldStatusId, newStatusId) {
   }
 }
 
-async function getLimit() {
+async function getLimit(boardId) {
   let res;
   const token= localStorage.getItem('authToken');
   try {
-    res = await fetch(`${BASE_URL}/statuses/limit`,
+    res = await fetch(`${BASE_URL}/boards/${boardId}/statuses/limit`,
       {
         method: 'GET',
         headers: {
@@ -339,6 +339,117 @@ async function loginAccount(user) {
   }
 }
 
+async function getAllBoards() {
+  let res;
+  const token= localStorage.getItem('authToken');
+  try {
+    res = await fetch(`${BASE_URL}/boards`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    if (res.status === 200) {
+      const allBoard = await res.json();
+      return allBoard;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function createBoard(board) {
+  let res;
+  const token= localStorage.getItem('authToken');
+  try {
+    res = await fetch(`${BASE_URL}/boards`, {
+      method: "POST",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(board),
+    });
+    if (res.status === 201) {
+      const board = await res.json();
+      return board;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function getBoardsById(boardId) {
+  let res;
+  const token= localStorage.getItem('authToken');
+  try {
+    res = await fetch(`${BASE_URL}/boards/${boardId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    if (res.status === 200) {
+      const board = await res.json();
+      return board;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function updateBoard(boardId,board) {
+  let res;
+  const token= localStorage.getItem('authToken');
+  try {
+    res = await fetch(`${BASE_URL}/boards/${boardId}`, {
+      method: "PUT",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(board),
+    });
+    if (res.status === 200) {
+      const board = await res.json();
+      return board;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function deleteBoard(boardId) {
+  let res;
+  const token= localStorage.getItem('authToken');
+  try {
+    res = await fetch(`${BASE_URL}/boards/${boardId}`, {
+      method: "DELETE",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status;
+  } catch (error) {
+    return undefined;
+  }
+}
+
 export {
   getTaskByStatus,
   getTaskById,
@@ -355,4 +466,9 @@ export {
   toggleLimitTask,
   getLimit,
   loginAccount,
+  getAllBoards,
+  createBoard,
+  getBoardsById,
+  updateBoard,
+  deleteBoard
 };
