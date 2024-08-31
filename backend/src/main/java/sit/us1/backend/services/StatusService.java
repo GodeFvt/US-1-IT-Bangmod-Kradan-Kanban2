@@ -21,6 +21,7 @@ import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
 import sit.us1.backend.repositories.taskboard.TaskListRepository;
 import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,26 +89,32 @@ public class StatusService {
             validationException.addValidationError("id", "Id in path and body must be the same");
             throw validationException;
         }
-        if (statusRepository.existsByNameAndIdNot(statusDTO.getName(), id)) {
+        if (statusRepository.existsByNameAndIdNotAndBoardId(statusDTO.getName(), id, boardId)) {
             validationException.addValidationError("name", "must be unique");
             throw validationException;
         }
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+        TaskStatus oldStatus = statusRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
+        if (Arrays.asList(nonEditableStatuses).contains(oldStatus.getName())) {
+            throw new BadRequestException("This status " + oldStatus.getName() + " cannot be updated");
+        }
 
         if (!board.getIsCustomStatus()) {
-            copyDefaultStatusesToBoard(boardId, board);
-            TaskStatus newStatus = statusRepository.findByNameAndBoardId(statusDTO.getName(), boardId)
-                    .orElseThrow(() -> new BadRequestException("Failed to find the copied status"));
-            id = newStatus.getId();
+            List<TaskStatus> statusList = copyDefaultStatusesToBoard(boardId, board);
+            System.out.println(statusList);
+            TaskStatus newStatus;
+            for (TaskStatus status : statusList) {
+                if (status.getName().equals(oldStatus.getName())) {
+                    newStatus = status;
+                    id = newStatus.getId();
+                }
+            }
         }
 
-        TaskStatus statusById = statusRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
-        if (Arrays.asList(nonEditableStatuses).contains(statusById.getName())) {
-            throw new BadRequestException("This status " + statusById.getName() + " cannot be updated");
-        }
         try {
-            statusDTO.setId(id);
             TaskStatus status = mapper.map(statusDTO, TaskStatus.class);
+            status.setId(id);
+            status.setBoardId(boardId);
             TaskStatus updatedStatus = statusRepository.save(status);
             return mapper.map(updatedStatus, SimpleStatusDTO.class);
         } catch (Exception e) {
@@ -181,12 +188,12 @@ public class StatusService {
         }
     }
 
-
-    private void copyDefaultStatusesToBoard(String boardId, Board board) {
+    public List<TaskStatus> copyDefaultStatusesToBoard(String boardId, Board board) {
         try {
             List<TaskStatus> defaultStatus = statusRepository.findAllDefaultStatus();
             board.setIsCustomStatus(true);
             boardRepository.save(board);
+            List<TaskStatus> statuses = new ArrayList<>();
             for (TaskStatus status : defaultStatus) {
                 TaskStatus copyStatus = new TaskStatus();
                 copyStatus.setName(status.getName());
@@ -195,7 +202,9 @@ public class StatusService {
                 copyStatus.setBoardId(boardId);
                 TaskStatus newStatus = statusRepository.save(copyStatus);
                 statusRepository.updateStatusIdAllTaskList(boardId, status.getId(), newStatus.getId());
+                statuses.add(newStatus);
             }
+            return statuses;
         } catch (Exception e) {
             throw new BadRequestException("Failed to copy default statuses.");
         }

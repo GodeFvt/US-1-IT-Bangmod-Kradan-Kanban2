@@ -141,7 +141,9 @@ public class BoardsController {
     public ResponseEntity<SimpleStatusDTO> updateStatus(@PathVariable String id,@PathVariable Integer statusId, @Validated @RequestBody SimpleStatusDTO statusDTO) {
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
-        statusAllId.setNewStatusId(statusId);
+        statusAllId.setOnPathStatusId(statusId);
+        statusAllId.setOnStatusDTOId(statusDTO.getId());
+        statusAllId.setName(statusDTO.getName());
         validationUtil.validateAndThrow(statusAllId, ValidationGroups.OnUpdate.class);
         SimpleStatusDTO status = statusService.updateStatus(id,statusId, statusDTO);
         return ResponseEntity.ok(status);
@@ -157,7 +159,7 @@ public class BoardsController {
     public ResponseEntity<SimpleStatusDTO> deleteStatus(@PathVariable String id, @PathVariable Integer statusId) {
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
-        statusAllId.setNewStatusId(statusId);
+        statusAllId.setOnPathStatusId(statusId);
         validationUtil.validateAndThrow(statusAllId, ValidationGroups.OnDeleteStatus.class);
         SimpleStatusDTO status = statusService.deleteStatus(id,statusId);
         return ResponseEntity.ok(status);
@@ -167,6 +169,7 @@ public class BoardsController {
     public ResponseEntity<SimpleStatusDTO> deleteStatusAndTransferStatusInAllTask(@PathVariable String id, @PathVariable Integer statusId,@PathVariable Integer newStatusId) {
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
+        statusAllId.setOnPathStatusId(statusId);
         statusAllId.setOldStatusId(statusId);
         statusAllId.setNewStatusId(newStatusId);
         validationUtil.validateAndThrow(statusAllId, ValidationGroups.OnDeleteStatusAndTransfer.class);

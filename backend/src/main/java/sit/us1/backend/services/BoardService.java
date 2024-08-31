@@ -9,8 +9,10 @@ import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.dtos.tasksDTO.SimpleTaskDTO;
 import sit.us1.backend.entities.taskboard.Board;
 import sit.us1.backend.entities.taskboard.BoardUser;
+import sit.us1.backend.entities.taskboard.TaskLimit;
 import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.repositories.taskboard.BoardRepository;
+import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
 
 import java.util.List;
 
@@ -18,6 +20,8 @@ import java.util.List;
 public class BoardService {
     @Autowired
     private BoardRepository boardRepository;
+    @Autowired
+    private TaskLimitRepository taskLimitRepository;
     @Autowired
     private ListMapper listMapper;
     @Autowired
@@ -40,12 +44,16 @@ public class BoardService {
         owner.setName(SecurityUtil.getCurrentUserDetails().getName());
         board.setOwner(owner);
         board.setIsCustomStatus(false);
+        TaskLimit taskLimit = new TaskLimit();
+        taskLimit.setIsLimit(false);
+        taskLimit.setMaximumTask(10);
         try {
-            boardRepository.save(board);
+            taskLimit.setBoardId(boardRepository.save(board).getId());
         }catch (Exception e){
             board.setId(NanoIdUtils.randomNanoId(10));
-            boardRepository.save(board);
+            taskLimit.setBoardId(boardRepository.save(board).getId());
         }
+        taskLimitRepository.save(taskLimit);
         return mapper.map(board, SimpleBoardDTO.class);
     }
 

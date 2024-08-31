@@ -33,7 +33,7 @@ public interface TaskStatusRepository extends JpaRepository<TaskStatus, Integer>
 
     Boolean existsByName (String statusName);
 
-    Boolean existsByNameAndIdNot(String statusName, Integer id);
+    Boolean existsByNameAndIdNotAndBoardId(String statusName, Integer id, String boardId);
 
 //    @Query("SELECT ts FROM TaskStatus ts JOIN TaskList tl ON ts.id = tl.status.id WHERE tl.board.id = :boardId")
 //    List<TaskStatus> findAllByBoardId(String boardId);

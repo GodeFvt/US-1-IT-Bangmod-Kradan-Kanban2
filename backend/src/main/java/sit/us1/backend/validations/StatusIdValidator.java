@@ -33,7 +33,7 @@ public class StatusIdValidator implements ConstraintValidator<ValidStatusId, Sta
 
     @Override
     public boolean isValid(StatusValidDTO statusAllId, ConstraintValidatorContext context) {
-        if (statusAllId.getNewStatusId() == null) {
+        if (statusAllId.getOnPathStatusId() == null) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("Status Id field is required")
                     .addConstraintViolation();
@@ -48,9 +48,9 @@ public class StatusIdValidator implements ConstraintValidator<ValidStatusId, Sta
         }
         Optional<TaskStatus> status ;
         if(board.get().getIsCustomStatus()){
-            status = statusRepository.findByIdAndBoardId(statusAllId.getNewStatusId(), statusAllId.getBoardId());
+            status = statusRepository.findByIdAndBoardId(statusAllId.getOnPathStatusId(), statusAllId.getBoardId());
         }else {
-            status = statusRepository.findById(statusAllId.getNewStatusId());
+            status = statusRepository.findById(statusAllId.getOnPathStatusId());
         }
 
         if (status.isPresent()) {

@@ -6,14 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import sit.us1.backend.dtos.statusesDTO.StatusValidDTO;
 import sit.us1.backend.entities.taskboard.Board;
-import sit.us1.backend.entities.taskboard.TaskStatus;
 import sit.us1.backend.repositories.taskboard.BoardRepository;
 import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
 
 import java.util.Arrays;
 import java.util.Optional;
 
-public class UniqueStatusNameValidator implements ConstraintValidator<ValidUniqueStatusName, StatusValidDTO> {
+public class UniqueStatusNameOuUpdateValidator implements ConstraintValidator<ValidUniqueStatusNameOnUpdate, StatusValidDTO> {
 
     @Autowired
     private TaskStatusRepository statusRepository;
@@ -23,27 +22,35 @@ public class UniqueStatusNameValidator implements ConstraintValidator<ValidUniqu
     private String[] nonEditableStatuses;
 
     @Override
-    public void initialize(ValidUniqueStatusName constraintAnnotation) {
+    public void initialize(ValidUniqueStatusNameOnUpdate constraintAnnotation) {
     }
 
     @Override
     public boolean isValid(StatusValidDTO statusValid, ConstraintValidatorContext context) {
-        if(Arrays.asList(nonEditableStatuses).contains(statusValid.getName())) {
-            return false;
-        }
         Optional<Board> board = boardRepository.findById(statusValid.getBoardId());
-        if(board.isEmpty()){
+        if (Arrays.asList(nonEditableStatuses).contains(statusValid.getName())) {
+            return false;
+        } else if (statusValid.getOnStatusDTOId() != null && statusValid.getOnPathStatusId() != statusValid.getOnStatusDTOId()) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("Id in path and body must be the same")
+                    .addPropertyNode("id")
+                    .addConstraintViolation();
+            return false;
+        } else if (board.isEmpty()) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("Board Id does not exist")
                     .addConstraintViolation();
             return false;
+        } else if (statusRepository.existsByNameAndIdNotAndBoardId(statusValid.getName(), statusValid.getOnPathStatusId(), statusValid.getBoardId())) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("must be unique")
+                    .addPropertyNode("name")
+                    .addConstraintViolation();
+            return false;
+        } else {
+            return true;
         }
-        Optional<TaskStatus> status ;
-        if(board.get().getIsCustomStatus()){
-            return statusValid.getName() != null && !statusRepository.existsByNameAndBoardId(statusValid.getName(), statusValid.getBoardId());
-        }else {
-            return statusValid.getName() != null && !statusRepository.existsByName(statusValid.getName());
-        }
+
 
     }
 }
