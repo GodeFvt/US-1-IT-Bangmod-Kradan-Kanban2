@@ -24,7 +24,7 @@ import java.util.List;
 @Service
 public class TaskService {
     @Autowired
-    private TaskListRepository repository;
+    private TaskListRepository taskRepository;
     @Autowired
     private TaskStatusRepository statusRepository;
     @Autowired
@@ -35,40 +35,51 @@ public class TaskService {
     private ModelMapper mapper;
 
     public List<SimpleTaskDTO> getAllTask() {
-        return listMapper.mapList(repository.findAll(), SimpleTaskDTO.class, mapper);
+        return listMapper.mapList(taskRepository.findAll(), SimpleTaskDTO.class, mapper);
     }
 
-    public List<SimpleTaskDTO> getTaskFiltered(String sortBy, String[] filterStatuses ,String boardID) {
+    public List<SimpleTaskDTO> getTaskFiltered(String sortBy, String[] filterStatuses ,String boardId) {
         try {
             Sort sort = Sort.by(sortBy == null || sortBy.isEmpty() ? "createdOn" : sortBy);
             String oid = SecurityUtil.getCurrentUserDetails().getOid();
             if (filterStatuses.length > 0) {
-                return listMapper.mapList(repository.findByStatusNamesSorted(filterStatuses,boardID,oid, sort), SimpleTaskDTO.class, mapper);
+                return listMapper.mapList(taskRepository.findByStatusNamesSorted(filterStatuses,boardId,oid, sort), SimpleTaskDTO.class, mapper);
             } else {
                 System.out.println(sort);
-                return listMapper.mapList(repository.findAllByBoardIdAndOid(boardID,oid,sort), SimpleTaskDTO.class, mapper);
+                return listMapper.mapList(taskRepository.findAllByBoardIdAndOid(boardId,oid,sort), SimpleTaskDTO.class, mapper);
             }
         } catch (Exception e) {
             throw new BadRequestException("Invalid sortBy property: " + sortBy);
         }
     }
 
-    public TaskDetailDTO getTaskById(String boardID ,Integer id) {
-        TaskList task = repository.findByBoardIdAndId(boardID,id).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+    public TaskDetailDTO getTaskById(String boardId ,Integer id) {
+        TaskList task = taskRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
         return mapper.map(task, TaskDetailDTO.class);
     }
 
-    public StatusCountDTO getCountByStatusIdAndReturnStatusName(String boardID ,Integer statusId) {
-        TaskStatus status = statusRepository.findById(statusId).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
-        StatusCountDTO StatusCount = repository.countByStatusIdAndReturnName(boardID,statusId);
+    public StatusCountDTO getCountByStatusIdAndReturnStatusName(String boardId ,Integer statusId) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+        TaskStatus status ;
+        if(board.getIsCustomStatus()){
+            status = statusRepository.findByIdAndBoardId(boardId,statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
+        }else {
+            status = statusRepository.findById(statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
+        }
+        StatusCountDTO StatusCount = taskRepository.countByStatusIdAndReturnName(boardId,statusId);
         return StatusCount == null ? new StatusCountDTO(0L, status.getName()) : StatusCount;
     }
 
     @Transactional
-    public TaskResponseDTO createTask(String boardID ,TaskRequestDTO taskRequestDTO) {
+    public TaskResponseDTO createTask(String boardId ,TaskRequestDTO taskRequestDTO) {
         TaskList task = mapper.map(taskRequestDTO, TaskList.class);
-        Board board = boardRepository.findById(boardID).orElseThrow(() -> new NotFoundException("Board not found: " + boardID));
-        TaskStatus status = statusRepository.findByNameAndBoardId(boardID,taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+        TaskStatus status;
+        if(board.getIsCustomStatus()){
+            status = statusRepository.findByNameAndBoardId(boardId,taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        }else{
+            status = statusRepository.findByName(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        }
         try {
             task.setStatus(status);
             task.setBoard(board);
@@ -76,7 +87,7 @@ public class TaskService {
             TaskList.add(task);
             status.setTaskList(TaskList);
             statusRepository.save(status);
-            TaskList newTask = repository.save(task);
+            TaskList newTask = taskRepository.save(task);
             return mapper.map(newTask, TaskResponseDTO.class);
         } catch (Exception e) {
             throw new NotFoundException("Failed to add This task");
@@ -85,10 +96,15 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponseDTO updateTask(String boardID ,Integer taskId, TaskRequestDTO taskRequestDTO) {
-        TaskList taskList = repository.findById(taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
-        TaskStatus status = statusRepository.findByName(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status not found: " + taskRequestDTO.getStatus()));
-        Board board = boardRepository.findById(boardID).orElseThrow(() -> new NotFoundException("Board not found: " + boardID));
+    public TaskResponseDTO updateTask(String boardId ,Integer taskId, TaskRequestDTO taskRequestDTO) {
+        TaskList taskList = taskRepository.findById(taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+        TaskStatus status ;
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+        if(board.getIsCustomStatus()){
+            status = statusRepository.findByNameAndBoardId(boardId,taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        }else {
+            status = statusRepository.findByName(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        }
         try {
             taskRequestDTO.setId(taskId);
             TaskList task = mapper.map(taskRequestDTO, TaskList.class);
@@ -97,7 +113,7 @@ public class TaskService {
             List<TaskList> TaskList = new ArrayList<>();
             TaskList.add(task);
             status.setTaskList(TaskList);
-            TaskList newTask = repository.save(task);
+            TaskList newTask = taskRepository.save(task);
             return mapper.map(newTask, TaskResponseDTO.class);
         } catch (Exception e) {
             throw new NotFoundException("Failed to update this task with Id number :" + taskId);
@@ -105,10 +121,10 @@ public class TaskService {
     }
 
     @Transactional
-    public SimpleTaskDTO deleteTask(String boardID , Integer taskId) {
-        TaskList taskList = repository.findById(taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
-        Board board = boardRepository.findById(boardID).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
-        repository.delete(taskList);
+    public SimpleTaskDTO deleteTask(String boardId , Integer taskId) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
+        TaskList taskList = taskRepository.findByBoardIdAndId(boardId,taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+        taskRepository.delete(taskList);
         return mapper.map(taskList, SimpleTaskDTO.class);
     }
 

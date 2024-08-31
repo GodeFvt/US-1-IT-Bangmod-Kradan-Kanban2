@@ -42,7 +42,7 @@ public class TaskStatusLimitValidator implements ConstraintValidator<ValidTaskSt
             return false;
         }
         TaskLimit taskLimit = limitRepository.findByBoardId(boardId).orElseThrow(() -> new ValidationException("Limit not found"));
-        Optional<TaskStatus> status = statusRepository.findByNameAndBoardId(boardId,taskRequestDTO.getStatus());
+        Optional<TaskStatus> status = statusRepository.findByName(taskRequestDTO.getStatus());
         if (status.isPresent()) {
             StatusCountDTO statusCount = taskListRepository.countByStatusIdAndReturnName(boardId,status.get().getId());
             if (statusCount != null && taskLimit.getIsLimit() && statusCount.getCount() >= taskLimit.getMaximumTask() && !Arrays.asList(nonEditableStatuses).contains(status.get().getName())) {
