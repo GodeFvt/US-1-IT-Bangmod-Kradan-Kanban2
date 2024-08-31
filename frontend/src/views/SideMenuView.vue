@@ -31,15 +31,17 @@ function signOut(){
         </div>
       </div>
       <ul class="mt-6 space-y-1">
+        <router-link :to="{ name: 'board' }">
         <li>
           <a
             href="#"
             class="block rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
           >
+          
             General
           </a>
         </li>
-
+          </router-link>
         <li>
           <details
             class="slide-right group [&_summary::-webkit-details-marker]:hidden"

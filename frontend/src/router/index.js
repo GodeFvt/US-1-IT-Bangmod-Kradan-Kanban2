@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import TaskBoardView from "../views/TaskBoardView.vue";
 import NotFound from "../views/NotFound.vue";
-import TaskStatusView from "@/views/TaskStatusView.vue";
+import TaskStatusView from "../views/TaskStatusView.vue";
+import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
 
@@ -9,6 +10,11 @@ const routes = [
   {
     path: "/",
     redirect: { name: "Login" },
+  },
+  {
+    path: "/boards",
+    name: "board",
+    component: BoardView,
   },
   {
     path: "/task",
