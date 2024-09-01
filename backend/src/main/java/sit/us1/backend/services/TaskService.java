@@ -39,6 +39,7 @@ public class TaskService {
     }
 
     public List<SimpleTaskDTO> getTaskFiltered(String sortBy, String[] filterStatuses ,String boardId) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {
             Sort sort = Sort.by(sortBy == null || sortBy.isEmpty() ? "createdOn" : sortBy);
             String oid = SecurityUtil.getCurrentUserDetails().getOid();
@@ -122,7 +123,7 @@ public class TaskService {
 
     @Transactional
     public SimpleTaskDTO deleteTask(String boardId , Integer taskId) {
-        Board board = boardRepository.findById(boardId).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         TaskList taskList = taskRepository.findByBoardIdAndId(boardId,taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
         taskRepository.delete(taskList);
         return mapper.map(taskList, SimpleTaskDTO.class);

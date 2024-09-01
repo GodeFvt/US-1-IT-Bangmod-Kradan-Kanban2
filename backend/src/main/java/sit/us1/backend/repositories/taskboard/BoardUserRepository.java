@@ -5,5 +5,4 @@ import sit.us1.backend.entities.taskboard.BoardUser;
 
 public interface BoardUserRepository extends JpaRepository<BoardUser, String> {
 
-    BoardUser findByUsername(String username);
 }

@@ -32,8 +32,12 @@ public class BoardService {
     }
 
     public List<SimpleBoardDTO> getAllBoardByOid() {
-        String Oid = SecurityUtil.getCurrentUserDetails().getOid();
-        return listMapper.mapList(boardRepository.findAllByOwner_Id(Oid), SimpleBoardDTO.class, mapper);
+        try {
+            String Oid = SecurityUtil.getCurrentUserDetails().getOid();
+            return listMapper.mapList(boardRepository.findAllByOwner_Id(Oid), SimpleBoardDTO.class, mapper);
+        } catch (Exception e) {
+            throw new BadRequestException("the specified board does not exist");
+        }
     }
 
     public SimpleBoardDTO createBoard(BoardRequestDTO newBoard) {
@@ -41,7 +45,6 @@ public class BoardService {
         board.setId(NanoIdUtils.randomNanoId(10));
         BoardUser owner = new BoardUser();
         owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
-        owner.setName(SecurityUtil.getCurrentUserDetails().getName());
         board.setOwner(owner);
         board.setIsCustomStatus(false);
         TaskLimit taskLimit = new TaskLimit();
@@ -49,11 +52,15 @@ public class BoardService {
         taskLimit.setMaximumTask(10);
         try {
             taskLimit.setBoardId(boardRepository.save(board).getId());
-        }catch (Exception e){
+        } catch (Exception e) {
             board.setId(NanoIdUtils.randomNanoId(10));
             taskLimit.setBoardId(boardRepository.save(board).getId());
         }
-        taskLimitRepository.save(taskLimit);
+        try {
+            taskLimitRepository.save(taskLimit);
+        } catch (Exception e) {
+            throw new BadRequestException("Cannot create board");
+        }
         return mapper.map(board, SimpleBoardDTO.class);
     }
 
@@ -62,8 +69,10 @@ public class BoardService {
     }
 
     public SimpleBoardDTO deleteBoardById(String id) {
+        Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
+        TaskLimit taskLimits = taskLimitRepository.findByBoardId(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
         try {
-            Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
+            taskLimitRepository.delete(taskLimits);
             boardRepository.delete(board);
             return mapper.map(board, SimpleBoardDTO.class);
         } catch (Exception e) {

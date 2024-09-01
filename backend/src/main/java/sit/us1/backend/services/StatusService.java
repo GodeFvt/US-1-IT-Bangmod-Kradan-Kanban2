@@ -145,6 +145,7 @@ public class StatusService {
 
     @Transactional
     public SimpleStatusDTO deleteStatus(String boardId, Integer id) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         StatusCountDTO statusCount = taskRepository.countByStatusIdAndReturnName(boardId, id);
         TaskStatus status = statusRepository.findByIdAndBoardId(boardId,id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
         if (Arrays.asList(nonEditableStatuses).contains(status.getName())) {
@@ -163,6 +164,7 @@ public class StatusService {
 
     @Transactional
     public SimpleStatusDTO deleteStatusAndTransferStatusInAllTask(String boardId, Integer id, Integer newId) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         TaskStatus status = statusRepository.findByIdAndBoardId(boardId,id).orElseThrow(() -> new BadRequestException("the specified status for task transfer does not exist"));
         TaskStatus newStatus = statusRepository.findByIdAndBoardId(boardId,newId).orElseThrow(() -> new BadRequestException("the specified status for task transfer does not exist"));
 

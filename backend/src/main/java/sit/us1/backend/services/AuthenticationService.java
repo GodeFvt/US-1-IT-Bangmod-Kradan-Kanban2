@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import sit.us1.backend.dtos.JwtDTO.JwtRequestUser;
 import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.BoardUser;
+import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.repositories.taskboard.BoardUserRepository;
 
 @Service
@@ -23,22 +24,22 @@ public class AuthenticationService {
     private JwtUserDetailsService jwtUserDetailsService;
 
     public String login(JwtRequestUser jwtRequestUser) {
-        String username = jwtRequestUser.getUserName();
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, jwtRequestUser.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(jwtRequestUser.getUserName(), jwtRequestUser.getPassword());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
         if (!authentication.isAuthenticated()) {
             throw new UsernameNotFoundException("Username or Password is incorrect.");
         }
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        if (boardUserRepository.findByUsername(username) == null) {
-            BoardUser user = new BoardUser();
-            user.setId(userDetails.getOid());
-            user.setUsername(userDetails.getUsername());
-            user.setName(userDetails.getName());
-            user.setEmail(userDetails.getEmail());
-            user.setRole(userDetails.getRole());
-            boardUserRepository.save(user);
+        try {
+            if (boardUserRepository.findById(userDetails.getOid()).isEmpty()) {
+                BoardUser user = new BoardUser();
+                user.setId(userDetails.getOid());
+                System.out.println(boardUserRepository.save(user));
+            }
+        } catch (Exception e) {
+            throw new BadRequestException("Cannot create user");
         }
+
         return jwtTokenUtil.generateToken(userDetails);
     }
 
