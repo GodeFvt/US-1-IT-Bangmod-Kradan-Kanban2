@@ -15,10 +15,6 @@ USE `taskboard` ;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `taskboard`.`users` (
   `oid` VARCHAR(40) NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
-  `username` VARCHAR(45) NOT NULL,
-  `email` VARCHAR(45) NOT NULL,
-  `role` ENUM('LECTURER', 'STAFF', 'STUDENT') NOT NULL,
   PRIMARY KEY (`oid`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
