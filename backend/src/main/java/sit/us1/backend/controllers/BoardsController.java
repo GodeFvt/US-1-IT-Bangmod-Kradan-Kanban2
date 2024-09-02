@@ -100,8 +100,10 @@ public class BoardsController {
     }
 
     @PutMapping("/{id}/tasks/{taskId}")
-    public ResponseEntity<TaskResponseDTO> updateTask(@PathVariable String id, @PathVariable Integer taskId, @Validated @RequestBody TaskRequestDTO task) {
-        TaskResponseDTO taskList = taskService.updateTask(id, taskId, task);
+    public ResponseEntity<TaskResponseDTO> updateTask(@PathVariable String id, @PathVariable Integer taskId, @RequestBody TaskRequestDTO newTask) {
+        newTask.setBoardId(id);
+        validationUtil.validateAndThrow(newTask);
+        TaskResponseDTO taskList = taskService.updateTask(id, taskId, newTask);
         return ResponseEntity.ok(taskList);
     }
 
@@ -128,7 +130,7 @@ public class BoardsController {
     }
 
     @PostMapping("/{id}/statuses")
-    public ResponseEntity<SimpleStatusDTO> createStatus(@PathVariable String id, @RequestBody SimpleStatusDTO newStatus) {
+    public ResponseEntity<SimpleStatusDTO> createStatus(@PathVariable String id,@Valid @RequestBody SimpleStatusDTO newStatus) {
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setName(newStatus.getName());

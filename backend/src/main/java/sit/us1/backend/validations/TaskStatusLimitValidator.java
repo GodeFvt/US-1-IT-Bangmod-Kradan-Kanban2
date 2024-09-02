@@ -38,7 +38,6 @@ public class TaskStatusLimitValidator implements ConstraintValidator<ValidTaskSt
     @Override
     public boolean isValid(TaskRequestDTO taskRequestDTO, ConstraintValidatorContext context) {
         String boardId = taskRequestDTO.getBoardId();
-
         if (boardId == null) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("Board ID is missing")
@@ -53,12 +52,11 @@ public class TaskStatusLimitValidator implements ConstraintValidator<ValidTaskSt
                     .addConstraintViolation();
             return false;
         }
-        TaskLimit taskLimit = limitRepository.findByBoardId(boardId).orElseThrow(() -> new ValidationException("Limit not found"));
+        Optional<TaskLimit> taskLimit = limitRepository.findByBoardId(boardId);
         Optional<TaskStatus> status = statusRepository.findByName(taskRequestDTO.getStatus());
-        System.out.println(status);
-        if (status.isPresent()) {
+        if (status.isPresent() && taskLimit.isPresent()) {
             StatusCountDTO statusCount = taskListRepository.countByStatusIdAndReturnName(boardId,status.get().getId());
-            if (statusCount != null && taskLimit.getIsLimit() && statusCount.getCount() >= taskLimit.getMaximumTask() && !Arrays.asList(nonEditableStatuses).contains(status.get().getName())) {
+            if (statusCount != null && taskLimit.get().getIsLimit() && statusCount.getCount() >= taskLimit.get().getMaximumTask() && !Arrays.asList(nonEditableStatuses).contains(status.get().getName())) {
                 if (taskRequestDTO.getStatus().equals(status.get().getName())) {
                     context.disableDefaultConstraintViolation();
                     context.buildConstraintViolationWithTemplate("The status has reached the limit")

@@ -48,7 +48,7 @@ public class StatusIdValidator implements ConstraintValidator<ValidStatusId, Sta
         }
         Optional<TaskStatus> status ;
         if(board.get().getIsCustomStatus()){
-            status = statusRepository.findByIdAndBoardId(statusAllId.getOnPathStatusId(), statusAllId.getBoardId());
+            status = statusRepository.findByBoardIdAndId(statusAllId.getBoardId(),statusAllId.getOnPathStatusId() );
         }else {
             status = statusRepository.findById(statusAllId.getOnPathStatusId());
         }

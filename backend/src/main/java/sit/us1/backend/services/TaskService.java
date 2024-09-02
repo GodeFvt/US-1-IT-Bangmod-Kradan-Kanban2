@@ -63,7 +63,7 @@ public class TaskService {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         TaskStatus status ;
         if(board.getIsCustomStatus()){
-            status = statusRepository.findByIdAndBoardId(boardId,statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
+            status = statusRepository.findByBoardIdAndId(boardId,statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
         }else {
             status = statusRepository.findById(statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
         }

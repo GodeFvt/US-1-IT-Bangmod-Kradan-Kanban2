@@ -41,8 +41,7 @@ public interface TaskStatusRepository extends JpaRepository<TaskStatus, Integer>
     @Query("SELECT ts FROM TaskStatus ts JOIN TaskList tl ON ts.id = tl.status.id WHERE tl.board.id = :boardId AND ts.name = :statusName")
     Optional<TaskStatus> findByNameAndBoardId(String boardId, String statusName);
 
-    @Query("SELECT ts FROM TaskStatus ts JOIN TaskList tl ON ts.id = tl.status.id WHERE tl.board.id = :boardId AND ts.id = :statusId")
-    Optional<TaskStatus> findByIdAndBoardId(String boardId, Integer statusId);
+    Optional<TaskStatus> findByBoardIdAndId(String boardId, Integer statusId);
 
     //@Query("SELECT ts FROM TaskStatus ts  WHERE ts.isDefault = true")
     List<TaskStatus> findAllByBoardId(String boardId);
@@ -56,5 +55,4 @@ public interface TaskStatusRepository extends JpaRepository<TaskStatus, Integer>
 
     Optional<TaskStatus> findByIdAndBoardIdIsNull(Integer id);
 
-    Optional<TaskStatus> findByIdAndBoardId(Integer id, String boardId);
 }

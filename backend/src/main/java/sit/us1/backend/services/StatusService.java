@@ -57,9 +57,7 @@ public class StatusService {
     }
 
     public SimpleStatusDTO getStatusById(String boardId, Integer statusId) {
-        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-        TaskStatus status = statusRepository.findByIdAndBoardId(boardId, statusId).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
-        return mapper.map(status, SimpleStatusDTO.class);
+        return mapper.map(getStatus(boardId, statusId), SimpleStatusDTO.class);
     }
 
     public TaskLimit getStatusLimit(String boardId) {
@@ -94,7 +92,8 @@ public class StatusService {
             throw validationException;
         }
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-        TaskStatus oldStatus = statusRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
+//        TaskStatus oldStatus = statusRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
+        TaskStatus oldStatus = getStatus(boardId, id);
         if (Arrays.asList(nonEditableStatuses).contains(oldStatus.getName())) {
             throw new BadRequestException("This status " + oldStatus.getName() + " cannot be updated");
         }
@@ -124,9 +123,11 @@ public class StatusService {
 
     @Transactional
     public List<StatusLimitResponseDTO> updateLimitMaxiMunTask(String boardId, Integer maximumTask, Boolean isLimit) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {
             limitRepository.updateLimit(boardId, maximumTask, isLimit);
             List<StatusLimitResponseDTO> statusLimits = statusRepository.countTaskByStatus(boardId);
+            System.out.println(statusLimits);
             statusLimits = statusLimits.stream()
                     .filter(statusLimit -> !Arrays.asList(nonEditableStatuses).contains(statusLimit.getName()))
                     .collect(Collectors.toList());
@@ -137,6 +138,7 @@ public class StatusService {
                     statusLimit.setTasks(taskInLimitDTOS);
                 }
             });
+                System.out.println(statusLimits);
             return statusLimits;
         } catch (Exception e) {
             throw new BadRequestException("Failed to update This status");
@@ -145,9 +147,10 @@ public class StatusService {
 
     @Transactional
     public SimpleStatusDTO deleteStatus(String boardId, Integer id) {
-        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+//        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+//        TaskStatus status = statusRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
+        TaskStatus status = getStatus(boardId, id);
         StatusCountDTO statusCount = taskRepository.countByStatusIdAndReturnName(boardId, id);
-        TaskStatus status = statusRepository.findByIdAndBoardId(boardId,id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
         if (Arrays.asList(nonEditableStatuses).contains(status.getName())) {
             throw new BadRequestException("This status " + status.getName() + " cannot be deleted");
         }
@@ -164,10 +167,11 @@ public class StatusService {
 
     @Transactional
     public SimpleStatusDTO deleteStatusAndTransferStatusInAllTask(String boardId, Integer id, Integer newId) {
-        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-        TaskStatus status = statusRepository.findByIdAndBoardId(boardId,id).orElseThrow(() -> new BadRequestException("the specified status for task transfer does not exist"));
-        TaskStatus newStatus = statusRepository.findByIdAndBoardId(boardId,newId).orElseThrow(() -> new BadRequestException("the specified status for task transfer does not exist"));
-
+//        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+//        TaskStatus status = statusRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new BadRequestException("the specified status for task transfer does not exist"));
+//        TaskStatus newStatus = statusRepository.findByBoardIdAndId(boardId,newId).orElseThrow(() -> new BadRequestException("the specified status for task transfer does not exist"));
+        TaskStatus status = getStatus(boardId, id);
+        TaskStatus newStatus = getStatus(boardId, newId);
         if (id.equals(newId)) {
             throw new BadRequestException("destination status for task transfer must be different from current status");
         }
@@ -190,6 +194,7 @@ public class StatusService {
         }
     }
 
+    @Transactional
     public List<TaskStatus> copyDefaultStatusesToBoard(String boardId, Board board) {
         try {
             List<TaskStatus> defaultStatus = statusRepository.findAllDefaultStatus();
@@ -210,5 +215,16 @@ public class StatusService {
         } catch (Exception e) {
             throw new BadRequestException("Failed to copy default statuses.");
         }
+    }
+
+    public TaskStatus getStatus(String boardId, Integer statusId) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+        TaskStatus status;
+        if (board.getIsCustomStatus()) {
+            status = statusRepository.findByBoardIdAndId(boardId, statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
+        } else {
+            status = statusRepository.findById(statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
+        }
+        return status;
     }
 }
