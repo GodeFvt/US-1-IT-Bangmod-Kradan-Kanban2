@@ -20,8 +20,7 @@ public class AuthenticationService {
     AuthenticationManager authenticationManager;
     @Autowired
     BoardUserRepository boardUserRepository;
-    @Autowired
-    private JwtUserDetailsService jwtUserDetailsService;
+
 
     public String login(JwtRequestUser jwtRequestUser) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(jwtRequestUser.getUserName(), jwtRequestUser.getPassword());
@@ -34,7 +33,7 @@ public class AuthenticationService {
             if (boardUserRepository.findById(userDetails.getOid()).isEmpty()) {
                 BoardUser user = new BoardUser();
                 user.setId(userDetails.getOid());
-                System.out.println(boardUserRepository.save(user));
+                boardUserRepository.save(user);
             }
         } catch (Exception e) {
             throw new BadRequestException("Cannot create user");
