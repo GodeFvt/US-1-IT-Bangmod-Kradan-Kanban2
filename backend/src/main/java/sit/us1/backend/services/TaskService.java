@@ -72,48 +72,40 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponseDTO createTask(String boardId ,TaskRequestDTO taskRequestDTO) {
+    public TaskResponseDTO createTask(String boardId, TaskRequestDTO taskRequestDTO) {
         TaskList task = mapper.map(taskRequestDTO, TaskList.class);
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         TaskStatus status;
-        if(board.getIsCustomStatus()){
-            status = statusRepository.findByNameAndBoardId(boardId,taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
-        }else{
-            status = statusRepository.findByName(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        if (board.getIsCustomStatus()) {
+            status = statusRepository.findByBoardIdAndName(boardId, taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        } else {
+            status = statusRepository.findByNameAndBoardIdIsNull(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
         }
         try {
             task.setStatus(status);
             task.setBoard(board);
-            List<TaskList> TaskList = new ArrayList<>();
-            TaskList.add(task);
-            status.setTaskList(TaskList);
-            statusRepository.save(status);
             TaskList newTask = taskRepository.save(task);
             return mapper.map(newTask, TaskResponseDTO.class);
         } catch (Exception e) {
             throw new NotFoundException("Failed to add This task");
         }
-
     }
 
     @Transactional
-    public TaskResponseDTO updateTask(String boardId ,Integer taskId, TaskRequestDTO taskRequestDTO) {
+    public TaskResponseDTO updateTask(String boardId, Integer taskId, TaskRequestDTO taskRequestDTO) {
         TaskList taskList = taskRepository.findById(taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
-        TaskStatus status ;
+        TaskStatus status;
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-        if(board.getIsCustomStatus()){
-            status = statusRepository.findByNameAndBoardId(boardId,taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
-        }else {
-            status = statusRepository.findByName(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        if (board.getIsCustomStatus()) {
+            status = statusRepository.findByBoardIdAndName(boardId, taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
+        } else {
+            status = statusRepository.findByNameAndBoardIdIsNull(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
         }
         try {
             taskRequestDTO.setId(taskId);
             TaskList task = mapper.map(taskRequestDTO, TaskList.class);
             task.setStatus(status);
             task.setBoard(board);
-            List<TaskList> TaskList = new ArrayList<>();
-            TaskList.add(task);
-            status.setTaskList(TaskList);
             TaskList newTask = taskRepository.save(task);
             return mapper.map(newTask, TaskResponseDTO.class);
         } catch (Exception e) {

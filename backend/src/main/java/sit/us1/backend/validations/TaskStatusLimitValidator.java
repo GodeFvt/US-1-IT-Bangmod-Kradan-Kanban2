@@ -53,7 +53,12 @@ public class TaskStatusLimitValidator implements ConstraintValidator<ValidTaskSt
             return false;
         }
         Optional<TaskLimit> taskLimit = limitRepository.findByBoardId(boardId);
-        Optional<TaskStatus> status = statusRepository.findByName(taskRequestDTO.getStatus());
+        Optional<TaskStatus> status;
+        if(board.get().getIsCustomStatus()){
+            status = statusRepository.findByBoardIdAndName(boardId,taskRequestDTO.getStatus());
+        }else {
+            status = statusRepository.findByNameAndBoardIdIsNull(taskRequestDTO.getStatus());
+        }
         if (status.isPresent() && taskLimit.isPresent()) {
             StatusCountDTO statusCount = taskListRepository.countByStatusIdAndReturnName(boardId,status.get().getId());
             if (statusCount != null && taskLimit.get().getIsLimit() && statusCount.getCount() >= taskLimit.get().getMaximumTask() && !Arrays.asList(nonEditableStatuses).contains(status.get().getName())) {

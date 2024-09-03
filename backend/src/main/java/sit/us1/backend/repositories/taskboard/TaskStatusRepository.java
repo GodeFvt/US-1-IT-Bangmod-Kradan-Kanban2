@@ -13,15 +13,9 @@ import java.util.List;
 import java.util.Optional;
 @Repository
 public interface TaskStatusRepository extends JpaRepository<TaskStatus, Integer> {
-    Optional<TaskStatus> findByName(String statusName);
+    Optional<TaskStatus> findByNameAndBoardIdIsNull(String statusName);
 
-//    @Query("SELECT ts FROM TaskStatus ts JOIN TaskList tl ON ts.id = tl.status.id WHERE ts.name = :statusName AND tl.board.id = :boardId")
-//    Optional<TaskStatus>  findByNameAndBoardId(@Param("boardId") String boardId , @Param("statusName") String statusName);
-
-//    @Query("SELECT new sit.us1.backend.dtos.limitsDTO.StatusLimitResponseDTO(ts.id, ts.name, COUNT(tl.id))" +
-//            "FROM TaskList tl JOIN tl.status ts " +
-//            "GROUP BY ts.id")
-//    List<StatusLimitResponseDTO> countTaskByStatus();
+    Optional<TaskStatus> findByBoardIdAndName(String boardId, String statusName);
 
     @Query("SELECT new sit.us1.backend.dtos.limitsDTO.StatusLimitResponseDTO(ts.id, ts.name, COUNT(tl.id))" +
             "FROM TaskList tl JOIN tl.status ts " +
@@ -31,20 +25,12 @@ public interface TaskStatusRepository extends JpaRepository<TaskStatus, Integer>
 
     Boolean existsByNameAndBoardId(String statusName, String boardId);
 
-    Boolean existsByName (String statusName);
-
     Boolean existsByNameAndIdNotAndBoardId(String statusName, Integer id, String boardId);
-
-//    @Query("SELECT ts FROM TaskStatus ts JOIN TaskList tl ON ts.id = tl.status.id WHERE tl.board.id = :boardId")
-//    List<TaskStatus> findAllByBoardId(String boardId);
-
-    @Query("SELECT ts FROM TaskStatus ts JOIN TaskList tl ON ts.id = tl.status.id WHERE tl.board.id = :boardId AND ts.name = :statusName")
-    Optional<TaskStatus> findByNameAndBoardId(String boardId, String statusName);
 
     Optional<TaskStatus> findByBoardIdAndId(String boardId, Integer statusId);
 
-    //@Query("SELECT ts FROM TaskStatus ts  WHERE ts.isDefault = true")
     List<TaskStatus> findAllByBoardId(String boardId);
+
     @Query("SELECT ts FROM TaskStatus ts WHERE ts.boardId IS NULL")
     List<TaskStatus> findAllDefaultStatus();
 
