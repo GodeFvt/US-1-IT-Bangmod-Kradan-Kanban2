@@ -9,7 +9,7 @@ const disabledSideMenu = ref(false);
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    if (newPath === "/login") {
+    if (newPath === "/login" || newPath === "/login/" ) {
       disabledSideMenu.value = true;
     } else {
       disabledSideMenu.value = false;

@@ -31,10 +31,10 @@ export const useUserStore = defineStore("userStore", {
     addBoard(board) {
       this.boards.push(board);
     },
-    editTask(index, board) {
+    editBoard(index, board) {
       this.boards[index] = { ...board };
     },
-    deleteTask(index) {
+    deleteBoard(index) {
       this.boards.splice(index, 1);
     },
     setAllBoard(newAllBoard) {

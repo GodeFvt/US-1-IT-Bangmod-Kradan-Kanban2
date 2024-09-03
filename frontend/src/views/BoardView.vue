@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed ,onUnmounted} from "vue";
 import {
-  deleteTask,
+  deleteBoard,
   getTaskById,
-  createTask,
-  updateTask,
+  createBoard,
+  updateBoard,
   getAllStatus,
   getFilteredTask,
   toggleLimitTask,
@@ -13,30 +13,56 @@ import {
   getBoardsById,
 } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
-import BaseCard from "../components/modal/BaseCard.vue";
 import AddButton from "../components/icon/AddButton.vue";
-import MoreActionIcon from "../components/icon/MoreActionIcon.vue";
 import { useUserStore } from "../stores/user.js";
 import PopUp from "../components/modal/PopUp.vue";
+import boardCardLits from "../components/board/boardCardLits.vue";
+import boardDetail from "../components/board/boardDetail.vue";
+import Toast from "../components/modal/Toasts.vue";
+import ConfirmModal from "../components/modal/ConfirmModal.vue";
+import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue"
 
 const userStore = useUserStore();
-const boards=ref([])
+const router = useRouter();
+const route = useRoute();
+
+const allBoard=ref([])
+const board = ref({});
+const typeToast = ref("");
+const messageToast = ref("");
+const boardIdForDelete = ref("")
+
+
+const timeCount = ref(3);
+
+//show component
 const showPopUp = ref(false);
+const showBoardModal = ref(false);
+const isEdit  = ref(false);
+const showToast = ref(false);
+const showDeleteModal = ref(false);
 
+console.log(showBoardModal.value  );
 
+// set value for allBoard
 onMounted(async () => {
   const resBoard = await getAllBoards();
   if(resBoard === 401){
     tokenPass()
+  } else if(resBoard.length===1) {
+     //ไป task นั้นเลย /board/:boardId TaskBoardView
   }
   else {
     userStore.setAllBoard(resBoard);
-    boards.value = userStore.boards;
-    console.log(boards.value)
+    allBoard.value = userStore.boards;
+    console.log(allBoard.value)
   }
 
 });
 
+
+
+//for 401 token
 function tokenPass() { 
    showPopUp.value = true
     intervals.push(
@@ -52,15 +78,178 @@ intervals.push(
   );
   }
 
-function createNewBoard (){
+onUnmounted(() => {
+  clearAllInterval();
+});
+function clearAllInterval() {
+  intervals.map((interval) => clearInterval(interval));
+  intervals = [];
+}
+//end for 401 token
+
+
+// add newBoard
+watch(
+  () => route.path,
+  (newPath, oldPath) => {
+    if (newPath === "/board/add") {
+      ClickAdd();
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => route.params.boardId,
+  async (newId, oldId) => {
+    if (newId !== undefined) {
+        if (route.path === `/board/${newId}/edit`) {     
+          console.log("edit eiei");
+          board.value =  allBoard.value.find((board) => board.id === newId)  
+          console.log(board.value);
+
+          showBoardModal.value = true;
+          isEdit.value = true;
+        } else if (route.path === `/board/${newId}/edit`) { 
+
+        } else {
+          isEdit.value = false;
+        }
+      }
+      // showLoading.value = false;
+  },
+  { immediate: true }
+);
+
+
+function ClickAdd() {
+  // showLoading.value = false;
+  isEdit.value = true; 
+  showBoardModal.value = true;
+  console.log(  board.value );
+  board.value = {
+    name: "",
+    description: "",
+  };
+}
+
+
+// function createNewBoard (){
+
+// }
+
+async function addEditBoard(newBoard) {
+  const indexToCheck = allBoard.value.findIndex(
+    (board) => board.id === newBoard.id
+  );
+
+  if (indexToCheck !== -1 && indexToCheck !== undefined) {
+    console.log(indexToCheck);
+    console.log(board.value.id);
+     await editBoard( board.value.id, newBoard);
+    console.log("edit");
+  } else {
+    console.log("add");
+    await addBoard(newBoard);
+  }
+}
+
+async function addBoard(newBoard) {
+  console.log("addBoard");
+  console.log(newBoard);
+  if (newBoard.name === null || newBoard.name === "") {
+    typeToast.value = "warning";
+    messageToast.value = `The name is required`;
+    showToast.value = true;
+  } else {
+    newBoard.name = newBoard.name.trim();
+    newBoard.description = newBoard.description?.trim();
+    const res = await createBoard(newBoard);
+    if (res === 422 || res === 400 || res === 500 || res === 404) {
+      typeToast.value = "warning";
+      messageToast.value = `An error has occurred, the board could not be added`;
+    }  else if (res === 401) {
+       // go login 
+       tokenPass();
+    } else {
+      // if res.status = 200
+      typeToast.value = "success";
+      userStore.addBoard(res);
+      messageToast.value = `The board has been added`;
+    }
+    showToast.value = true;
+  }
+}
+
+async function editBoard(boardId,editedBoard) {
+  const res = await updateBoard(boardId,editedBoard);
+  if (res === 422 || res === 400 || res === 500 || res === 404) {
+    typeToast.value = "warning";
+    messageToast.value = `An error has occurred, the board does not exist`;
+  }  else if (res === 401) {
+       // go login 
+       tokenPass();
+    }  
+  else {
+    typeToast.value = "success";
+    const indexToUpdate = allBoard.value.findIndex(
+      (board) => board.id === editedBoard.id
+    );
+    userStore.editBoard(indexToUpdate, res);
+    messageToast.value = `The board has been updated`;
+  }
+  showToast.value = true;
+}
+
+
+function closeStatus(action) {
+  showBoardModal.value = action;
+  // showAddModal.value = action;
+  router.push({ name: "board" });
+}
+
+
+async function removeBoard(boardId ,  confirmDelete = false) {
+  showDeleteModal.value = true
+  console.log(boardId);
+console.log(typeof boardId);
+  if (typeof boardId==="string") {
+  boardIdForDelete.value = boardId
+  console.log(boardIdForDelete.value);
+
+  console.log(showDeleteModal.value);
+  console.log(boardId);
+  board.value =  allBoard.value.find((board) => board.id === boardId) 
+  console.log(confirmDelete,"before confirm");
+  }
+  // console.log(boardIdForDelete.value);
+  if (confirmDelete) {
+    console.log(boardIdForDelete.value);
+    console.log(confirmDelete,"after confirm");
+    const res = await deleteBoard(boardIdForDelete.value);
+    if (res === 422 || res === 400 || res === 500 || res === 404) {
+      typeToast.value = "warning";
+      messageToast.value = `An error has occurred, the board could not be added`;
+
+    }  else if (res === 401) {
+       // go login 
+       tokenPass();
+    } else {
+      // if res.status = 200
+      typeToast.value = "success";
+      userStore.deleteBoard(boardId);
+      messageToast.value = `The board has been deleted`;
+    }
+    showDeleteModal.value = false
+  }
 
 }
+
 
 function openBoard(boardId){
-
+  console.log("go to task page");
+  router.push({ name: "task" ,params : {boardId: boardId }});
 }
-
-
 
 </script>
 <template>
@@ -69,74 +258,68 @@ function openBoard(boardId){
       <div class="container px-4 mx-auto">
         <h2 class="slide-right mb-6 text-2xl font-bold">Your Boards</h2>
         <div class="border-b border-gray-300 mb-12"></div>
-
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          
-          <!-- Board Cards -->
-          <BaseCard
-            v-for="board in boards"
-            :key="board.id"
-            customClass="relative group" 
-          >
-            <!-- Menu Icon -->
-            <div
-              class="itbkk-button-action dropdown dropdown-hover flex justify-center items-center absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <div
-                :tabindex="board.id"
-                role="button"
-                class="p-1 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-50"
-              >
-                <MoreActionIcon />
-              </div>
-              <ul
-                :tabindex="board.id"
-                class="dropdown-content menu px-1 py-1 shadow bg-base-100 rounded-box w-26 z-50 opacity-0 top-full group-hover:opacity-100 transition-opacity"
-              >
-                <li>
-                  <router-link
-                    :to="{ name: 'ManageStatus', params: { boardId: board.id } }"
-                  >
-                    <span class="itbkk-button-edit cursor-pointer"> ManageStatus </span>
-                  </router-link>
-                </li>
-                <li>
-                  <span
-                    class="itbkk-button-delete cursor-pointer"
-                    @click="$emit('removeTask', index)"
-                  >
-                    Delete
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            <template #header>
-              <h3 class="slide-right text-lg font-semibold">{{ board.name }}</h3>
-            </template>
-            <template #content>
-              <p class="slide-right text-sm text-muted-foreground">{{ board.description }}</p>
-            </template>
-            <button
-              @click="openBoard(board.id)"
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full">
-              Open Board
-            </button>
-          </BaseCard>
-
-          <!-- Create New Board Card -->
-          <div 
-            @click="createNewBoard"
-            class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
+     <router-link :to="{ name: 'AddBoard' }">
+         <div 
+            class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
           >
             <AddButton/>
             <h3 class="text-lg font-semibold mb-2 text-gray-400">Create New Board</h3>
           </div>
-
+        </router-link>
+        <!-- board card list -->
+         <boardCardLits
+         :allBoard="allBoard"
+         @removeBoard="removeBoard"
+         @openBoard="openBoard"
+         >
+        </boardCardLits>
         </div>
+    
+  
       </div>
+      
     </main>
+    <div class="ml-auto">
+    <Toast :toast="typeToast" @close-toast="showToast = false">
+        <template #message>
+          <span class="itbkk-message break-all">{{ messageToast }}</span>
+        </template>
+      </Toast>
+    </div>
   </div>
+
+  
+
+   <boardDetail
+   v-if="showBoardModal"
+   @user-action="closeStatus"
+   @addEdit="addEditBoard"
+   :board="board"
+   :isEdit="isEdit"
+   >
+   </boardDetail>  
+
+   
+   <ConfirmModal
+          v-if="showDeleteModal"
+          @user-action="showDeleteModal = false"
+          @confirm="removeBoard"
+          :index="allBoard.findIndex((board) => board.id === boardIdForDelete)"
+          class="z-50"
+          width="w-[42vh]"
+        >
+          <template #header>
+            <div class="flex justify-center">
+              <AlertSquareIcon class="w-16 h-16 opacity-40" />
+            </div>
+          </template>
+          <template #body>
+            <span class="itbkk-message">
+              Do you want to delete this  "<span class="font-semibold">{{ board.name }}</span>"
+            </span>
+          </template>
+        </ConfirmModal>
 
   <PopUp v-if="showPopUp">
           <template #message>  
