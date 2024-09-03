@@ -1,18 +1,26 @@
 <script setup>
-import { ref, nextTick, watch } from "vue";
-import VueJwtDecode from "vue-jwt-decode";
+import { ref, computed,onMounted } from "vue";
+import {
+  getAllBoards,
+} from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
+import AuthzPopup from '../components/AuthzPopup.vue';
 
 const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
-
+const showPopUp =ref(false);
+const countBoard = computed(() => {
+  return userStore.boards.length;
+})
 
 function signOut(){
     userStore.clearAuthToken()
   router.push({ name: "Login"});
 }
+
+
 </script>
 
 <template>
@@ -50,7 +58,7 @@ function signOut(){
             <summary
               class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-white hover:bg-gray-100 hover:text-gray-700"
             >
-              <span class="text-sm font-medium"> All Boards (2)</span>
+              <span class="text-sm font-medium"> All Boards ({{countBoard}})</span>
 
               <span
                 class="shrink-0 transition duration-300 group-open:-rotate-180"
@@ -71,28 +79,17 @@ function signOut(){
             </summary>
 
             <ul class="mt-2 space-y-1 px-4">
-              <li>
-                <a
-                  href="#"
-                  class="block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700"
-                >
-                  Board 1
-                </a>
-              </li>
-
-              <li>
-                <a
-                  href="#"
-                  class="block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700"
-                >
-                  Board 2
-                </a>
+              <li v-for="board in userStore.boards" :key="board.id">
+                <router-link  :to="{ name: 'task', params: { boardId: board.id } }" 
+                class="block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700" >
+                {{ board.name }}
+               </router-link>
               </li>
             </ul>
           </details>
         </li>
 
-        <li class="">
+        <!-- <li class="">
           <a
             href="#"
             class="slide-right block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700"
@@ -100,7 +97,7 @@ function signOut(){
           >
             Manage Status
           </a>
-        </li>
+        </li> -->
 
         <li>
           <details
@@ -220,6 +217,7 @@ function signOut(){
       </div>
     </div>
   </div>
+  <AuthzPopup v-if="showPopUp" />
 </template>
 
 <style scoped>

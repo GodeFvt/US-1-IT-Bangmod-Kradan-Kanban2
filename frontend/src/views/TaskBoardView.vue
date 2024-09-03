@@ -25,7 +25,7 @@ import TaskTable from "../components/task/TaskTable.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
-import PopUp from "../components/modal/PopUp.vue";
+import AuthzPopup from '../components/AuthzPopup.vue';
 
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
@@ -82,7 +82,7 @@ onMounted(async () => {
     showErrorMSG.value = true;
   }  else if (resTask === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } else {
     taskStore.setAllTask(resTask);
     allTask.value = taskStore.allTask;
@@ -96,7 +96,7 @@ onMounted(async () => {
       showErrorMSG.value = true;
     }  else if (resStatus === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     }  else {
       statusStore.setAllStatus(resStatus);
     }
@@ -105,7 +105,7 @@ onMounted(async () => {
     const resLimit = await getLimit();
      if (resLimit === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     }
     statusStore.setMaximumTaskStatus(resLimit.maximumTask);
     statusStore.setLimitStatus(resLimit.isLimit);
@@ -139,7 +139,7 @@ watch(
         router.push({ name: "TaskNotFound", params: { page: "Task" } });
       } else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
       } else {
         task.value = res;
         if (route.path === `/task/${newId}/edit`) {
@@ -154,33 +154,6 @@ watch(
   },
   { immediate: true }
 );
-
-//for 401
-function tokenPass() { 
-   showPopUp.value = true
-    intervals.push(
-    setTimeout(() => {
-        router.push({ name: "Login" });
-    }, 3000)  
-    
-  );
-intervals.push(
-    setInterval(() => {
-      console.log("cheackk");
-      timeCount.value--;
-    }, 1000)
-  );
-  }
-
-onUnmounted(() => {
-  clearAllInterval();
-});
-function clearAllInterval() {
-  intervals.map((interval) => clearInterval(interval));
-  intervals = [];
-}
-
-
 
 async function confirmLimit(action) {
   if (action === false) {
@@ -197,7 +170,7 @@ async function confirmLimit(action) {
       messageToast.value = `An error occurred.please try again.`;
     }  else if (res === 401) {
       // go login 
-      tokenPass();
+      showPopUp.value = true
     } else {
       statusStore.setLimitStatus(true);
       statusStore.setMaximumTaskStatus(maximumTask.value);
@@ -217,7 +190,7 @@ async function confirmLimit(action) {
       messageToast.value = `An error occurred enable limit task`;
     }  else if (res === 401) {
       // go login 
-      tokenPass();
+      showPopUp.value = true
         }
      else if (res === 500) {
       typeToast.value = "denger";
@@ -289,7 +262,7 @@ async function addTask(newTask) {
       messageToast.value = `An error occurred adding the task`;
     }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } else {
       typeToast.value = "success";
       taskStore.addTask(res);
@@ -308,7 +281,7 @@ async function editTask(editedTask) {
     messageToast.value = `An error occurred updating the task "${editedTask.title}"`;
   }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } else {
     typeToast.value = "success";
     const indexToUpdate = allTask.value.findIndex(
@@ -338,7 +311,7 @@ async function removeTask(index, confirmDelete = false) {
       messageToast.value = `An error has occurred, the task does not exist.`;
     }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     }
      else {
       typeToast.value = "danger";
@@ -511,7 +484,7 @@ async function removeTask(index, confirmDelete = false) {
               Do you want to delete the task number
             </span>
             <span class="break-all">
-              : {{ indexToRemove + 1 }}<br />
+              : {{ indexToRemove + 1 }}<br/>
               <div class="flex justify-center">
                 "<span class="itbkk-message">{{ task.title }}</span
                 >"
@@ -586,22 +559,7 @@ async function removeTask(index, confirmDelete = false) {
         >
         </limitModal>
 
-       <PopUp v-if="showPopUp">
-          <template #message>  
-            <p class="text-lg	 text-gray-700">
-            Oops! something went wrong. please try Login again. 
-            </p>
-          </template>
-          <template #button>    
-            <router-link :to="{ name: 'Login' }">
-            <button class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">
-              try Login again
-            </button>
-            </router-link> 
-            <p class="text-sm	 text-gray-500">
-                 Redirecting to home in <span class="text-red-700">{{ timeCount }}</span> seconds... </p>
-          </template>
-        </PopUp>
+        <AuthzPopup v-if="showPopUp" />
 
       </div>
       <div

@@ -41,14 +41,22 @@ const props = defineProps({
               <ul
                 :tabindex="board.id"
                 class="dropdown-content menu px-1 py-1 shadow bg-base-100 rounded-box w-26 z-50 opacity-0 top-full group-hover:opacity-100 transition-opacity"
-              >
+              >   
+               <li>
+                  <router-link
+                    :to="{ name: 'ManageStatus', params: { boardId: board.id } }"
+                  >
+                    <span class="itbkk-button-edit cursor-pointer"> ManageStatus</span>
+                  </router-link>
+                </li>
                 <li>
                   <router-link
                     :to="{ name: 'EditBoard', params: { boardId: board.id } }"
                   >
-                    <span class="itbkk-button-edit cursor-pointer"> ManageBoard </span>
+                    <span class="itbkk-button-edit cursor-pointer"> Edit </span>
                   </router-link>
                 </li>
+             
                 <li>
                   <span
                     class="itbkk-button-delete cursor-pointer"

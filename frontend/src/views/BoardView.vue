@@ -15,12 +15,12 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import AddButton from "../components/icon/AddButton.vue";
 import { useUserStore } from "../stores/user.js";
-import PopUp from "../components/modal/PopUp.vue";
 import boardCardLits from "../components/board/boardCardLits.vue";
 import boardDetail from "../components/board/boardDetail.vue";
 import Toast from "../components/modal/Toasts.vue";
 import ConfirmModal from "../components/modal/ConfirmModal.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue"
+import AuthzPopup from '../components/AuthzPopup.vue';
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -31,11 +31,6 @@ const board = ref({});
 const typeToast = ref("");
 const messageToast = ref("");
 const boardIdForDelete = ref("")
-
-
-const timeCount = ref(3);
-
-//show component
 const showPopUp = ref(false);
 const showBoardModal = ref(false);
 const isEdit  = ref(false);
@@ -47,46 +42,20 @@ console.log(showBoardModal.value  );
 // set value for allBoard
 onMounted(async () => {
   const resBoard = await getAllBoards();
+  console.log("onMounted doing")
   if(resBoard === 401){
-    tokenPass()
-  } else if(resBoard.length===1) {
-     //ไป task นั้นเลย /board/:boardId TaskBoardView
+    showPopUp.value = true
   }
+  // else if(resBoard.length===1) {
+   //ไป task นั้นเลย /board/:boardId TaskBoardView
+   
+  // }
   else {
     userStore.setAllBoard(resBoard);
     allBoard.value = userStore.boards;
     console.log(allBoard.value)
   }
-
 });
-
-
-
-//for 401 token
-function tokenPass() { 
-   showPopUp.value = true
-    intervals.push(
-    setTimeout(() => {
-        router.push({ name: "Login" });
-    }, 3000)  
-    
-  );
-intervals.push(
-    setInterval(() => {
-      timeCount.value--;
-    }, 1000)
-  );
-  }
-
-onUnmounted(() => {
-  clearAllInterval();
-});
-function clearAllInterval() {
-  intervals.map((interval) => clearInterval(interval));
-  intervals = [];
-}
-//end for 401 token
-
 
 // add newBoard
 watch(
@@ -133,30 +102,20 @@ function ClickAdd() {
   };
 }
 
-
-// function createNewBoard (){
-
-// }
-
 async function addEditBoard(newBoard) {
   const indexToCheck = allBoard.value.findIndex(
     (board) => board.id === newBoard.id
   );
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
-    console.log(indexToCheck);
-    console.log(board.value.id);
      await editBoard( board.value.id, newBoard);
     console.log("edit");
   } else {
-    console.log("add");
     await addBoard(newBoard);
   }
 }
 
 async function addBoard(newBoard) {
-  console.log("addBoard");
-  console.log(newBoard);
   if (newBoard.name === null || newBoard.name === "") {
     typeToast.value = "warning";
     messageToast.value = `The name is required`;
@@ -169,8 +128,7 @@ async function addBoard(newBoard) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the board could not be added`;
     }  else if (res === 401) {
-       // go login 
-       tokenPass();
+       showPopUp.value=true
     } else {
       // if res.status = 200
       typeToast.value = "success";
@@ -187,8 +145,7 @@ async function editBoard(boardId,editedBoard) {
     typeToast.value = "warning";
     messageToast.value = `An error has occurred, the board does not exist`;
   }  else if (res === 401) {
-       // go login 
-       tokenPass();
+       showPopUp.value=true
     }  
   else {
     typeToast.value = "success";
@@ -202,38 +159,27 @@ async function editBoard(boardId,editedBoard) {
 }
 
 
-function closeStatus(action) {
+function closeBoard(action) {
   showBoardModal.value = action;
-  // showAddModal.value = action;
   router.push({ name: "board" });
 }
 
 
 async function removeBoard(boardId ,  confirmDelete = false) {
   showDeleteModal.value = true
-  console.log(boardId);
 console.log(typeof boardId);
   if (typeof boardId==="string") {
   boardIdForDelete.value = boardId
-  console.log(boardIdForDelete.value);
-
-  console.log(showDeleteModal.value);
-  console.log(boardId);
   board.value =  allBoard.value.find((board) => board.id === boardId) 
-  console.log(confirmDelete,"before confirm");
   }
-  // console.log(boardIdForDelete.value);
   if (confirmDelete) {
-    console.log(boardIdForDelete.value);
-    console.log(confirmDelete,"after confirm");
     const res = await deleteBoard(boardIdForDelete.value);
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the board could not be added`;
 
     }  else if (res === 401) {
-       // go login 
-       tokenPass();
+       showPopUp.value=true
     } else {
       // if res.status = 200
       typeToast.value = "success";
@@ -247,7 +193,6 @@ console.log(typeof boardId);
 
 
 function openBoard(boardId){
-  console.log("go to task page");
   router.push({ name: "task" ,params : {boardId: boardId }});
 }
 
@@ -275,8 +220,6 @@ function openBoard(boardId){
          >
         </boardCardLits>
         </div>
-    
-  
       </div>
       
     </main>
@@ -289,11 +232,9 @@ function openBoard(boardId){
     </div>
   </div>
 
-  
-
-   <boardDetail
+  <boardDetail
    v-if="showBoardModal"
-   @user-action="closeStatus"
+   @user-action="closeBoard"
    @addEdit="addEditBoard"
    :board="board"
    :isEdit="isEdit"
@@ -320,23 +261,7 @@ function openBoard(boardId){
             </span>
           </template>
         </ConfirmModal>
-
-  <PopUp v-if="showPopUp">
-          <template #message>  
-            <p class="text-lg	 text-gray-700">
-            Oops! something went wrong. please try Login again. 
-            </p>
-          </template>
-          <template #button>    
-            <router-link :to="{ name: 'Login' }">
-            <button class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">
-              try Login again
-            </button>
-            </router-link> 
-            <p class="text-sm	 text-gray-500">
-                 Redirecting to home in <span class="text-red-700">{{ timeCount }}</span> seconds... </p>
-          </template>
-        </PopUp>
+  <AuthzPopup v-if="showPopUp" />
 
 </template>
 

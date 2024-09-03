@@ -4,7 +4,7 @@ import NotFound from "../views/NotFound.vue";
 import TaskStatusView from "../views/TaskStatusView.vue";
 import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
-import { useUserStore } from "../stores/user.js";
+
 
 const routes = [
   {
@@ -95,13 +95,12 @@ router.beforeEach((to, from) => {
 });
 
 router.beforeEach((to, from,next) => {
-  const userStore = useUserStore();
-  const isAuthenticated = !!userStore.authToken;
+  const isAuthenticated = !!localStorage.getItem('authToken');
   if (isAuthenticated === false && to.name !== 'Login') {
     next({ name: 'Login' });
   }
   else if(to.name ==='Login' && isAuthenticated ===true){
-    next({ name: 'task' });
+    next({ name: 'board' });
   }
   else {
     next();

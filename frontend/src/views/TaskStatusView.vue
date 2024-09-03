@@ -23,7 +23,8 @@ import { useTaskStore } from "../stores/tasks.js";
 import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import HeaderView from "./HeaderView.vue";
-import PopUp from "../components/modal/PopUp.vue";
+import AuthzPopup from '../components/AuthzPopup.vue';
+
 
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
@@ -68,7 +69,7 @@ onMounted(async () => {
     showErrorMSG.value = true;
   } else if (resStatus === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } else {
     statusStore.setAllStatus(resStatus);
     allStatus.value = statusStore.allStatus;
@@ -80,7 +81,7 @@ onMounted(async () => {
     const resLimit = await getLimit();
      if (resLimit === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     }
     statusStore.setMaximumTaskStatus(resLimit.maximumTask);
     statusStore.setLimitStatus(resLimit.isLimit);
@@ -93,7 +94,7 @@ onMounted(async () => {
       showErrorMSG.value = true;
     } else if (resTask === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     }  else {
       taskStore.setAllTask(resTask);
     }
@@ -102,30 +103,9 @@ onMounted(async () => {
   showLoading.value = false;
 });
 
-// for 401
-function tokenPass() { 
-   showPopUp.value = true
-    intervals.push(
-    setTimeout(() => {
-        router.push({ name: "Login" });
-    }, 3000)  
-    
-  );
-intervals.push(
-    setInterval(() => {
-      console.log("cheackk");
-      timeCount.value--;
-    }, 1000)
-  );
-  }
 
-onUnmounted(() => {
-  clearAllInterval();
-});
-function clearAllInterval() {
-  intervals.map((interval) => clearInterval(interval));
-  intervals = [];
-}
+
+
 
 
 //noOfTask ไม่มาด้วยเลยต้องมาset
@@ -150,7 +130,7 @@ watch(
         router.push({ name: "TaskNotFound", params: { page: "Status" } });
       }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
        } else {
         status.value = res;
         if (route.path === `/status/${newId}/edit`) {
@@ -218,7 +198,7 @@ async function addStatus(newStatus) {
       messageToast.value = `An error has occurred, the status could not be added`;
     }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } else {
       typeToast.value = "success";
       statusStore.addStatus(res);
@@ -235,7 +215,7 @@ async function editStatus(editedStatus) {
     messageToast.value = `An error has occurred, the status does not exist`;
   }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     }  
   else {
     typeToast.value = "success";
@@ -283,7 +263,7 @@ async function confirmLimit(action) {
       messageToast.value = `An error occurred enable limit task`;
     }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } 
     else if (res === 500) {
       typeToast.value = "denger";
@@ -307,7 +287,7 @@ async function confirmLimit(action) {
       messageToast.value = `An error occurred disabled limit task`;
     }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     }  
     else if (res === 500) {
       typeToast.value = "denger";
@@ -353,7 +333,7 @@ async function removeStatus(index, confirmDelete = false) {
       statusStore.deleteStatus(index);
     }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } else {
       typeToast.value = "denger";
       messageToast.value = `An error occurred.please try again.`;
@@ -373,7 +353,7 @@ async function clickRemove(index) {
     messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
   }  else if (res === 401) {
        // go login 
-       tokenPass();
+       showPopUp.value = true
     } else {
     if (res.count >= 1) {
       tranferStatus.value = "No Status";
@@ -585,22 +565,7 @@ async function clickRemove(index) {
       class="z-50"
     >
     </limitModal>
-    <PopUp v-if="showPopUp">
-          <template #message>  
-          <p class="l text-gray-700">
-            Oops! something went wrong. Whatever happened, it was probably our fault. please try Login again.
-            </p>
-          
-          </template>
-
-          <template #button>
-            <router-link :to="{ name: 'Login' }">
-            <button class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">
-              try Login again
-            </button>
-            </router-link>
-          </template>
-    </PopUp>
+    <AuthzPopup v-if="showPopUp" />
 
   </div>
 </template>
