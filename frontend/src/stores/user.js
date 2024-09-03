@@ -15,6 +15,7 @@ export const useUserStore = defineStore("userStore", {
         return decodeToken;
       }
     })(),
+    boards: [],
   }),
   
   actions: {
@@ -26,6 +27,18 @@ export const useUserStore = defineStore("userStore", {
     clearAuthToken() {
       this.authToken = null;
       localStorage.removeItem("authToken");
+    },
+    addBoard(board) {
+      this.boards.push(board);
+    },
+    editTask(index, board) {
+      this.boards[index] = { ...board };
+    },
+    deleteTask(index) {
+      this.boards.splice(index, 1);
+    },
+    setAllBoard(newAllBoard) {
+      this.boards = [...newAllBoard];
     },
   },
 });

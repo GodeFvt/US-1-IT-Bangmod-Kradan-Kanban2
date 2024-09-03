@@ -1,19 +1,57 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
+import {
+  deleteTask,
+  getTaskById,
+  createTask,
+  updateTask,
+  getAllStatus,
+  getFilteredTask,
+  toggleLimitTask,
+  getLimit,
+  getAllBoards,
+  getBoardsById,
+} from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import BaseCard from "../components/modal/BaseCard.vue";
 import AddButton from "../components/icon/AddButton.vue";
 import MoreActionIcon from "../components/icon/MoreActionIcon.vue";
+import { useUserStore } from "../stores/user.js";
+import PopUp from "../components/modal/PopUp.vue";
 
-const isMenuOpen=ref(false)
-const boards=ref([
-{ id: 1, title: "Work Tasks", description: "Manage your work-related tasks" },
-{ id: 1, title: "Work Tasks", description: "Manage your work-related tasks" },
-{ id: 1, title: "Work Tasks", description: "Manage your work-related tasks" },
-{ id: 1, title: "Work Tasks", description: "Manage your work-related tasks" },
-{ id: 1, title: "Work Tasks", description: "Manage your work-related tasks" },
+const userStore = useUserStore();
+const boards=ref([])
+const showPopUp = ref(false);
 
-])
+
+onMounted(async () => {
+  const resBoard = await getAllBoards();
+  if(resBoard === 401){
+    tokenPass()
+  }
+  else {
+    userStore.setAllBoard(resBoard);
+    boards.value = userStore.boards;
+    console.log(boards.value)
+  }
+
+});
+
+function tokenPass() { 
+   showPopUp.value = true
+    intervals.push(
+    setTimeout(() => {
+        router.push({ name: "Login" });
+    }, 3000)  
+    
+  );
+intervals.push(
+    setInterval(() => {
+      timeCount.value--;
+    }, 1000)
+  );
+  }
+
 function createNewBoard (){
 
 }
@@ -74,7 +112,7 @@ function openBoard(boardId){
             </div>
 
             <template #header>
-              <h3 class="slide-right text-lg font-semibold">{{ board.title }}</h3>
+              <h3 class="slide-right text-lg font-semibold">{{ board.name }}</h3>
             </template>
             <template #content>
               <p class="slide-right text-sm text-muted-foreground">{{ board.description }}</p>
@@ -99,6 +137,24 @@ function openBoard(boardId){
       </div>
     </main>
   </div>
+
+  <PopUp v-if="showPopUp">
+          <template #message>  
+            <p class="text-lg	 text-gray-700">
+            Oops! something went wrong. please try Login again. 
+            </p>
+          </template>
+          <template #button>    
+            <router-link :to="{ name: 'Login' }">
+            <button class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">
+              try Login again
+            </button>
+            </router-link> 
+            <p class="text-sm	 text-gray-500">
+                 Redirecting to home in <span class="text-red-700">{{ timeCount }}</span> seconds... </p>
+          </template>
+        </PopUp>
+
 </template>
 
 <style scoped>

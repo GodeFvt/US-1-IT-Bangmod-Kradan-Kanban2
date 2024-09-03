@@ -355,8 +355,11 @@ async function getAllBoards() {
     if (res.status === 200) {
       const allBoard = await res.json();
       return allBoard;
-    } else {
+    }  if (res.status === 401) {
       return res.status;
+    }
+    else {
+      return undefined;
     }
   } catch (error) {
     return undefined;
