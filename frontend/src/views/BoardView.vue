@@ -15,7 +15,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import AddButton from "../components/icon/AddButton.vue";
 import { useUserStore } from "../stores/user.js";
-import boardCardLits from "../components/board/boardCardLits.vue";
+import boardCardList from "../components/board/boardCardList.vue";
 import boardDetail from "../components/board/boardDetail.vue";
 import Toast from "../components/modal/Toasts.vue";
 import ConfirmModal from "../components/modal/ConfirmModal.vue";
@@ -37,12 +37,9 @@ const isEdit  = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
 
-console.log(showBoardModal.value  );
-
 // set value for allBoard
 onMounted(async () => {
   const resBoard = await getAllBoards();
-  console.log("onMounted doing")
   if(resBoard === 401){
     showPopUp.value = true
   }
@@ -213,12 +210,12 @@ function openBoard(boardId){
           </div>
         </router-link>
         <!-- board card list -->
-         <boardCardLits
+         <boardCardList
          :allBoard="allBoard"
          @removeBoard="removeBoard"
          @openBoard="openBoard"
          >
-        </boardCardLits>
+        </boardCardList>
         </div>
       </div>
       

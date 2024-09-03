@@ -45,8 +45,6 @@ const showToast = ref(false);
 const showAddModal = ref(false);
 const showDeleteModal = ref(false);
 const showPopUp = ref(false);
-
-
 const isEdit = ref(false);
 const toggleActive = ref(statusStore.isLimit);
 const indexToRemove = ref(-1);
@@ -55,16 +53,13 @@ const typeToast = ref("");
 const showListStatus = ref(false);
 const maximumTask = ref(statusStore.maximumTask);
 const showSettingModal = ref(false);
-
+const boardId = ref(route.params.boardId);
 const tranferStatus = ref("No Status");
 
-// variable for 401
-const timeCount = ref(3);
-let intervals = [];
 
 
 onMounted(async () => {
-  const resStatus = await getAllStatus();
+  const resStatus = await getAllStatus(boardId.value);
   if (resStatus === undefined) {
     showErrorMSG.value = true;
   } else if (resStatus === 401) {
@@ -78,7 +73,7 @@ onMounted(async () => {
   toggleActive.value = statusStore.isLimit;
   statusStore.setNoOftask(countStatus.value);
   if (statusStore.maximumTask === undefined) {
-    const resLimit = await getLimit();
+    const resLimit = await getLimit(boardId.value);
      if (resLimit === 401) {
        // go login 
        showPopUp.value = true
@@ -89,7 +84,7 @@ onMounted(async () => {
     toggleActive.value = statusStore.isLimit;
   }
   if (taskStore.allTask.length === 0) {
-    const resTask = await getFilteredTask();
+    const resTask = await getFilteredTask(boardId.value);
     if (resTask === undefined) {
       showErrorMSG.value = true;
     } else if (resTask === 401) {
@@ -102,10 +97,6 @@ onMounted(async () => {
 
   showLoading.value = false;
 });
-
-
-
-
 
 
 //noOfTask ไม่มาด้วยเลยต้องมาset
@@ -125,7 +116,7 @@ watch(
   () => route.params.statusId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      const res = await getStatusById(newId);
+      const res = await getStatusById(boardId.value,newId);
       if (res === 404 || res === 400) {
         router.push({ name: "TaskNotFound", params: { page: "Status" } });
       }  else if (res === 401) {
@@ -148,7 +139,7 @@ watch(
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    if (newPath === "/status/add") {
+    if (newPath === `/board/${boardId.value}/status/add`) {
       ClickAdd();
     }
   },
@@ -192,7 +183,7 @@ async function addStatus(newStatus) {
   } else {
     newStatus.name = newStatus.name.trim();
     newStatus.description = newStatus.description?.trim();
-    const res = await createStatus(newStatus);
+    const res = await createStatus(boardId.value,newStatus);
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the status could not be added`;
@@ -202,6 +193,7 @@ async function addStatus(newStatus) {
     } else {
       typeToast.value = "success";
       statusStore.addStatus(res);
+      console.log(allStatus.value);
       messageToast.value = `The status has been added`;
     }
     showToast.value = true;
@@ -209,7 +201,7 @@ async function addStatus(newStatus) {
 }
 
 async function editStatus(editedStatus) {
-  const res = await updateStatus(editedStatus);
+  const res = await updateStatus(boardId.value,editedStatus);
   if (res === 422 || res === 400 || res === 500 || res === 404) {
     typeToast.value = "warning";
     messageToast.value = `An error has occurred, the status does not exist`;
@@ -257,7 +249,7 @@ async function confirmLimit(action) {
     toggleActive.value = statusStore.isLimit;
     maximumTask.value = statusStore.maximumTask;
   } else if (toggleActive.value && action) {
-    const res = await toggleLimitTask(maximumTask.value, true);
+    const res = await toggleLimitTask(boardId.value,maximumTask.value, true);
     if (res === 400 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred enable limit task`;
@@ -281,7 +273,7 @@ async function confirmLimit(action) {
     }
     showToast.value = true;
   } else if (toggleActive.value === false && action) {
-    const res = await toggleLimitTask(maximumTask.value, false);
+    const res = await toggleLimitTask(boardId.value,maximumTask.value, false);
     if (res === 400 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred disabled limit task`;
@@ -310,9 +302,9 @@ async function removeStatus(index, confirmDelete = false) {
   console.log(newStatus.id);
   if (confirmDelete) {
     if (showTranfer.value) {
-      res = await deleteStatusAndTranfer(status.value.id, newStatus.id);
+      res = await deleteStatusAndTranfer(boardId.value,status.value.id, newStatus.id);
     } else {
-      res = await deleteStatus(status.value.id);
+      res = await deleteStatus(boardId.value,status.value.id);
     }
 
     if (res === 200) {
@@ -347,7 +339,7 @@ async function clickRemove(index) {
   showDeleteModal.value = true;
   status.value = allStatus.value[index];
   indexToRemove.value = index;
-  const res = await getTaskByStatus(status.value.id);
+  const res = await getTaskByStatus(boardId.value,status.value.id);
   if (res === 400 || res === 404 || res === 500) {
     typeToast.value = "danger";
     messageToast.value = `An error occurred deleting the status "${status.value.name}.`;

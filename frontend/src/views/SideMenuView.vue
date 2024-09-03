@@ -19,6 +19,15 @@ function signOut(){
     userStore.clearAuthToken()
   router.push({ name: "Login"});
 }
+onMounted(async () => {
+  const resBoard = await getAllBoards();
+  if(resBoard === 401){
+    showPopUp.value = true
+  }
+  else {
+    userStore.setAllBoard(resBoard);
+  }
+});
 
 
 </script>

@@ -5,6 +5,7 @@ import SortIcon from "../icon/SortIcon.vue";
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { getFilteredTask } from "../../lib/fetchUtill.js";
+import { useRoute, useRouter } from "vue-router";
 
 defineEmits(["removeTask"]);
 const props = defineProps({
@@ -28,6 +29,9 @@ const props = defineProps({
     type: Array,
   },
 });
+
+const router = useRouter();
+const route = useRoute();
 const sortType = ref("default");
 const statusStore = useStatusStore();
 const taskFiltered = ref([]);
@@ -66,7 +70,7 @@ watch(
     if (statusFilter.length === 0) {
       taskFiltered.value = allTask;
     } else {
-      taskFiltered.value = await getFilteredTask(statusFilter);
+      taskFiltered.value = await getFilteredTask(route.params.boardId,statusFilter);
     }
     sortByStatus();
   },

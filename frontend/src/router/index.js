@@ -27,7 +27,7 @@ const routes = [
     component: BoardView,
   },
   {
-    path: "/board/:boardId",
+    path: "/board/:boardId/task",
     name: "task",
     component: TaskBoardView,
   },

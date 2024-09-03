@@ -55,14 +55,10 @@ const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
 
-
+const boardId = ref(route.params.boardId);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
 const allTaskLimit = ref([]); // allTask อันที่เกิน
-
-// variable for 401
-const timeCount = ref(3);
-let intervals = [];
 
 const countStatus = computed(() => {
   return allTask.value.reduce(
@@ -77,7 +73,7 @@ const countStatus = computed(() => {
 });
 
 onMounted(async () => {
-  const resTask = await getFilteredTask();
+  const resTask = await getFilteredTask(boardId.value);
   if (resTask === undefined) {
     showErrorMSG.value = true;
   }  else if (resTask === 401) {
@@ -91,7 +87,7 @@ onMounted(async () => {
   toggleActive.value = statusStore.isLimit;
   statusStore.setNoOftask(countStatus.value);
   if (statusStore.allStatus.length === 0) {
-    const resStatus = await getAllStatus();
+    const resStatus = await getAllStatus(boardId.value);
     if (resStatus === undefined) {
       showErrorMSG.value = true;
     }  else if (resStatus === 401) {
@@ -102,7 +98,7 @@ onMounted(async () => {
     }
   }
   if (statusStore.maximumTask === undefined) {
-    const resLimit = await getLimit();
+    const resLimit = await getLimit(boardId.value);
      if (resLimit === 401) {
        // go login 
        showPopUp.value = true
@@ -134,7 +130,7 @@ watch(
   () => route.params.taskId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      const res = await getTaskById(newId);
+      const res = await getTaskById(boardId.value,newId);
       if (res === 404 || res === 400 || res === 500) {
         router.push({ name: "TaskNotFound", params: { page: "Task" } });
       } else if (res === 401) {
@@ -161,7 +157,7 @@ async function confirmLimit(action) {
     toggleActive.value = statusStore.isLimit;
     maximumTask.value = statusStore.maximumTask;
   } else if (toggleActive.value && action) {
-    const res = await toggleLimitTask(maximumTask.value, true);
+    const res = await toggleLimitTask(boardId.value,maximumTask.value, true);
     if (res === 400 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred enable limit task`;
@@ -184,7 +180,7 @@ async function confirmLimit(action) {
     }
     showToast.value = true;
   } else if (toggleActive.value === false && action) {
-    const res = await toggleLimitTask(maximumTask.value, false);
+    const res = await toggleLimitTask(boardId.value,maximumTask.value, false);
     if (res === 400 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred enable limit task`;
@@ -209,7 +205,7 @@ async function confirmLimit(action) {
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    if (newPath === "/task/add") {
+    if (newPath === `/board/${boardId.value}/task/add`) {
       ClickAdd();
     }
   },
@@ -256,7 +252,7 @@ async function addTask(newTask) {
     newTask.description = newTask.description?.trim();
     newTask.assignees = newTask.assignees?.trim();
     newTask.status = newTask.status.name;
-    const res = await createTask(newTask);
+    const res = await createTask(boardId.value,newTask);
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred adding the task`;
@@ -275,7 +271,7 @@ async function addTask(newTask) {
 
 async function editTask(editedTask) {
   editedTask.status = editedTask.status.name;
-  const res = await updateTask(editedTask);
+  const res = await updateTask(boardId.value,editedTask);
   if (res === 422 || res === 400 || res === 500 || res === 404) {
     typeToast.value = "warning";
     messageToast.value = `An error occurred updating the task "${editedTask.title}"`;
@@ -299,7 +295,7 @@ async function removeTask(index, confirmDelete = false) {
   task.value = allTask.value[index];
   indexToRemove.value = index;
   if (confirmDelete) {
-    const res = await deleteTask(task.value.id);
+    const res = await deleteTask(boardId.value,task.value.id);
     if (res === 200) {
       statusStore.setNoOftask(countStatus.value);
       taskStore.deleteTask(index);
