@@ -56,10 +56,8 @@ const showSettingModal = ref(false);
 const boardId = ref(route.params.boardId);
 const tranferStatus = ref("No Status");
 
-
-
-onMounted(async () => {
-  const resStatus = await getAllStatus(boardId.value);
+async function fetchData() {
+   const resStatus = await getAllStatus(boardId.value);
   if (resStatus === undefined) {
     showErrorMSG.value = true;
   } else if (resStatus === 401) {
@@ -96,7 +94,19 @@ onMounted(async () => {
   }
 
   showLoading.value = false;
+}
+
+onMounted(() => {
+  fetchData();
 });
+
+watch(
+  () => route.params.boardId,
+  (newBoardId, oldBoardId) => {
+    boardId.value = newBoardId;
+    fetchData();
+  }
+);
 
 
 //noOfTask ไม่มาด้วยเลยต้องมาset
@@ -124,7 +134,7 @@ watch(
        showPopUp.value = true
        } else {
         status.value = res;
-        if (route.path === `/status/${newId}/edit`) {
+        if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
           isEdit.value = true;
         } else {
           isEdit.value = false;
@@ -187,6 +197,7 @@ async function addStatus(newStatus) {
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the status could not be added`;
+      showToast.value = true;
     }  else if (res === 401) {
        // go login 
        showPopUp.value = true
@@ -195,8 +206,8 @@ async function addStatus(newStatus) {
       statusStore.addStatus(res);
       console.log(allStatus.value);
       messageToast.value = `The status has been added`;
+      showToast.value = true;
     }
-    showToast.value = true;
   }
 }
 

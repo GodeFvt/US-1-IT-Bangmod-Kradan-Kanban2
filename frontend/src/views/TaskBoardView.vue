@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, computed,onUnmounted } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 // import lib
 import {
   deleteTask,
@@ -72,36 +72,36 @@ const countStatus = computed(() => {
   );
 });
 
-onMounted(async () => {
+async function fetchData() {
   const resTask = await getFilteredTask(boardId.value);
   if (resTask === undefined) {
     showErrorMSG.value = true;
-  }  else if (resTask === 401) {
-       // go login 
-       showPopUp.value = true
-    } else {
+  } else if (resTask === 401) {
+    showPopUp.value = true;
+  } else {
     taskStore.setAllTask(resTask);
     allTask.value = taskStore.allTask;
   }
+
   maximumTask.value = statusStore.maximumTask;
   toggleActive.value = statusStore.isLimit;
   statusStore.setNoOftask(countStatus.value);
+
   if (statusStore.allStatus.length === 0) {
     const resStatus = await getAllStatus(boardId.value);
     if (resStatus === undefined) {
       showErrorMSG.value = true;
-    }  else if (resStatus === 401) {
-       // go login 
-       showPopUp.value = true
-    }  else {
+    } else if (resStatus === 401) {
+      showPopUp.value = true;
+    } else {
       statusStore.setAllStatus(resStatus);
     }
   }
+
   if (statusStore.maximumTask === undefined) {
     const resLimit = await getLimit(boardId.value);
-     if (resLimit === 401) {
-       // go login 
-       showPopUp.value = true
+    if (resLimit === 401) {
+      showPopUp.value = true;
     }
     statusStore.setMaximumTaskStatus(resLimit.maximumTask);
     statusStore.setLimitStatus(resLimit.isLimit);
@@ -110,20 +110,30 @@ onMounted(async () => {
   }
 
   showLoading.value = false;
-});
+}
 
-
-
-
-onMounted(() => {
+function countStatuses() {
   const countStatusKeys = Object.keys(countStatus);
-
   countStatusKeys.forEach((status, index) => {
     setTimeout(() => {
       isVisible.value[index] = true;
     }, index * 150);
   });
+}
+
+onMounted(() => {
+  fetchData();
+  countStatuses();
 });
+
+watch(
+  () => route.params.boardId,
+  (newBoardId, oldBoardId) => {
+    boardId.value = newBoardId;
+    fetchData();
+    countStatuses();
+  }
+);
 
 // react to route changes
 watch(
@@ -138,8 +148,9 @@ watch(
        showPopUp.value = true
       } else {
         task.value = res;
-        if (route.path === `/task/${newId}/edit`) {
+        if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
           isEdit.value = true;
+          console.log(isEdit.value)
         } else {
           isEdit.value = false;
         }
@@ -256,6 +267,7 @@ async function addTask(newTask) {
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred adding the task`;
+      showToast.value = true;
     }  else if (res === 401) {
        // go login 
        showPopUp.value = true
@@ -264,8 +276,10 @@ async function addTask(newTask) {
       taskStore.addTask(res);
       statusStore.setNoOftask(countStatus.value);
       messageToast.value = `Task "${res.title}" added successfully`;
+      showToast.value = true;
+      
     }
-    showToast.value = true;
+  
   }
 }
 
@@ -320,7 +334,6 @@ async function removeTask(index, confirmDelete = false) {
 </script>
 
 <template>
-
     <div class="flex flex-col w-full h-screen">
       <!-- <div class="h-[8%]">
         <HeaderView class="h-full" />
@@ -442,7 +455,7 @@ async function removeTask(index, confirmDelete = false) {
 
           <TaskTable
             :statusFilter="statusFilter"
-            :allTask="allTask"
+            :allTask="taskStore.allTask"
             :showErrorMSG="showErrorMSG"
             :showLoading="showLoading"
             :allTaskLimit="allTaskLimit"

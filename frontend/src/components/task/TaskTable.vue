@@ -38,7 +38,6 @@ const taskFiltered = ref([]);
 const windowWidth = ref(window.innerWidth);
 
 const isVisible = ref([]);
-
 watch(
   () => props.allTask,
   () => {
@@ -46,8 +45,9 @@ watch(
       setTimeout(() => {
         isVisible.value[index] = true;
       }, (index + 1) * 150);
-    });
-  }
+    })
+  },
+  {deep: true }
 );
 function getTextColor(hex) {
   if (hex.length !== 7 || hex[0] !== "#") {
@@ -126,6 +126,7 @@ onMounted(() => {
   };
   window.addEventListener("resize", handleResize);
   handleResize();
+  
 });
 
 onUnmounted(() => {
