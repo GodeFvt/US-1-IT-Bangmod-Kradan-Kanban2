@@ -43,14 +43,18 @@ onMounted(async () => {
   if(resBoard === 401){
     showPopUp.value = true
   }
-  // else if(resBoard.length===1) {
-   //ไป task นั้นเลย /board/:boardId TaskBoardView
-   
-  // }
+
   else {
     userStore.setAllBoard(resBoard);
     allBoard.value = userStore.boards;
     console.log(allBoard.value)
+    console.log(allBoard.value[0].id);
+    console.log(resBoard.length);
+
+    if(resBoard.length==1) {
+  // ไป task นั้นเลย /board/:boardId TaskBoardView
+    router.push({ name: "task" ,params : {boardId: allBoard.value[0].id }});
+  }
   }
 });
 
@@ -123,7 +127,7 @@ async function addBoard(newBoard) {
     const res = await createBoard(newBoard);
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
-      messageToast.value = `An error has occurred, the board could not be added`;
+      messageToast.value = `There is problem.Please try again later.`;
     }  else if (res === 401) {
        showPopUp.value=true
     } else {

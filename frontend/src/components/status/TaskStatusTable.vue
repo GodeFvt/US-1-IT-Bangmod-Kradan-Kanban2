@@ -30,7 +30,8 @@ watch(
         isVisible.value[index] = true;
       }, (index + 1) * 150);
     });
-  }
+  },
+  {deep: true }
 );
 </script>
 

@@ -12,6 +12,7 @@ function tokenNotPass() {
    showPopUp.value = true
     intervals.push(
     setTimeout(() => {
+      console.log("popup show");
         router.push({ name: "Login"});
     }, 3000)  
     

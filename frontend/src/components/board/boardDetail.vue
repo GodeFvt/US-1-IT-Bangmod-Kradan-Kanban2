@@ -66,15 +66,16 @@ function edit(boardId) {
 }
 
 const duplicateName = computed(() => {
-  if (isStatusChanged.value === false) {
-    return allBoard.value
-      .filter((e) => e.name !== props.board.name)
-      .some(
-        (e) => e.name.toLowerCase() === duplicateBoard.value.name.toLowerCase()
-      );
-  } else {
-    return false;
-  }
+  return false
+  // if (isStatusChanged.value === false) {
+  //   return allBoard.value
+  //     .filter((e) => e.name !== props.board.name)
+  //     .some(
+  //       (e) => e.name.toLowerCase() === duplicateBoard.value.name.toLowerCase()
+  //     );
+  // } else {
+  //   return false;
+  // }
 });
 
 const disabledSave = computed(() => {
@@ -169,9 +170,9 @@ const disabledSave = computed(() => {
                 <span class="text-xs text-red-500" v-if="validate.name.boolean">
                   {{ validate.name.msg }}</span
                 >
-                <span class="text-xs text-red-500" v-if="duplicateName">
+                <!-- <span class="text-xs text-red-500" v-if="duplicateName">
                   Board name must be uniques, please choose another name.
-                </span>
+                </span> -->
               </div>
             </div>
           </div>

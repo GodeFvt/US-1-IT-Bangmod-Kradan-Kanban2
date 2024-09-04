@@ -4,6 +4,7 @@ import NotFound from "../views/NotFound.vue";
 import TaskStatusView from "../views/TaskStatusView.vue";
 import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
+import VueJwtDecode from "vue-jwt-decode";
 
 
 const routes = [
@@ -27,7 +28,7 @@ const routes = [
     component: BoardView,
   },
   {
-    path: "/board/:boardId/task",
+    path: "/board/:boardId",
     name: "task",
     component: TaskBoardView,
   },
@@ -96,15 +97,36 @@ router.beforeEach((to, from) => {
 
 router.beforeEach((to, from,next) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
+  let token = localStorage.getItem("authToken") || null;
+  let tokenExp = false
+    if (token) {
+        const decodeToken = VueJwtDecode.decode(token);
+        const currentTime = Math.floor(Date.now() / 1000); //แปลงจาก milisec to sec
+        if (decodeToken.exp < currentTime) {
+          localStorage.removeItem("authToken");
+          tokenExp = true
+        }
+      }
   if (isAuthenticated === false && to.name !== 'Login') {
     next({ name: 'Login' });
   }
   else if(to.name ==='Login' && isAuthenticated ===true){
-    next({ name: 'board' });
+    //ถ้า user อยากไปหน้า login แต่ login แล้ว 
+     localStorage.removeItem("authToken");
+    next({ name: 'Login' });
   }
-  else {
+  // else if(to.name !=='Login' && tokenExp ===true){
+  //   //ถ้า user อยากไปหน้า login แต่ login แล้ว 
+  //   console.log("หมด");
+  //    next({ name: 'Login' });
+  //   //localStorage.removeItem("authToken");
+    
+  // }
+   else {
     next();
   }
 });
+
+
 
 export default router;
