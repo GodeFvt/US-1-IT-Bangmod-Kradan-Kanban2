@@ -247,8 +247,10 @@ async function addEditTask(newTask) {
   );
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
+    console.log("edit T");
     await editTask(newTask);
   } else {
+    console.log("add T");
     await addTask(newTask);
   }
 }

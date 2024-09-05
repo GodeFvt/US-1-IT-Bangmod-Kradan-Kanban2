@@ -16,6 +16,7 @@ export const useUserStore = defineStore("userStore", {
       }
     })(),
     boards: [],
+    isAuthenticated : !!localStorage.getItem('authToken'),
   }),
   
   actions: {
@@ -39,6 +40,9 @@ export const useUserStore = defineStore("userStore", {
     },
     setAllBoard(newAllBoard) {
       this.boards = [...newAllBoard];
+    },
+    updateIsAuthen(Boolean) {
+      this.isAuthenticated = Boolean;
     },
   },
 });

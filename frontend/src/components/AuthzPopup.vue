@@ -2,11 +2,14 @@
 import { ref, onMounted,onBeforeUnmount } from "vue";
 import PopUp from "../components/modal/PopUp.vue";
 import { useRouter } from "vue-router";
+import { useUserStore } from "../stores/user.js";
+import VueJwtDecode from "vue-jwt-decode";
 
 const showPopUp = ref(false);
 const timeCount = ref(3);
 const intervals = [];
 const router = useRouter();
+const userStore = useUserStore();
 
 function tokenNotPass() { 
    showPopUp.value = true
@@ -24,12 +27,26 @@ intervals.push(
     }, 1000)
   );
   }
-onMounted(() => {
+onMounted(() => {  
+  checkAuthen();
   tokenNotPass();
+
 });
 onBeforeUnmount(() => {
     intervals.forEach(clearInterval);
 });
+function checkAuthen() {
+  let token = localStorage.getItem("authToken") || null;
+ 
+    if (token) {
+        const decodeToken = VueJwtDecode.decode(token);
+        const currentTime = Math.floor(Date.now() / 1000); //แปลงจาก milisec to sec
+        if (decodeToken.exp < currentTime) {
+          localStorage.removeItem("authToken");
+          userStore.updateIsAuthen(false)
+        }
+      }
+   }
 
 </script>
 <template>

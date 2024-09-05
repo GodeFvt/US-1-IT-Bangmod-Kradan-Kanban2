@@ -17,16 +17,20 @@ const countBoard = computed(() => {
 
 function signOut(){
     userStore.clearAuthToken()
+    userStore.updateIsAuthen(false)
   router.push({ name: "Login"});
 }
 onMounted(async () => {
-  const resBoard = await getAllBoards();
-  if(resBoard === 401){
-    showPopUp.value = true
-  }
-  else {
-    userStore.setAllBoard(resBoard);
-  }
+  
+     const resBoard = await getAllBoards();
+     if(resBoard === 401){
+        showPopUp.value = true
+      }
+     else {
+       userStore.setAllBoard(resBoard);
+      }
+ 
+ 
 });
 
 

@@ -36,7 +36,6 @@ onBeforeUnmount(() => {
 });
 
 function animation() {
-  console.log("playAnimation");
   borderAnimate.value = `border-animate`;
   cardAnimate.value = `card-animate`;
   timeoutId = setTimeout(() => {
@@ -68,6 +67,7 @@ const isNotValid = computed(() => {
 });
 
 const messageShow = ref("");
+const inert = ref(false);
 
 async function signInOnClick(userLogin) {
   let res;
@@ -75,7 +75,9 @@ async function signInOnClick(userLogin) {
     res = await loginAccount(userLogin);
     if (typeof res === "object") {
       // const decodedToken = VueJwtDecode.decode(res.access_token);
+      inert.value = true
       userStore.setAuthToken(res.access_token);
+      userStore.updateIsAuthen(true)
       router.push({ name: "board" });
     } else if (res === 400 || res === 401) {
       showMessage.value = true;
@@ -119,6 +121,7 @@ async function signInOnClick(userLogin) {
                       Sign in to your account
                     </h1>
                   </div>
+                  <form action="#">
                   <div>
                     <label class="block mb-2 text-sm font-medium text-gray-900"
                       >Username</label
@@ -129,6 +132,7 @@ async function signInOnClick(userLogin) {
                       placeholder="username"
                       maxlength="50"
                       v-model="user.userName"
+                      autocomplete="username" :inert="inert"
                     />
                   </div>
                   <div class="max-w-lg">
@@ -145,11 +149,13 @@ async function signInOnClick(userLogin) {
                       </a>
                     </div>
                     <div class="relative">
+                     
                       <input
                         :type="typePassword"
                         placeholder="••••••••"
                         maxlength="14"
                         v-model="user.password"
+                        name="password" autocomplete="current-password"
                         class="itbkk-password py-3 ps-4 pe-10 text-gray-900 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring focus:ring-gray-800 focus:border-gray-100 block w-full p-2.5"
                       />
                       <button
@@ -186,7 +192,7 @@ async function signInOnClick(userLogin) {
                       </button>
                     </div>
                   </div>
-
+                </form>
                   <div class="flex items-start">
                     <div v-if="showMessage" class="itbkk-message text-red-500">
                       <p>{{ messageShow }}</p>
