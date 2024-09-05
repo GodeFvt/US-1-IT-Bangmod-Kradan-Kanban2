@@ -17,17 +17,10 @@ import java.util.Optional;
 
 @Repository
 public interface TaskListRepository extends JpaRepository<TaskList, Integer> {
-//    @Transactional
-//    @Modifying
-//    @Query("UPDATE TaskList tl SET tl.status.id = :newId WHERE tl.status.id = :oldId")
-//    void updateStatusId(Integer oldId, Integer newId);
-
     @Transactional
     @Modifying
     @Query("UPDATE TaskList tl SET tl.status.id = :newId WHERE tl.status.id = :oldId AND tl.board.id = :boardId")
     void updateStatusIdAllTaskList(String boardId,Integer oldId, Integer newId);
-
-
 
     @Query("SELECT new sit.us1.backend.dtos.tasksDTO.StatusCountDTO( COUNT(t), t.status.name) FROM TaskList t JOIN Board b ON t.board.id = b.id WHERE b.id = :boardID AND t.status.id = :statusId GROUP BY t.status.name")
     StatusCountDTO countByStatusIdAndReturnName(String boardID,Integer statusId);
@@ -43,9 +36,7 @@ public interface TaskListRepository extends JpaRepository<TaskList, Integer> {
 
     List<TaskList> findAllByStatusId(Integer statusId);
 
-    List<TaskList> findAllByStatusNameIn(String[] statusNames);
-
-
     Optional<TaskList> findByBoardIdAndId(String boardID, Integer id);
 
+    List<TaskList> findAllByBoard_Id(String boardID);
 }

@@ -7,14 +7,16 @@ import org.springframework.stereotype.Service;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.dtos.tasksDTO.SimpleTaskDTO;
-import sit.us1.backend.entities.taskboard.Board;
-import sit.us1.backend.entities.taskboard.BoardUser;
-import sit.us1.backend.entities.taskboard.TaskLimit;
+import sit.us1.backend.entities.taskboard.*;
 import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.repositories.taskboard.BoardRepository;
 import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
+import sit.us1.backend.repositories.taskboard.TaskListRepository;
+import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BoardService {
@@ -22,6 +24,10 @@ public class BoardService {
     private BoardRepository boardRepository;
     @Autowired
     private TaskLimitRepository taskLimitRepository;
+    @Autowired
+    private TaskStatusRepository taskStatusRepository;
+    @Autowired
+    private TaskListRepository taskListRepository;
     @Autowired
     private ListMapper listMapper;
     @Autowired
@@ -69,9 +75,16 @@ public class BoardService {
     }
 
     public SimpleBoardDTO deleteBoardById(String id) {
-        Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
+        List<TaskList> allTask = taskListRepository.findAllByBoard_Id(id);
         TaskLimit taskLimits = taskLimitRepository.findByBoardId(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
         try {
+            taskListRepository.deleteAll(allTask);
+            Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
+            List<TaskStatus> allStatus = taskStatusRepository.findAllByBoardId(id);
+            if (board.getIsCustomStatus()) {
+                taskStatusRepository.deleteAll(allStatus);
+            }
+
             taskLimitRepository.delete(taskLimits);
             boardRepository.delete(board);
             return mapper.map(board, SimpleBoardDTO.class);
