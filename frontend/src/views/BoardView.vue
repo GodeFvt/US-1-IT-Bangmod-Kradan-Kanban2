@@ -220,7 +220,7 @@ function openBoard(boardId){
       </div>
       
     </main>
-    <div class="ml-auto">
+    <div v-if="showToast" class="fixed flex items-center w-full max-w-xs right-5 bottom-5">
     <Toast :toast="typeToast" @close-toast="showToast = false">
         <template #message>
           <span class="itbkk-message break-all">{{ messageToast }}</span>
