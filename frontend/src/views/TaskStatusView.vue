@@ -12,6 +12,7 @@ import {
   toggleLimitTask,
   getLimit,
   getFilteredTask,
+  getBoardsById
 } from "../lib/fetchUtill.js";
 import TaskStatusTable from "../components/status/TaskStatusTable.vue";
 import TaskStatusDetail from "../components/status/TaskStatusDetail.vue";
@@ -22,9 +23,8 @@ import { useStatusStore } from "../stores/statuses.js";
 import { useTaskStore } from "../stores/tasks.js";
 import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
-import HeaderView from "./HeaderView.vue";
 import AuthzPopup from '../components/AuthzPopup.vue';
-
+import identifyUser from "../components/identifyUser.vue";
 
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
@@ -55,6 +55,7 @@ const maximumTask = ref(statusStore.maximumTask);
 const showSettingModal = ref(false);
 const boardId = ref(route.params.boardId);
 const tranferStatus = ref("No Status");
+const boardName = ref();
 
 async function fetchData() {
    const resStatus = await getAllStatus(boardId.value);
@@ -64,6 +65,8 @@ async function fetchData() {
        // go login 
        showPopUp.value = true
     } else {
+    const res = await getBoardsById(boardId.value);
+    boardName.value = res.name;
     statusStore.setAllStatus(resStatus);
     allStatus.value = statusStore.allStatus;
   }
@@ -310,7 +313,6 @@ async function removeStatus(index, confirmDelete = false) {
   //ได้ id ที่จะ tranfer
   let newStatus = allStatus.value.find((e) => e.name === tranferStatus.value);
   let res;
-  console.log(newStatus.id);
   if (confirmDelete) {
     if (showTranfer.value) {
       res = await deleteStatusAndTranfer(boardId.value,status.value.id, newStatus.id);
@@ -377,7 +379,21 @@ async function clickRemove(index) {
     <div class="flex flex-col items-center h-full gap-5 mt-2">
       <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
         <!-- Task Status Count -->
-        <div class="m-[2px] flex sm:items-center items-end">
+        <div class="m-[2px] flex sm:items-center items-end w-full">
+  
+          <button @click="router.go(-1)" class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+       
+       <div
+         class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold"
+       >
+         {{boardName}} Personal's Board
+       </div>
+   </div>
+        <!-- <div class="m-[2px] flex sm:items-center items-end">
           <router-link :to="{ name: 'task' }">
             <div
               class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1"
@@ -388,13 +404,14 @@ async function clickRemove(index) {
           <div class="mx-2 text-slate-500">/</div>
 
           <div class="text-gray-800 text-[1rem] font-bold">ManageStatus</div>
-        </div>
+        </div> -->
 
         <!-- Filter -->
         <div class="flex items-end w-full justify-end">
           <div
             class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
           >
+          
             <div class="">
               <router-link :to="{ name: 'AddStatus' }">
                 <button
@@ -569,7 +586,10 @@ async function clickRemove(index) {
     >
     </limitModal>
     <AuthzPopup v-if="showPopUp" />
-
+    <identifyUser
+      :boardId="boardId"
+      >
+    </identifyUser>
   </div>
 </template>
 <style scoped></style>

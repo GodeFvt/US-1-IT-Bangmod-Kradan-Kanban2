@@ -6,6 +6,10 @@ import { useRouter, useRoute } from "vue-router";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import TaskStatusCard from "../components/status/TaskStatusCard.vue";
 import HeaderView from "./HeaderView.vue";
+import {
+  getAllBoards,
+} from "../lib/fetchUtill.js";
+
 const toggleIcon = ref(false);
 const user = ref({
   userName: "",
@@ -74,11 +78,17 @@ async function signInOnClick(userLogin) {
   if (userLogin.userName.length > 0 && userLogin.password.length > 0) {
     res = await loginAccount(userLogin);
     if (typeof res === "object") {
-      // const decodedToken = VueJwtDecode.decode(res.access_token);
       inert.value = true
       userStore.setAuthToken(res.access_token);
       userStore.updateIsAuthen(true)
+
+      const resBoard = await getAllBoards();
+     userStore.setAllBoard(resBoard);
+
       router.push({ name: "board" });
+      if(resBoard.length===1) {
+    router.push({ name: "task" ,params : {boardId: userStore.boards[0].id }});
+  }
     } else if (res === 400 || res === 401) {
       showMessage.value = true;
       messageShow.value = "Username or Password is incorrect.";

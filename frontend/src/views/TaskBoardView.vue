@@ -10,6 +10,7 @@ import {
   getFilteredTask,
   toggleLimitTask,
   getLimit,
+  getBoardsById,
 } from "../lib/fetchUtill.js";
 // import router
 import { useRoute, useRouter } from "vue-router";
@@ -26,10 +27,12 @@ import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
 import AuthzPopup from '../components/AuthzPopup.vue';
+import identifyUser from "../components/identifyUser.vue";
+import { useUserStore } from "../stores/user.js";
 
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
-
+const userStore = useUserStore();
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
 const router = useRouter();
@@ -45,7 +48,7 @@ const messageToast = ref("");
 const typeToast = ref("");
 const isEdit = ref(false);
 const indexToRemove = ref(-1);
-
+const boardName = ref();
 const task = ref({});
 const isVisible = ref([]);
 
@@ -54,11 +57,12 @@ const showDeleteModal = ref(false);
 const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
-
 const boardId = ref(route.params.boardId);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
 const allTaskLimit = ref([]); // allTask อันที่เกิน
+
+
 
 const countStatus = computed(() => {
   return allTask.value.reduce(
@@ -73,6 +77,7 @@ const countStatus = computed(() => {
 });
 
 async function fetchData() {
+  
   const resTask = await getFilteredTask(boardId.value);
   if (resTask === undefined) {
     showErrorMSG.value = true;
@@ -81,6 +86,8 @@ async function fetchData() {
   } else {
     taskStore.setAllTask(resTask);
     allTask.value = taskStore.allTask;
+    const res = await getBoardsById(boardId.value);
+    boardName.value = res.name;
   }
 
   maximumTask.value = statusStore.maximumTask;
@@ -342,19 +349,25 @@ async function removeTask(index, confirmDelete = false) {
       </div> -->
       <div class="flex flex-col items-center h-full gap-5 mt-2">
         <!-- Task Status and Add Task Button -->
-        <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
-          <div class="m-[2px] flex sm:items-center items-end">
-            <router-link :to="{ name: 'task' }">
+        <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300">
+          
+          <div class="m-[2px] flex sm:items-center items-end w-full ">
+            <router-link :to="{ name: 'board' }">
+            <button class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+    </router-link>
               <div
-                class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1 font-bold"
+                class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold"
               >
-                Home
+                {{boardName}} Personal's Board
               </div>
-            </router-link>
-            <div class="mx-2 text-slate-500">/</div>
+              
           </div>
           <!-- Filter -->
-          <div class="flex items-end w-full justify-end sm:mt-0 mt-5">
+          <div class="flex items-end w-full justify-end sm:mt-0 mt-5 mb-2">
             <div class="flex flex-row items-center gap-1">
               <div class="">
                 <router-link :to="{ name: 'AddTask' }">
@@ -584,6 +597,10 @@ async function removeTask(index, confirmDelete = false) {
         </Toast>
       </div>
     </div>
+    <identifyUser
+      :boardId="boardId"
+      >
+    </identifyUser>
 </template>
 <style scoped>
 .task-status-wrapper {

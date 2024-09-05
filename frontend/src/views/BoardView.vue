@@ -2,15 +2,9 @@
 import { ref, onMounted, watch, computed ,onUnmounted} from "vue";
 import {
   deleteBoard,
-  getTaskById,
   createBoard,
   updateBoard,
-  getAllStatus,
-  getFilteredTask,
-  toggleLimitTask,
-  getLimit,
   getAllBoards,
-  getBoardsById,
 } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import AddButton from "../components/icon/AddButton.vue";
@@ -37,8 +31,8 @@ const isEdit  = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
 
-// set value for allBoard
-onMounted(async () => {
+
+async function fetchData() {
   const resBoard = await getAllBoards();
   if(resBoard === 401){
     showPopUp.value = true
@@ -47,24 +41,26 @@ onMounted(async () => {
   else {
     userStore.setAllBoard(resBoard);
     allBoard.value = userStore.boards;
-    console.log(allBoard.value)
-    console.log(allBoard.value[0].id);
-    console.log(resBoard.length);
 
-    if(resBoard.length==1) {
-  // ไป task นั้นเลย /board/:boardId TaskBoardView
-    router.push({ name: "task" ,params : {boardId: allBoard.value[0].id }});
   }
-  }
-});
+}
+// set value for allBoard
+onMounted(()=>{
+  allBoard.value = userStore.boards;
+})
 
 // add newBoard
 watch(
   () => route.path,
-  (newPath, oldPath) => {
+  (newPath, oldPath) => { 
+    if(oldPath ==="/login"){
+        
+    }
+    else{ fetchData()}
     if (newPath === "/board/add") {
       ClickAdd();
     }
+   
   },
   { immediate: true }
 );
