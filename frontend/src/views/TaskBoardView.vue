@@ -349,7 +349,7 @@ async function removeTask(index, confirmDelete = false) {
       </div> -->
       <div class="flex flex-col items-center h-full gap-5 mt-2">
         <!-- Task Status and Add Task Button -->
-        <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300">
+        <div class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300 slide-right">
           
           <div class="m-[2px] flex sm:items-center items-end w-full ">
             <router-link :to="{ name: 'board' }">
@@ -360,7 +360,7 @@ async function removeTask(index, confirmDelete = false) {
       </button>
     </router-link>
               <div
-                class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold"
+                class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold"
               >
                 {{boardName}} Personal's Board
               </div>
@@ -611,5 +611,20 @@ async function removeTask(index, confirmDelete = false) {
 .task-status-wrapper.slide-in {
   transform: translateX(0);
   opacity: 1;
+}
+.slide-right {
+  -webkit-animation: slide-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: slide-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slide-right {
+  0% {
+    -webkit-transform: translateX(-100px);
+    transform: translateX(-100px);
+  }
+  100% {
+    -webkit-transform: translateX(0);
+    transform: translateX(0);
+  }
 }
 </style>

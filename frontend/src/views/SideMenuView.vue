@@ -54,13 +54,17 @@ onMounted(async () => {
       <ul class="mt-6 space-y-1">
         <router-link :to="{ name: 'board' }">
         <li>
-          <a
-            href="#"
-            class="block rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
-          >
+          <!-- bg-gray เวลา route อยู่หน้า board -->
+          <div
+          :class="{
+            'bg-gray-100 text-gray-700': route.name === 'board',
+            'text-white hover:bg-gray-100 hover:text-gray-700': route.name !== 'board'
+          }"
+          class="block rounded-lg px-4 py-2 text-sm font-medium"
+        >
           
             General
-          </a>
+          </div>
         </li>
           </router-link>
         <li>
@@ -68,9 +72,13 @@ onMounted(async () => {
             class="slide-right group [&_summary::-webkit-details-marker]:hidden"
             style="animation-delay: 0.2s"
           >
-            <summary
-              class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-white hover:bg-gray-100 hover:text-gray-700"
-            >
+          <summary
+          :class="{
+            'bg-gray-200 text-gray-700': route.name === 'task',
+            'text-white hover:bg-gray-100 hover:text-gray-700': route.name !== 'task'
+          }"
+          class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-sm font-medium"
+        >
               <span class="text-sm font-medium"> All Boards ({{countBoard}})</span>
 
               <span
@@ -94,23 +102,18 @@ onMounted(async () => {
             <ul class="mt-2 space-y-1 px-4">
               <li v-for="board in userStore.boards" :key="board.id">
                 <router-link  :to="{ name: 'task', params: { boardId: board.id } }" 
-                class="block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700" >
+                :class="{
+                'bg-gray-100 text-gray-700': route.params.boardId === board.id,
+                'text-white hover:bg-gray-100 hover:text-gray-700': route.params.boardId !== board.id
+              }"
+              class="block rounded-lg px-4 py-2 text-sm font-medium"
+            >
                 {{ board.name }}
                </router-link>
               </li>
             </ul>
           </details>
         </li>
-
-        <!-- <li class="">
-          <a
-            href="#"
-            class="slide-right block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700"
-            style="animation-delay: 0.4s"
-          >
-            Manage Status
-          </a>
-        </li> -->
 
         <li>
           <details
