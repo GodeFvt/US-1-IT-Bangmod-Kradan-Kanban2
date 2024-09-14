@@ -38,6 +38,9 @@ onBeforeUnmount(() => {
 function checkAuthen() {
   let token = localStorage.getItem("authToken") || null;
  
+  if(token === null){
+    userStore.updateIsAuthen(false)
+  }
     if (token) {
         const decodeToken = VueJwtDecode.decode(token);
         const currentTime = Math.floor(Date.now() / 1000); //แปลงจาก milisec to sec

@@ -21,13 +21,14 @@ function signOut(){
   router.push({ name: "Login"});
 }
 onMounted(async () => {
+  if(userStore.boards.length ===0){
      const resBoard = await getAllBoards();
      if(resBoard === 401){
         showPopUp.value = true
       }
      else {
        userStore.setAllBoard(resBoard);
-      }
+      }}
 });
 
 

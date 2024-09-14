@@ -102,17 +102,9 @@ router.beforeEach((to, from,next) => {
     next({ name: 'Login' });
   }
   else if(to.name ==='Login' && userStore.isAuthenticated ===true){
-    //ถ้า user อยากไปหน้า login แต่ login แล้ว 
-    //  localStorage.removeItem("authToken");
+
     next({ name: 'board' });
   }
-  // else if(to.name !=='Login' && tokenExp ===true){
-  //   //ถ้า user อยากไปหน้า login แต่ login แล้ว 
-  //   console.log("หมด");
-  //    next({ name: 'Login' });
-  //   //localStorage.removeItem("authToken");
-    
-  // }
    else {
     next();
   }

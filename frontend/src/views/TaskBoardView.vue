@@ -27,7 +27,6 @@ import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
 import AuthzPopup from '../components/AuthzPopup.vue';
-import identifyUser from "../components/identifyUser.vue";
 import { useUserStore } from "../stores/user.js";
 
 // import HeaderView from "./HeaderView.vue";
@@ -77,7 +76,22 @@ const countStatus = computed(() => {
 });
 
 async function fetchData() {
-  
+    const oidByToken = userStore.authToken.oid;
+    const res = await getBoardsById(boardId.value);
+    if (res === 404 || res === 400 || res === 500) {
+        router.push({ name: "TaskNotFound", params: { page: "Board" } });
+      }
+      else if(res === 401){
+        showPopUp.value = true;
+      }
+      else{
+      boardName.value = res.name;
+       const oidByGet = res.owner.id;
+    if(oidByGet !== oidByToken){
+        router.push({ name: "TaskNotFound", params: { page: "Board" } });
+       } 
+      }
+
   const resTask = await getFilteredTask(boardId.value);
   if (resTask === undefined) {
     showErrorMSG.value = true;
@@ -86,8 +100,8 @@ async function fetchData() {
   } else {
     taskStore.setAllTask(resTask);
     allTask.value = taskStore.allTask;
-    const res = await getBoardsById(boardId.value);
-    boardName.value = res.name;
+    // const res = await getBoardsById(boardId.value);
+    // boardName.value = res.name;
   }
 
   maximumTask.value = statusStore.maximumTask;
@@ -597,10 +611,10 @@ async function removeTask(index, confirmDelete = false) {
         </Toast>
       </div>
     </div>
-    <identifyUser
+    <!-- <identifyUser
       :boardId="boardId"
       >
-    </identifyUser>
+    </identifyUser> -->
 </template>
 <style scoped>
 .task-status-wrapper {

@@ -24,8 +24,9 @@ import { useTaskStore } from "../stores/tasks.js";
 import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import AuthzPopup from '../components/AuthzPopup.vue';
-import identifyUser from "../components/identifyUser.vue";
+import { useUserStore } from "../stores/user.js";
 
+const userStore = useUserStore();
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
 const router = useRouter();
@@ -58,6 +59,22 @@ const tranferStatus = ref("No Status");
 const boardName = ref();
 
 async function fetchData() {
+  const oidByToken = userStore.authToken.oid;
+    const res = await getBoardsById(boardId.value);
+    if (res === 404 || res === 400 || res === 500) {
+        router.push({ name: "TaskNotFound", params: { page: "Board" } });
+      }
+      else if(res === 401){
+        showPopUp.value = true;
+      }
+      else{
+      boardName.value = res.name;
+       const oidByGet = res.owner.id;
+    if(oidByGet !== oidByToken){
+        router.push({ name: "TaskNotFound", params: { page: "Board" } });
+       } 
+      }
+
    const resStatus = await getAllStatus(boardId.value);
   if (resStatus === undefined) {
     showErrorMSG.value = true;
@@ -65,8 +82,6 @@ async function fetchData() {
        // go login 
        showPopUp.value = true
     } else {
-    const res = await getBoardsById(boardId.value);
-    boardName.value = res.name;
     statusStore.setAllStatus(resStatus);
     allStatus.value = statusStore.allStatus;
   }
@@ -380,13 +395,13 @@ async function clickRemove(index) {
       <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
         <!-- Task Status Count -->
         <div class="m-[2px] flex sm:items-center items-end w-full">
-  
-          <button @click="router.go(-1)" class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800">
+          <router-link :to="{ name: 'task' }">
+          <button class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-       
+      </router-link>
        <div
          class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold"
        >
@@ -586,10 +601,7 @@ async function clickRemove(index) {
     >
     </limitModal>
     <AuthzPopup v-if="showPopUp" />
-    <identifyUser
-      :boardId="boardId"
-      >
-    </identifyUser>
+
   </div>
 </template>
 <style scoped></style>
