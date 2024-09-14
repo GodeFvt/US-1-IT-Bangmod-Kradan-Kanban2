@@ -17,10 +17,10 @@ public class ValidationUtil {
         if (!violations.isEmpty()) {
             if(violations.iterator().next().getPropertyPath().toString().isEmpty() || violations.iterator().next().getPropertyPath().toString().isBlank()){
                 throw new BadRequestException(violations.iterator().next().getMessage());
-            }else {
+            }
+            else {
                 ValidationException validationException = new ValidationException("Validation error. Check 'errors' field for details.");
                 violations.forEach(violation -> {
-                    System.out.println(violation.getPropertyPath().toString());
                     validationException.addValidationError(violation.getPropertyPath().toString(), violation.getMessage());
                 });
                 throw validationException;

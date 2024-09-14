@@ -29,7 +29,7 @@ import java.util.List;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
 @RestController
-@RequestMapping("/boards")
+@RequestMapping("/v3/boards")
 public class BoardsController {
     @Autowired
     private BoardService boardService;
