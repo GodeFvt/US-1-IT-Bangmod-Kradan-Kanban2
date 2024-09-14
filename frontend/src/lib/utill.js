@@ -31,4 +31,42 @@ function validateSizeInput(...properties) {
   });
 }
 
-export { convertString, toFormatDate, validateSizeInput };
+function isTokenValid(token){
+  if (!token) {
+    return false; // No token found
+  }
+
+  let decodeToken;
+
+  if (typeof token === 'string') {
+    // Token is a string, try to decode it
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return false; // Token is not well-formed (JWT must have three parts)
+    }
+
+    try {
+      decodeToken = VueJwtDecode.decode(token);
+    } catch (error) {
+      return false; // Error in decoding token or invalid JSON
+    }
+  } else if (typeof token === 'object') {
+    // Token is already decoded (assumed to be an object)
+    decodeToken = token;
+  } else {
+    return false; // Token is not a valid format
+  }
+
+  if (!decodeToken.exp) {
+    return false; // No expiration field found
+  }
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  if (decodeToken.exp < currentTime) {
+    return false; // Token is expired
+  }
+
+  return true; // Token is valid
+}
+
+export { convertString, toFormatDate, validateSizeInput,isTokenValid };

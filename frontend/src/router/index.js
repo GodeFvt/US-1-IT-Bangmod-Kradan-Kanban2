@@ -6,6 +6,8 @@ import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import {  useUserStore  } from "../stores/user.js";
 
+
+
 const routes = [
   {
     path: "/",

@@ -28,6 +28,7 @@ import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
 import AuthzPopup from '../components/AuthzPopup.vue';
 import { useUserStore } from "../stores/user.js";
+import { isTokenValid } from "../lib/utill.js";
 
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
@@ -76,6 +77,9 @@ const countStatus = computed(() => {
 });
 
 async function fetchData() {
+
+  if(isTokenValid(userStore.authToken)){
+    console.log("asdasd")
     const oidByToken = userStore.authToken.oid;
     const res = await getBoardsById(boardId.value);
     if (res === 404 || res === 400 || res === 500) {
@@ -131,6 +135,8 @@ async function fetchData() {
   }
 
   showLoading.value = false;
+}
+else{showPopUp.value = true}
 }
 
 function countStatuses() {
