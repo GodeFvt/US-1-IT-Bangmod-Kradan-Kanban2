@@ -21,7 +21,6 @@ function signOut(){
   router.push({ name: "Login"});
 }
 onMounted(async () => {
-  
      const resBoard = await getAllBoards();
      if(resBoard === 401){
         showPopUp.value = true
@@ -29,8 +28,6 @@ onMounted(async () => {
      else {
        userStore.setAllBoard(resBoard);
       }
- 
- 
 });
 
 
