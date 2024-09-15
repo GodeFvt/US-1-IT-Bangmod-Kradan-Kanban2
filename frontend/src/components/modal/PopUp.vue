@@ -5,9 +5,9 @@
     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
   >
     <div
-      class="flex items-center justify-center max-lg:mx-0 max-lg:my-0 max-lg:grow w-[35%] "
+      class="flex items-center justify-center max-lg:mx-0 max-lg:my-0 max-lg:grow w-[35%]"
     >
-      <div class="flex flex-col items-center justify-center w-[100%] ">
+      <div class="flex flex-col items-center justify-center w-[100%]">
         <div
           class="w-full rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0 backdrop-blur-xl bg-slate-100"
         >

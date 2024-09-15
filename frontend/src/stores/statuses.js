@@ -5,7 +5,7 @@ export const useStatusStore = defineStore("statusStore", {
     allStatus: [],
     isLimit: false,
     maximumTask: undefined,
-    noOftask: {}
+    noOftask: {},
   }),
   actions: {
     addStatus(status) {

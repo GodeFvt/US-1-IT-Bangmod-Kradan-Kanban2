@@ -31,7 +31,7 @@ watch(
       }, (index + 1) * 150);
     });
   },
-  {deep: true }
+  { deep: true }
 );
 </script>
 

@@ -1,52 +1,60 @@
 <script setup>
-import { ref, computed,onMounted } from "vue";
-import {
-  getAllBoards,
-} from "../lib/fetchUtill.js";
+import { ref, computed, onMounted } from "vue";
+import { getAllBoards } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
-import AuthzPopup from '../components/AuthzPopup.vue';
+import AuthzPopup from "../components/AuthzPopup.vue";
 import { isTokenValid } from "../lib/utill.js";
-
+import QuillIcon from "../components/icon/QuillIcon.vue";
 const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
-const showPopUp =ref(false);
+const showPopUp = ref(false);
 const countBoard = computed(() => {
   return userStore.boards.length;
-})
-
-function signOut(){
-    userStore.clearAuthToken()
-    userStore.updateIsAuthen(false)
-  router.push({ name: "Login"});
-}
-onMounted(async () => {
-   userStore.initializeAuthToken();
-  if (!isTokenValid(userStore.authToken)) {
-        showPopUp.value = true;
-        return;
-      } else {
-  if(userStore.boards.length ===0){
-     const resBoard = await getAllBoards();
-     if(resBoard === 401){
-        showPopUp.value = true
-      }
-     else {
-       userStore.setAllBoard(resBoard);
-      }
-    }
-    }
-  
 });
 
+function signOut() {
+  userStore.clearAuthToken();
+  userStore.updateIsAuthen(false);
+  router.push({ name: "Login" });
+}
 
+onMounted(async () => {
+  userStore.initializeAuthToken();
+  if (!isTokenValid(userStore.authToken)) {
+    showPopUp.value = true;
+    return;
+  } else {
+    if (userStore.boards.length === 0) {
+      const resBoard = await getAllBoards();
+      if (resBoard === 401) {
+        showPopUp.value = true;
+      } else {
+        userStore.setAllBoard(resBoard);
+        // if (resBoard.length === 1) {
+        //   console.log("redirect to task");
+        //   router.push({
+        //     name: "task",
+        //     params: { boardId: userStore.boards[0].id },
+        //   });
+        // }
+      }
+    }
+  }
+});
+const open = ref(true);
 </script>
 
 <template>
   <div
-    class="flex h-screen flex-col justify-between border-e w-[17rem] bg-gray-800 border-r border-gray-500"
+    class="flex relative h-screen flex-col justify-between border-e bg-gray-800 border-r border-gray-500 duration-300"
+    :class="{ 'w-[17rem]': open, 'w-16': !open }"
   >
+    <QuillIcon
+      class="bg-white rounded-full absolute -right-3 top-9 border border-gray-800 cursor-pointer"
+      @click="open = !open"
+    />
     <div class="px-4 h-full">
       <div class="flex h-[9%] items-center py-3 border-b border-gray-100">
         <div class="flex items-center mx-auto h-full justify-center">
@@ -60,33 +68,36 @@ onMounted(async () => {
       </div>
       <ul class="mt-6 space-y-1">
         <router-link :to="{ name: 'board' }">
-        <li>
-          <!-- bg-gray เวลา route อยู่หน้า board -->
-          <div
-          :class="{
-            'bg-gray-100 text-gray-700': route.name === 'board',
-            'text-white hover:bg-gray-100 hover:text-gray-700': route.name !== 'board'
-          }"
-          class="block rounded-lg px-4 py-2 text-sm font-medium"
-        >
-          
-            General
-          </div>
-        </li>
-          </router-link>
+          <li>
+            <!-- bg-gray เวลา route อยู่หน้า board -->
+            <div
+              :class="{
+                'bg-gray-100 text-gray-700': route.name === 'board',
+                'text-white hover:bg-gray-100 hover:text-gray-700':
+                  route.name !== 'board',
+              }"
+              class="block rounded-lg px-4 py-2 text-sm font-medium"
+            >
+              General
+            </div>
+          </li>
+        </router-link>
         <li>
           <details
             class="slide-right group [&_summary::-webkit-details-marker]:hidden"
             style="animation-delay: 0.2s"
           >
-          <summary
-          :class="{
-            'bg-gray-200 text-gray-700': route.name === 'task',
-            'text-white hover:bg-gray-100 hover:text-gray-700': route.name !== 'task'
-          }"
-          class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-sm font-medium"
-        >
-              <span class="text-sm font-medium"> All Boards ({{countBoard}})</span>
+            <summary
+              :class="{
+                'bg-gray-200 text-gray-700': route.name === 'task',
+                'text-white hover:bg-gray-100 hover:text-gray-700':
+                  route.name !== 'task',
+              }"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-sm font-medium"
+            >
+              <span class="text-sm font-medium">
+                All Boards ({{ countBoard }})</span
+              >
 
               <span
                 class="shrink-0 transition duration-300 group-open:-rotate-180"
@@ -108,15 +119,18 @@ onMounted(async () => {
 
             <ul class="mt-2 space-y-1 px-4">
               <li v-for="board in userStore.boards" :key="board.id">
-                <router-link  :to="{ name: 'task', params: { boardId: board.id } }" 
-                :class="{
-                'bg-gray-100 text-gray-700': route.params.boardId === board.id,
-                'text-white hover:bg-gray-100 hover:text-gray-700': route.params.boardId !== board.id
-              }"
-              class="block rounded-lg px-4 py-2 text-sm font-medium"
-            >
-                {{ board.name }}
-               </router-link>
+                <router-link
+                  :to="{ name: 'task', params: { boardId: board.id } }"
+                  :class="{
+                    'bg-gray-100 text-gray-700':
+                      route.params.boardId === board.id,
+                    'text-white hover:bg-gray-100 hover:text-gray-700':
+                      route.params.boardId !== board.id,
+                  }"
+                  class="block rounded-lg px-4 py-2 text-sm font-medium"
+                >
+                  {{ board.name }}
+                </router-link>
               </li>
             </ul>
           </details>
@@ -215,9 +229,11 @@ onMounted(async () => {
 
         <div>
           <p class="text-xs">
-            <strong class="itbkk-fullname block font-medium">{{ userStore.authToken?.name || 'Anonymous' }}</strong>
+            <strong class="itbkk-fullname block font-medium">{{
+              userStore.authToken?.name || "Anonymous"
+            }}</strong>
 
-            <span> {{ userStore.authToken?.email || '' }} </span>
+            <span> {{ userStore.authToken?.email || "" }} </span>
           </p>
         </div>
       </a>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, computed,onUnmounted } from "vue";
+import { ref, onMounted, watch, computed, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   getAllStatus,
@@ -12,7 +12,7 @@ import {
   toggleLimitTask,
   getLimit,
   getFilteredTask,
-  getBoardsById
+  getBoardsById,
 } from "../lib/fetchUtill.js";
 import TaskStatusTable from "../components/status/TaskStatusTable.vue";
 import TaskStatusDetail from "../components/status/TaskStatusDetail.vue";
@@ -23,7 +23,7 @@ import { useStatusStore } from "../stores/statuses.js";
 import { useTaskStore } from "../stores/tasks.js";
 import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
-import AuthzPopup from '../components/AuthzPopup.vue';
+import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
 import { isTokenValid } from "../lib/utill.js";
 
@@ -61,64 +61,60 @@ const boardName = ref();
 
 async function fetchData() {
   if (!isTokenValid(userStore.authToken)) {
-        showPopUp.value = true;
-        return;
-      } else {
-  const oidByToken = userStore.authToken.oid;
-  const res = await getBoardsById(boardId.value);
+    showPopUp.value = true;
+    return;
+  } else {
+    const oidByToken = userStore.authToken.oid;
+    const res = await getBoardsById(boardId.value);
     if (res === 404 || res === 400 || res === 500) {
-        router.push({ name: "TaskNotFound", params: { page: "Board" } });
-      }
-      else if(res === 401){
-        showPopUp.value = true;
-      }
-      else{
-      boardName.value = res.name;
-       const oidByGet = res.owner.id;
-    if(oidByGet !== oidByToken){
-        router.push({ name: "TaskNotFound", params: { page: "Board" } });
-       } 
-      }
-   const resStatus = await getAllStatus(boardId.value);
-  if (resStatus === undefined) {
-    showErrorMSG.value = true;
-  } else if (resStatus === 401) {
-       // go login 
-       showPopUp.value = true
+      router.push({ name: "TaskNotFound", params: { page: "Board" } });
+    } else if (res === 401) {
+      showPopUp.value = true;
     } else {
-    statusStore.setAllStatus(resStatus);
-    allStatus.value = statusStore.allStatus;
-  }
-  maximumTask.value = statusStore.maximumTask;
-  toggleActive.value = statusStore.isLimit;
-  statusStore.setNoOftask(countStatus.value);
-  if (statusStore.maximumTask === undefined) {
-    const resLimit = await getLimit(boardId.value);
-     if (resLimit === 401) {
-       // go login 
-       showPopUp.value = true
+      boardName.value = res.name;
+      const oidByGet = res.owner.id;
+      if (oidByGet !== oidByToken) {
+        router.push({ name: "TaskNotFound", params: { page: "Board" } });
+      }
     }
-    statusStore.setMaximumTaskStatus(resLimit.maximumTask);
-    statusStore.setLimitStatus(resLimit.isLimit);
+    const resStatus = await getAllStatus(boardId.value);
+    if (resStatus === undefined) {
+      showErrorMSG.value = true;
+    } else if (resStatus === 401) {
+      // go login
+      showPopUp.value = true;
+    } else {
+      statusStore.setAllStatus(resStatus);
+      allStatus.value = statusStore.allStatus;
+    }
     maximumTask.value = statusStore.maximumTask;
     toggleActive.value = statusStore.isLimit;
-  }
-  if (taskStore.allTask.length === 0) {
-    const resTask = await getFilteredTask(boardId.value);
-    if (resTask === undefined) {
-      showErrorMSG.value = true;
-    } else if (resTask === 401) {
-       // go login 
-       showPopUp.value = true
-    }  else {
-      taskStore.setAllTask(resTask);
+    statusStore.setNoOftask(countStatus.value);
+    if (statusStore.maximumTask === undefined) {
+      const resLimit = await getLimit(boardId.value);
+      if (resLimit === 401) {
+        // go login
+        showPopUp.value = true;
+      }
+      statusStore.setMaximumTaskStatus(resLimit.maximumTask);
+      statusStore.setLimitStatus(resLimit.isLimit);
+      maximumTask.value = statusStore.maximumTask;
+      toggleActive.value = statusStore.isLimit;
     }
+    if (taskStore.allTask.length === 0) {
+      const resTask = await getFilteredTask(boardId.value);
+      if (resTask === undefined) {
+        showErrorMSG.value = true;
+      } else if (resTask === 401) {
+        // go login
+        showPopUp.value = true;
+      } else {
+        taskStore.setAllTask(resTask);
+      }
+    }
+
+    showLoading.value = false;
   }
-
-  showLoading.value = false;
-
-}
-
 }
 
 onMounted(() => {
@@ -132,7 +128,6 @@ watch(
     fetchData();
   }
 );
-
 
 //noOfTask ไม่มาด้วยเลยต้องมาset
 const countStatus = computed(() => {
@@ -156,24 +151,24 @@ watch(
         return;
       } else {
         showLoading.value = true;
-      const res = await getStatusById(boardId.value,newId);
-      if (res === 404 || res === 400) {
-        router.push({ name: "TaskNotFound", params: { page: "Status" } });
-      }  else if (res === 401) {
-       // go login 
-       showPopUp.value = true
-       } else {
-        status.value = res;
-        if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
-          isEdit.value = true;
+        const res = await getStatusById(boardId.value, newId);
+        if (res === 404 || res === 400) {
+          router.push({ name: "TaskNotFound", params: { page: "Status" } });
+        } else if (res === 401) {
+          // go login
+          showPopUp.value = true;
         } else {
-          isEdit.value = false;
+          status.value = res;
+          if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
+            isEdit.value = true;
+          } else {
+            isEdit.value = false;
+          }
+          showDetail.value = true;
         }
-        showDetail.value = true;
+        showLoading.value = false;
       }
-      showLoading.value = false;
     }
-  }
   },
   { immediate: true }
 );
@@ -218,58 +213,57 @@ async function addEditStatus(newStatus) {
 
 async function addStatus(newStatus) {
   if (!isTokenValid(userStore.authToken)) {
-        showPopUp.value = true;
-        return;
-      } else {
-  if (newStatus.name === null || newStatus.name === "") {
-    typeToast.value = "warning";
-    messageToast.value = `The name is required`;
-    showToast.value = true;
+    showPopUp.value = true;
+    return;
   } else {
-    newStatus.name = newStatus.name.trim();
-    newStatus.description = newStatus.description?.trim();
-    const res = await createStatus(boardId.value,newStatus);
-    if (res === 422 || res === 400 || res === 500 || res === 404) {
+    if (newStatus.name === null || newStatus.name === "") {
       typeToast.value = "warning";
-      messageToast.value = `An error has occurred, the status could not be added`;
+      messageToast.value = `The name is required`;
       showToast.value = true;
-    }  else if (res === 401) {
-       // go login 
-       showPopUp.value = true
     } else {
-      typeToast.value = "success";
-      statusStore.addStatus(res);
-      console.log(allStatus.value);
-      messageToast.value = `The status has been added`;
-      showToast.value = true;
+      newStatus.name = newStatus.name.trim();
+      newStatus.description = newStatus.description?.trim();
+      const res = await createStatus(boardId.value, newStatus);
+      if (res === 422 || res === 400 || res === 500 || res === 404) {
+        typeToast.value = "warning";
+        messageToast.value = `An error has occurred, the status could not be added`;
+        showToast.value = true;
+      } else if (res === 401) {
+        // go login
+        showPopUp.value = true;
+      } else {
+        typeToast.value = "success";
+        statusStore.addStatus(res);
+        console.log(allStatus.value);
+        messageToast.value = `The status has been added`;
+        showToast.value = true;
+      }
     }
   }
-}
 }
 
 async function editStatus(editedStatus) {
   if (!isTokenValid(userStore.authToken)) {
-        showPopUp.value = true;
-        return;
-      } else {
-  const res = await updateStatus(boardId.value,editedStatus);
-  if (res === 422 || res === 400 || res === 500 || res === 404) {
-    typeToast.value = "warning";
-    messageToast.value = `An error has occurred, the status does not exist`;
-  }  else if (res === 401) {
-       // go login 
-       showPopUp.value = true
-    }  
-  else {
-    typeToast.value = "success";
-    const indexToUpdate = allStatus.value.findIndex(
-      (status) => status.id === editedStatus.id
-    );
-    statusStore.editStatus(indexToUpdate, res);
-    messageToast.value = `The status has been updated`;
+    showPopUp.value = true;
+    return;
+  } else {
+    const res = await updateStatus(boardId.value, editedStatus);
+    if (res === 422 || res === 400 || res === 500 || res === 404) {
+      typeToast.value = "warning";
+      messageToast.value = `An error has occurred, the status does not exist`;
+    } else if (res === 401) {
+      // go login
+      showPopUp.value = true;
+    } else {
+      typeToast.value = "success";
+      const indexToUpdate = allStatus.value.findIndex(
+        (status) => status.id === editedStatus.id
+      );
+      statusStore.editStatus(indexToUpdate, res);
+      messageToast.value = `The status has been updated`;
+    }
+    showToast.value = true;
   }
-  showToast.value = true;
-}
 }
 
 const countTask = ref(0);
@@ -297,130 +291,139 @@ const limitThisTask = computed(() => {
 
 async function confirmLimit(action) {
   if (!isTokenValid(userStore.authToken)) {
+    showPopUp.value = true;
+    return;
+  } else {
+    if (action === false) {
+      showSettingModal.value = false;
+      toggleActive.value = statusStore.isLimit;
+      maximumTask.value = statusStore.maximumTask;
+    } else if (toggleActive.value && action) {
+      const res = await toggleLimitTask(boardId.value, maximumTask.value, true);
+      if (res === 400 || res === 404) {
+        typeToast.value = "warning";
+        messageToast.value = `An error occurred enable limit task`;
+      } else if (res === 401) {
+        // go login
         showPopUp.value = true;
-        return;
+      } else if (res === 500) {
+        typeToast.value = "denger";
+        messageToast.value = `An error occurred.please try again.`;
       } else {
-  if (action === false) {
-    showSettingModal.value = false;
-    toggleActive.value = statusStore.isLimit;
-    maximumTask.value = statusStore.maximumTask;
-  } else if (toggleActive.value && action) {
-    const res = await toggleLimitTask(boardId.value,maximumTask.value, true);
-    if (res === 400 || res === 404) {
-      typeToast.value = "warning";
-      messageToast.value = `An error occurred enable limit task`;
-    }  else if (res === 401) {
-       // go login 
-       showPopUp.value = true
-    } 
-    else if (res === 500) {
-      typeToast.value = "denger";
-      messageToast.value = `An error occurred.please try again.`;
-    } else {
-      statusStore.setLimitStatus(true);
-      statusStore.setMaximumTaskStatus(maximumTask.value);
-      allTaskLimit.value = res.filter((e) => e.noOfTasks > maximumTask.value);
-      // statusStore.setAllStatusLimit(allTaskLimit.value);
-      if (allTaskLimit.value.length !== 0 && allTaskLimit.value !== undefined) {
-        showListStatus.value = true;
+        statusStore.setLimitStatus(true);
+        statusStore.setMaximumTaskStatus(maximumTask.value);
+        allTaskLimit.value = res.filter((e) => e.noOfTasks > maximumTask.value);
+        // statusStore.setAllStatusLimit(allTaskLimit.value);
+        if (
+          allTaskLimit.value.length !== 0 &&
+          allTaskLimit.value !== undefined
+        ) {
+          showListStatus.value = true;
+        }
+        typeToast.value = "success";
+        messageToast.value = `The Kanban board now limits ${maximumTask.value} tasks in each status`;
       }
-      typeToast.value = "success";
-      messageToast.value = `The Kanban board now limits ${maximumTask.value} tasks in each status`;
+      showToast.value = true;
+    } else if (toggleActive.value === false && action) {
+      const res = await toggleLimitTask(
+        boardId.value,
+        maximumTask.value,
+        false
+      );
+      if (res === 400 || res === 404) {
+        typeToast.value = "warning";
+        messageToast.value = `An error occurred disabled limit task`;
+      } else if (res === 401) {
+        // go login
+        showPopUp.value = true;
+      } else if (res === 500) {
+        typeToast.value = "denger";
+        messageToast.value = `An error occurred.please try again.`;
+      } else {
+        statusStore.setLimitStatus(false);
+        allTaskLimit.value = [];
+        typeToast.value = "success";
+        messageToast.value = `The Kanban board has disabled the task limit in each status.`;
+      }
+      showToast.value = true;
     }
-    showToast.value = true;
-  } else if (toggleActive.value === false && action) {
-    const res = await toggleLimitTask(boardId.value,maximumTask.value, false);
-    if (res === 400 || res === 404) {
-      typeToast.value = "warning";
-      messageToast.value = `An error occurred disabled limit task`;
-    }  else if (res === 401) {
-       // go login 
-       showPopUp.value = true
-    }  
-    else if (res === 500) {
-      typeToast.value = "denger";
-      messageToast.value = `An error occurred.please try again.`;
-    } else {
-      statusStore.setLimitStatus(false);
-      allTaskLimit.value = [];
-      typeToast.value = "success";
-      messageToast.value = `The Kanban board has disabled the task limit in each status.`;
-    }
-    showToast.value = true;
+    showSettingModal.value = false;
   }
-  showSettingModal.value = false;
-}
 }
 
 async function removeStatus(index, confirmDelete = false) {
   if (!isTokenValid(userStore.authToken)) {
-        showPopUp.value = true;
-        return;
+    showPopUp.value = true;
+    return;
+  } else {
+    //ได้ id ที่จะ tranfer
+    let newStatus = allStatus.value.find((e) => e.name === tranferStatus.value);
+    let res;
+    if (confirmDelete) {
+      if (showTranfer.value) {
+        res = await deleteStatusAndTranfer(
+          boardId.value,
+          status.value.id,
+          newStatus.id
+        );
       } else {
-  //ได้ id ที่จะ tranfer
-  let newStatus = allStatus.value.find((e) => e.name === tranferStatus.value);
-  let res;
-  if (confirmDelete) {
-    if (showTranfer.value) {
-      res = await deleteStatusAndTranfer(boardId.value,status.value.id, newStatus.id);
-    } else {
-      res = await deleteStatus(boardId.value,status.value.id);
-    }
-
-    if (res === 200) {
-      typeToast.value = "success";
-      if (countTask.value >= 0) {
-        messageToast.value = `${countTask.value} task(s) have been transferred and the status has been deleted`;
-        // update status ใน task เฉพาะการลบที่เกิดการ tranfer
-        if (showTranfer.value) {
-          taskStore.setAllTaskUpdate(status.value.id, newStatus);
-        }
-      } else {
-        messageToast.value = `The status has been deleted`;
+        res = await deleteStatus(boardId.value, status.value.id);
       }
-      statusStore.deleteStatus(index);
-    } else if (res === 404 || res === 400) {
-      typeToast.value = "warning";
-      messageToast.value = `An error has occurred, the status does not exist.`;
-      statusStore.deleteStatus(index);
-    }  else if (res === 401) {
-       // go login 
-       showPopUp.value = true
-    } else {
-      typeToast.value = "denger";
-      messageToast.value = `An error occurred.please try again.`;
+
+      if (res === 200) {
+        typeToast.value = "success";
+        if (countTask.value >= 0) {
+          messageToast.value = `${countTask.value} task(s) have been transferred and the status has been deleted`;
+          // update status ใน task เฉพาะการลบที่เกิดการ tranfer
+          if (showTranfer.value) {
+            taskStore.setAllTaskUpdate(status.value.id, newStatus);
+          }
+        } else {
+          messageToast.value = `The status has been deleted`;
+        }
+        statusStore.deleteStatus(index);
+      } else if (res === 404 || res === 400) {
+        typeToast.value = "warning";
+        messageToast.value = `An error has occurred, the status does not exist.`;
+        statusStore.deleteStatus(index);
+      } else if (res === 401) {
+        // go login
+        showPopUp.value = true;
+      } else {
+        typeToast.value = "denger";
+        messageToast.value = `An error occurred.please try again.`;
+      }
+      showDeleteModal.value = false;
+      showToast.value = true;
     }
-    showDeleteModal.value = false;
-    showToast.value = true;
   }
-}
 }
 
 async function clickRemove(index) {
   if (!isTokenValid(userStore.authToken)) {
-        showPopUp.value = true;
-        return;
+    showPopUp.value = true;
+    return;
+  } else {
+    showDeleteModal.value = true;
+    status.value = allStatus.value[index];
+    indexToRemove.value = index;
+    const res = await getTaskByStatus(boardId.value, status.value.id);
+    if (res === 400 || res === 404 || res === 500) {
+      typeToast.value = "danger";
+      messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
+    } else if (res === 401) {
+      // go login
+      showPopUp.value = true;
+    } else {
+      if (res.count >= 1) {
+        tranferStatus.value = "No Status";
+        showTranfer.value = true;
+        countTask.value = res.count;
       } else {
-  showDeleteModal.value = true;
-  status.value = allStatus.value[index];
-  indexToRemove.value = index;
-  const res = await getTaskByStatus(boardId.value,status.value.id);
-  if (res === 400 || res === 404 || res === 500) {
-    typeToast.value = "danger";
-    messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
-  }  else if (res === 401) {
-       // go login 
-       showPopUp.value = true
-    } else {
-    if (res.count >= 1) {
-      tranferStatus.value = "No Status";
-      showTranfer.value = true;
-      countTask.value = res.count;
-    } else {
-      showTranfer.value = false;
+        showTranfer.value = false;
+      }
     }
   }
-}
 }
 </script>
 <template>
@@ -434,18 +437,29 @@ async function clickRemove(index) {
         <!-- Task Status Count -->
         <div class="m-[2px] flex sm:items-center items-end w-full">
           <router-link :to="{ name: 'task' }">
-          <button class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      </router-link>
-       <div
-         class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold"
-       >
-         {{boardName}} Personal's Board
-       </div>
-   </div>
+            <button
+              class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          </router-link>
+          <div class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold">
+            {{ boardName }} Personal's Board
+          </div>
+        </div>
         <!-- <div class="m-[2px] flex sm:items-center items-end">
           <router-link :to="{ name: 'task' }">
             <div
@@ -464,7 +478,6 @@ async function clickRemove(index) {
           <div
             class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
           >
-          
             <div class="">
               <router-link :to="{ name: 'AddStatus' }">
                 <button
@@ -639,7 +652,6 @@ async function clickRemove(index) {
     >
     </limitModal>
     <AuthzPopup v-if="showPopUp" />
-
   </div>
 </template>
 <style scoped></style>

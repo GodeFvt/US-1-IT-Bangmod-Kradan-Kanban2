@@ -63,8 +63,8 @@ watch(
   () => route.path,
   (newPath, oldPath) => {
     // if (oldPath === "/login") {
-      
-    // } 
+
+    // }
     // else {fetchData();
     // }
     if (newPath === "/board/add") {

@@ -17,7 +17,10 @@ onMounted(() => {
       if (TaskNotFound.value === "Board") {
         router.push({ name: "board" });
       } else {
-        router.push({ name: "task" ,params : {boardId: userStore.boards[0].id }})
+        router.push({
+          name: "task",
+          params: { boardId: userStore.boards[0].id },
+        });
       }
     }, 3000)
   );

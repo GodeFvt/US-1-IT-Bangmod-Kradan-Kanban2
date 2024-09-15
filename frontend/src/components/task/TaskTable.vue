@@ -46,9 +46,9 @@ watch(
       setTimeout(() => {
         isVisible.value[index] = true;
       }, (index + 1) * 150);
-    })
+    });
   },
-  {deep: true }
+  { deep: true }
 );
 function getTextColor(hex) {
   if (hex.length !== 7 || hex[0] !== "#") {
@@ -71,11 +71,12 @@ watch(
     if (statusFilter.length === 0) {
       taskFiltered.value = allTask;
     } else {
-    const res = await getFilteredTask(route.params.boardId,statusFilter);
-      if(res === 401) {
-       showPopUp.value = true
+      const res = await getFilteredTask(route.params.boardId, statusFilter);
+      if (res === 401) {
+        showPopUp.value = true;
+      } else {
+        taskFiltered.value = res;
       }
-      else{taskFiltered.value = res}
     }
     sortByStatus();
   },
@@ -131,7 +132,6 @@ onMounted(() => {
   };
   window.addEventListener("resize", handleResize);
   handleResize();
-  
 });
 
 onUnmounted(() => {
@@ -259,7 +259,7 @@ onUnmounted(() => {
               </div>
               <ul
                 :tabindex="task.id"
-                class="dropdown-content menu px-2 py-1 shadow bg-base-100 rounded-box w-24 z-50"
+                class="dropdown-content menu px-2 py-1 shadow bg-base-100 rounded-box w-24"
               >
                 <li>
                   <router-link
@@ -305,6 +305,4 @@ onUnmounted(() => {
   <AuthzPopup v-if="showPopUp" />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

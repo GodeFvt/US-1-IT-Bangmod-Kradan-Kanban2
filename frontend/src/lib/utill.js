@@ -40,8 +40,8 @@ function isTokenValid(token) {
 
   let decodeToken;
 
-  if (typeof token === 'string') {
-    const parts = token.split('.');
+  if (typeof token === "string") {
+    const parts = token.split(".");
     if (parts.length !== 3) {
       return false; // Token is not well-formed (JWT must have three parts)
     }
@@ -51,7 +51,7 @@ function isTokenValid(token) {
     } catch (error) {
       return false; // Error in decoding token or invalid JSON
     }
-  } else if (typeof token === 'object') {
+  } else if (typeof token === "object") {
     decodeToken = token;
   } else {
     return false; // Token is not a valid format
@@ -69,4 +69,4 @@ function isTokenValid(token) {
   return true; // Token is valid
 }
 
-export { convertString, toFormatDate, validateSizeInput,isTokenValid };
+export { convertString, toFormatDate, validateSizeInput, isTokenValid };
