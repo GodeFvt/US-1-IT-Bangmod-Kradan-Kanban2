@@ -61,7 +61,6 @@ const boardId = ref(route.params.boardId);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
 const allTaskLimit = ref([]); // allTask อันที่เกิน
-
 const countStatus = computed(() => {
   return allTask.value.reduce(
     (accumulator, currentValue) => {

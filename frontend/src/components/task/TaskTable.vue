@@ -7,6 +7,8 @@ import { useStatusStore } from "../../stores/statuses.js";
 import { getFilteredTask } from "../../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import AuthzPopup from "../AuthzPopup.vue";
+import EditIcon from "../icon/EditIcon.vue";
+import DeleteIcon from "../icon/DeleteIcon.vue";
 
 defineEmits(["removeTask"]);
 const props = defineProps({
@@ -157,7 +159,7 @@ onUnmounted(() => {
             No.
           </th>
           <th
-            class="px-6 py-4 w-[50%] max-md:w-[65%] max-md:px-2 max-md:py-3 max-md:border-l-4 max-md:rounded-t-md"
+            class="px-6 py-4 w-[40%] max-md:w-[65%] max-md:px-2 max-md:py-3 max-md:border-l-4 max-md:rounded-t-md"
           >
             Title
           </th>
@@ -176,7 +178,7 @@ onUnmounted(() => {
             </div>
           </th>
           <th
-            class="px-4 py-4 w-[10%] max-md:w-[30%] max-md:px-2 max-md:py-3 rounded-tr-md"
+            class="px-4 py-4 w-[20%] max-md:w-[30%] max-md:px-2 max-md:py-3 rounded-tr-md"
           >
             Action
           </th>
@@ -197,7 +199,7 @@ onUnmounted(() => {
           </td>
 
           <td
-            class="h-full w-[50%] px-6 py-4 max-md:w-[65%] max-md:px-2 max-md:py-3 hover:bg-neutral-100"
+            class="h-full w-[40%] px-6 py-4 max-md:w-[65%] max-md:px-2 max-md:py-3 hover:bg-neutral-100"
           >
             <router-link
               :to="{ name: 'TaskDetail', params: { taskId: task.id } }"
@@ -245,38 +247,13 @@ onUnmounted(() => {
             </div>
           </td>
           <td
-            class="itbkk-status w-[10%] px-4 py-4 max-md:w-[30%] max-md:px-2 max-md:py-3 cursor-pointer flex justify-center items-center"
+            class="itbkk-status w-[20%] px-4 py-4 max-md:w-[30%] max-md:px-2 max-md:py-3 cursor-pointer flex justify-center items-center"
           >
             <div
-              class="itbkk-button-action dropdown dropdown-bottom flex justify-center items-center h-full w-full"
-            >
-              <div
-                :tabindex="task.id"
-                role="button"
-                class="p-2 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-50"
-              >
-                <MoreActionIcon />
-              </div>
-              <ul
-                :tabindex="task.id"
-                class="dropdown-content menu px-2 py-1 shadow bg-base-100 rounded-box w-24"
-              >
-                <li>
-                  <router-link
-                    :to="{ name: 'EditTask', params: { taskId: task.id } }"
-                  >
-                    <span class="itbkk-button-edit cursor-pointer"> Edit </span>
-                  </router-link>
-                </li>
-                <li>
-                  <span
-                    class="itbkk-button-delete cursor-pointer"
-                    @click="$emit('removeTask', index)"
-                  >
-                    Delete
-                  </span>
-                </li>
-              </ul>
+              class="itbkk-button-action flex flex-row gap-1 max-sm:flex-col"
+            >   
+            <router-link :to="{ name: 'EditTask', params: { taskId: task.id } }"><div  class="itbkk-button-edit  cursor-pointer"> <EditIcon /></div></router-link>
+             <div  class="itbkk-button-delete cursor-pointer" @click="$emit('removeTask', index)"><DeleteIcon /></div>
             </div>
           </td>
         </tr>
