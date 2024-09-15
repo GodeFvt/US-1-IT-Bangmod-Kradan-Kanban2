@@ -31,40 +31,12 @@ const isEdit = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
 
-async function fetchData() {
-  // if (userStore.boards.length === 0) {
-  //   const resBoard = await getAllBoards();
-  //   if (resBoard === 401) {
-  //     showPopUp.value = true;
-  //   } else {
-  //     userStore.setAllBoard(resBoard);
-  //     allBoard.value = userStore.boards;
-  //   }
-  // }
-  // const resBoard = await getAllBoards();
-  // if (resBoard === 401) {
-  //   showPopUp.value = true;
-  // } else {
-  //   userStore.setAllBoard(resBoard);
-  //   allBoard.value = userStore.boards;
-  // }
-}
-// set value for allBoard
-onMounted(() => {
-  // fetchData();
-  // nextTick(() => {
-  //   allBoard.value = userStore.boards;
-  // });
-  // allBoard.value = userStore.boards;
-});
-
-// add newBoard
 watch(
   () => route.path,
   (newPath, oldPath) => {
     // if (oldPath === "/login") {
-
-    // }
+      
+    // } 
     // else {fetchData();
     // }
     if (newPath === "/board/add") {
@@ -78,6 +50,10 @@ watch(
   () => route.params.boardId,
   async (newId, oldId) => {
     if (newId !== undefined) {
+      if (!isTokenValid(userStore.authToken)) {
+    showPopUp.value = true;
+    return;
+  } else {
       if (route.path === `/board/${newId}/edit`) {
         console.log("edit eiei");
         board.value = allBoard.value.find((board) => board.id === newId);
@@ -89,6 +65,7 @@ watch(
       } else {
         isEdit.value = false;
       }
+    }
     }
     // showLoading.value = false;
   },
@@ -120,6 +97,10 @@ async function addEditBoard(newBoard) {
 }
 
 async function addBoard(newBoard) {
+  if (!isTokenValid(userStore.authToken)) {
+    showPopUp.value = true;
+    return;
+  } else {
   if (newBoard.name === null || newBoard.name === "") {
     typeToast.value = "warning";
     messageToast.value = `The name is required`;
@@ -142,8 +123,13 @@ async function addBoard(newBoard) {
     showToast.value = true;
   }
 }
+}
 
 async function editBoard(boardId, editedBoard) {
+  if (!isTokenValid(userStore.authToken)) {
+    showPopUp.value = true;
+    return;
+  } else {
   const res = await updateBoard(boardId, editedBoard);
   if (res === 422 || res === 400 || res === 500 || res === 404) {
     typeToast.value = "warning";
@@ -160,6 +146,7 @@ async function editBoard(boardId, editedBoard) {
   }
   showToast.value = true;
 }
+}
 
 function closeBoard(action) {
   showBoardModal.value = action;
@@ -167,6 +154,10 @@ function closeBoard(action) {
 }
 
 async function removeBoard(boardId, confirmDelete = false) {
+  if (!isTokenValid(userStore.authToken)) {
+    showPopUp.value = true;
+    return;
+  } else {
   showDeleteModal.value = true;
   console.log(typeof boardId);
   if (typeof boardId === "string") {
@@ -188,6 +179,7 @@ async function removeBoard(boardId, confirmDelete = false) {
     }
     showDeleteModal.value = false;
   }
+}
 }
 
 function openBoard(boardId) {
