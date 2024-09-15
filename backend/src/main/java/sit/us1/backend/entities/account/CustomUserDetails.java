@@ -12,11 +12,11 @@ import java.util.Collection;
 @Setter
 public class CustomUserDetails extends User implements UserDetails {
     private String name;
-    private Character oid;
+    private String oid;
     private String email;
-    private String role;
+    private Role role;
 
-    public CustomUserDetails(String username,String name, Character oid, String email,String password, String role, Collection<? extends GrantedAuthority> authorities) {
+    public CustomUserDetails(String username,String name, String oid, String email,String password, Role role, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, authorities);
         this.name = name;
         this.oid = oid;

@@ -1,37 +1,53 @@
 import { createRouter, createWebHistory } from "vue-router";
 import TaskBoardView from "../views/TaskBoardView.vue";
 import NotFound from "../views/NotFound.vue";
-import TaskStatusView from "@/views/TaskStatusView.vue";
+import TaskStatusView from "../views/TaskStatusView.vue";
+import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
 
 const routes = [
   {
     path: "/",
-    redirect: { name: "Login" },
+    redirect: { name: "board" },
   },
   {
-    path: "/task",
+    path: "/board",
+    name: "board",
+    component: BoardView,
+  },
+  {
+    path: "/board/add",
+    name: "AddBoard",
+    component: BoardView,
+  },
+  {
+    path: "/board/:boardId/edit",
+    name: "EditBoard",
+    component: BoardView,
+  },
+  {
+    path: "/board/:boardId",
     name: "task",
     component: TaskBoardView,
   },
   {
-    path: "/task/:taskId",
+    path: "/board/:boardId/task/:taskId",
     name: "TaskDetail",
     component: TaskBoardView,
   },
   {
-    path: "/task/:taskId/edit",
+    path: "/board/:boardId/task/:taskId/edit",
     name: "EditTask",
     component: TaskBoardView,
   },
   {
-    path: "/task/add",
+    path: "/board/:boardId/task/add",
     name: "AddTask",
     component: TaskBoardView,
   },
   {
-    path: "/TaskNotFound:page",
+    path: "/board/:boardId/TaskNotFound:page",
     name: "TaskNotFound",
     component: NotFound,
   },
@@ -41,22 +57,22 @@ const routes = [
     component: NotFound,
   },
   {
-    path: "/status",
+    path: "/board/:boardId/status",
     name: "ManageStatus",
     component: TaskStatusView,
   },
   {
-    path: "/status/:statusId",
+    path: "/board/:boardId/status/:statusId",
     name: "StatusDetail",
     component: TaskStatusView,
   },
   {
-    path: "/status/:statusId/edit",
+    path: "/board/:boardId/status/:statusId/edit",
     name: "EditStatus",
     component: TaskStatusView,
   },
   {
-    path: "/status/add",
+    path: "/board/:boardId/status/add",
     name: "AddStatus",
     component: TaskStatusView,
   },
@@ -78,18 +94,14 @@ router.beforeEach((to, from) => {
   }
 });
 
-router.beforeEach((to, from,next) => {
+router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
-  // const isAuthenticated = !!localStorage.getItem('authToken');
-  // const isAuthenticated = Object.keys(userStore.authToken).length > 0;
-  const isAuthenticated = !!userStore.authToken;
-  if (isAuthenticated === false && to.name !== 'Login') {
-    next({ name: 'Login' });
-  }
-  else if(to.name ==='Login' && isAuthenticated ===true){
-    next({ name: 'task' });
-  }
-  else {
+
+  if (userStore.isAuthenticated === false && to.name !== "Login") {
+    next({ name: "Login" });
+  } else if (to.name === "Login" && userStore.isAuthenticated === true) {
+    next({ name: "board" });
+  } else {
     next();
   }
 });

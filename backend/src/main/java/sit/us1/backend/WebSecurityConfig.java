@@ -11,6 +11,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -33,22 +34,20 @@ public class WebSecurityConfig {
     JwtUserDetailsService jwtUserDetailsService;
 
 
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-    httpSecurity.csrf(csrf -> csrf.disable())
-            .authorizeRequests(authorize -> authorize
-                    .requestMatchers("/login").permitAll()
-                    .requestMatchers("/validate-token").permitAll()
-                    .requestMatchers("/statuses/**").permitAll()
-                    .requestMatchers("/tasks/**").permitAll()
-                    .anyRequest().authenticated())
-                    .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                    .exceptionHandling(exceptionHandling -> exceptionHandling
-                    .authenticationEntryPoint(authenticationEntryPoint())
-                    .accessDeniedHandler(accessDeniedHandler()))
-            .httpBasic(withDefaults());
-    return httpSecurity.build();
-}
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.csrf(csrf -> csrf.disable())
+                .authorizeRequests(authorize -> authorize
+                        .requestMatchers("/login").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(authenticationEntryPoint())
+                        .accessDeniedHandler(accessDeniedHandler()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(withDefaults());
+        return httpSecurity.build();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

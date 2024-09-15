@@ -2,7 +2,8 @@
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { ref, watch } from "vue";
-
+import EditIcon from "../icon/EditIcon.vue";
+import DeleteIcon from "../icon/DeleteIcon.vue";
 defineEmits(["removeStatus"]);
 const props = defineProps({
   allStatus: {
@@ -30,7 +31,8 @@ watch(
         isVisible.value[index] = true;
       }, (index + 1) * 150);
     });
-  }
+  },
+  { deep: true }
 );
 </script>
 
@@ -126,18 +128,16 @@ watch(
                   params: { statusId: status.id },
                 }"
               >
-                <div class="btn btn-sm">
-                  <span class="itbkk-button-edit cursor-pointer"> Edit </span>
+                <div class="itbkk-button-edit cursor-pointer">
+                  <EditIcon />
                 </div>
               </router-link>
 
               <div
-                class="btn btn-sm btn-error"
+              class="itbkk-button-delete cursor-pointer text-white"
                 @click="$emit('removeStatus', index)"
               >
-                <span class="itbkk-button-delete cursor-pointer text-white">
-                  Delete
-                </span>
+                <DeleteIcon />
               </div>
             </div>
           </td>

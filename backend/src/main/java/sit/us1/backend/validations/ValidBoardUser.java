@@ -4,13 +4,12 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
-
+@Constraint(validatedBy = BoardUserValidator.class)
 @Documented
-@Constraint(validatedBy = UniqueStatusNameValidator.class)
-@Target( { ElementType.METHOD, ElementType.FIELD })
+@Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidUniqueStatusName {
-    String message() default "Status name must be unique";
+public @interface ValidBoardUser {
+    String message() default "You are not the owner of this board";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

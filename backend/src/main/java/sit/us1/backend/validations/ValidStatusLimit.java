@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 
 @Documented
 @Constraint(validatedBy = StatusLimitValidator.class)
-@Target({ElementType.METHOD, ElementType.FIELD ,ElementType.PARAMETER})
+@Target({ElementType.METHOD, ElementType.FIELD ,ElementType.PARAMETER,ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidStatusLimit {
     String message() default "The destination status cannot be over the limit after transfer";

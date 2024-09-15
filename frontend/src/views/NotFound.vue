@@ -1,6 +1,8 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useUserStore } from "../stores/user.js";
+const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 const timeCount = ref(3);
@@ -11,8 +13,14 @@ onMounted(() => {
     setTimeout(() => {
       if (TaskNotFound.value === "Status") {
         router.push({ name: "ManageStatus" });
+      }
+      if (TaskNotFound.value === "Board") {
+        router.push({ name: "board" });
       } else {
-        router.push({ name: "task" });
+        router.push({
+          name: "task",
+          params: { boardId: userStore.boards[0].id },
+        });
       }
     }, 3000)
   );
@@ -48,6 +56,12 @@ function clearAllInterval() {
     >
       An error has occurred, the status does not exist
     </p>
+    <p
+      v-else-if="TaskNotFound === 'Board'"
+      class="itbkk-message text-5xl text-red-700"
+    >
+      An error has occurred, the board does not exist
+    </p>
     <p v-else class="itbkk-message text-5xl text-red-700">
       The page you are looking for does not exist.
     </p>
@@ -57,7 +71,7 @@ function clearAllInterval() {
       <span class="text-red-700">{{ timeCount }}</span> seconds...
     </p>
     <br />
-    <router-link :to="{ name: 'task' }">
+    <router-link :to="{ name: 'board' }">
       <button
         class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded"
       >

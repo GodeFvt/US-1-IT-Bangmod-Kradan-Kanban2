@@ -36,7 +36,7 @@ public class JwtUserDetailsService implements UserDetailsService {
             }
         };
         authorities.add(grantedAuthority);
-        return  new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole().toString(), authorities);
+        return  new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole(), authorities);
     }
 }
 

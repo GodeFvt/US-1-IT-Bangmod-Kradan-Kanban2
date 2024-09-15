@@ -17,8 +17,10 @@ export const useTaskStore = defineStore("taskStore", {
     setAllTask(newAllTask) {
       this.allTask = [...newAllTask];
     },
-    setAllTaskUpdate(oldStatusId , newStatus) {
-      this.allTask.forEach(e=> e.status.id===oldStatusId ? e.status = newStatus : e.status);
+    setAllTaskUpdate(oldStatusId, newStatus) {
+      this.allTask.forEach((e) =>
+        e.status.id === oldStatusId ? (e.status = newStatus) : e.status
+      );
     },
   },
 });

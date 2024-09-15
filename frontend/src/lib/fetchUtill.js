@@ -1,14 +1,25 @@
 const BASE_URL = import.meta.env.VITE_API_ROOT;
 
-async function getFilteredTask([...filter] = "", sortBy = "id") {
+async function getFilteredTask(boardId, [...filter] = "", sortBy = "id") {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
     res = await fetch(
-      `${BASE_URL}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`
+      `${BASE_URL}/v3/boards/${boardId}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
     );
     if (res.status === 200) {
       const tasks = await res.json();
       return tasks;
+    }
+    if (res.status === 401) {
+      return res.status;
     } else {
       return undefined;
     }
@@ -17,14 +28,16 @@ async function getFilteredTask([...filter] = "", sortBy = "id") {
   }
 }
 
-async function toggleLimitTask(maximum, isLimit) {
+async function toggleLimitTask(boardId, maximum, isLimit) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
     res = await fetch(
-      `${BASE_URL}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
+      `${BASE_URL}/v3/boards/${boardId}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
       {
         method: "PATCH",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
@@ -41,10 +54,17 @@ async function toggleLimitTask(maximum, isLimit) {
   }
 }
 
-async function getTaskById(id) {
+async function getTaskById(boardId, taskId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/tasks/${id}`);
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -56,10 +76,20 @@ async function getTaskById(id) {
   }
 }
 
-async function getTaskByStatus(statusid) {
+async function getTaskByStatus(boardId, statusId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/tasks/count/status/${statusid}`);
+    res = await fetch(
+      `${BASE_URL}/v3/boards/${boardId}/tasks/count/status/${statusId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -71,12 +101,14 @@ async function getTaskByStatus(statusid) {
   }
 }
 
-async function createTask(task) {
+async function createTask(boardId, task) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/tasks`, {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks`, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(task),
@@ -92,12 +124,14 @@ async function createTask(task) {
   }
 }
 
-async function updateTask(task) {
+async function updateTask(boardId, task) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/tasks/${task.id}`, {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${task.id}`, {
       method: "PUT",
       headers: {
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(task),
@@ -113,11 +147,16 @@ async function updateTask(task) {
   }
 }
 
-async function deleteTask(id) {
+async function deleteTask(boardId, taskId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/tasks/${id}`, {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}`, {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
     return res.status;
   } catch (error) {
@@ -125,13 +164,23 @@ async function deleteTask(id) {
   }
 }
 
-async function getAllStatus() {
+async function getAllStatus(boardId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/statuses`);
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
     if (res.status === 200) {
       const tasks = await res.json();
       return tasks;
+    }
+    if (res.status === 401) {
+      return res.status;
     } else {
       return undefined;
     }
@@ -140,10 +189,17 @@ async function getAllStatus() {
   }
 }
 
-async function getStatusById(id) {
+async function getStatusById(boardId, statusId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/statuses/${id}`);
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/${statusId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
     if (res.status === 200) {
       const task = await res.json();
       return task;
@@ -155,12 +211,14 @@ async function getStatusById(id) {
   }
 }
 
-async function createStatus(Statuses) {
+async function createStatus(boardId, Statuses) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/statuses`, {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses`, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(Statuses),
@@ -176,16 +234,21 @@ async function createStatus(Statuses) {
   }
 }
 
-async function updateStatus(Statuses) {
+async function updateStatus(boardId, Statuses) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/statuses/${Statuses.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(Statuses),
-    });
+    res = await fetch(
+      `${BASE_URL}/v3/boards/${boardId}/statuses/${Statuses.id}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(Statuses),
+      }
+    );
     if (res.status === 200) {
       const statuses = await res.json();
       return statuses;
@@ -197,33 +260,53 @@ async function updateStatus(Statuses) {
   }
 }
 
-async function deleteStatus(id) {
+async function deleteStatus(boardId, statusId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/statuses/${id}`, {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/${statusId}`, {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
     return res.status;
   } catch (error) {
     return undefined;
   }
 }
-async function deleteStatusAndTranfer(OldStatusId, newStatusId) {
+async function deleteStatusAndTranfer(boardId, OldStatusId, newStatusId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/statuses/${OldStatusId}/${newStatusId}`, {
-      method: "DELETE",
-    });
+    res = await fetch(
+      `${BASE_URL}/v3/boards/${boardId}/statuses/${OldStatusId}/${newStatusId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return res.status;
   } catch (error) {
     return undefined;
   }
 }
 
-async function getLimit() {
+async function getLimit(boardId) {
   let res;
+  const token = localStorage.getItem("authToken");
   try {
-    res = await fetch(`${BASE_URL}/statuses/limit`);
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/limit`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
     if (res.status === 200) {
       const statusLimit = await res.json();
       return statusLimit;
@@ -235,22 +318,132 @@ async function getLimit() {
   }
 }
 
-
 async function loginAccount(user) {
   let res;
   try {
-    res = await fetch(`${BASE_URL}/login` ,{
+    res = await fetch(`${BASE_URL}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(user),
     });
-    if(res.status ===200){
+    if (res.status === 200) {
       const token = await res.json();
-      return token
+      return token;
+    } else {
+      return res.status;
     }
-    else {return res.status}
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function getAllBoards() {
+  let res;
+  const token = localStorage.getItem("authToken");
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (res.status === 200) {
+      const allBoard = await res.json();
+      return allBoard;
+    }
+    if (res.status === 401) {
+      return res.status;
+    } else {
+      return undefined;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function createBoard(board) {
+  let res;
+  const token = localStorage.getItem("authToken");
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(board),
+    });
+    if (res.status === 201) {
+      const board = await res.json();
+      return board;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function getBoardsById(boardId) {
+  let res;
+  const token = localStorage.getItem("authToken");
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (res.status === 200) {
+      const board = await res.json();
+      return board;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function updateBoard(boardId, board) {
+  let res;
+  const token = localStorage.getItem("authToken");
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(board),
+    });
+    if (res.status === 200) {
+      const board = await res.json();
+      return board;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function deleteBoard(boardId) {
+  let res;
+  const token = localStorage.getItem("authToken");
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status;
   } catch (error) {
     return undefined;
   }
@@ -272,4 +465,9 @@ export {
   toggleLimitTask,
   getLimit,
   loginAccount,
+  getAllBoards,
+  createBoard,
+  getBoardsById,
+  updateBoard,
+  deleteBoard,
 };

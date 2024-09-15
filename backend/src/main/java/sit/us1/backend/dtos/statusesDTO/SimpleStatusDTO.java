@@ -5,16 +5,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import sit.us1.backend.validations.*;
-
-
-
 @Data
 public class SimpleStatusDTO {
     private Integer id;
     @NotNull
     @NotBlank
-    @ValidUniqueStatusName(groups = ValidationGroups.OnCreate.class)
     @Size(max = 50)
     private String name;
     @Size(max = 200)
@@ -37,6 +32,14 @@ public class SimpleStatusDTO {
             this.description = value.trim();
         }
 
+    }
+
+    public void setColor(String value) {
+        if (value == null || value.isEmpty()) {
+            this.color = "#828282";
+        }else {
+            this.color = value;
+        }
     }
 
 }

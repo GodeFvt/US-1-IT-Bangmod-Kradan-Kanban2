@@ -2,6 +2,7 @@ package sit.us1.backend.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +34,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String requestTokenHeader = request.getHeader("Authorization");
         String username = null;
         String jwtToken = null;
+
+        if (request.getRequestURI().equals("/login")) {
+            chain.doFilter(request, response);
+            return;
+        }
         try {
             if (requestTokenHeader != null) {
                 if (requestTokenHeader.startsWith("Bearer ")) {
@@ -40,13 +46,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     try {
                         username = jwtTokenUtil.getUsernameFromToken(jwtToken);
                     } catch (IllegalArgumentException e) {
-                        throw new UnauthorizedException(e.getMessage());
+                        throw new UnauthorizedException("Unable to get JWT Token");
                     } catch (ExpiredJwtException e) {
-                        throw new UnauthorizedException(e.getMessage());
+                        throw new UnauthorizedException("JWT Token has expired");
+                    } catch (JwtException e) {
+                        throw new UnauthorizedException("JWT Token is invalid");
                     }
                 } else {
                     throw new UnauthorizedException("JWT Token does not begin with Bearer String");
                 }
+            }else {
+                throw new UnauthorizedException("JWT Token is required");
             }
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.jwtUserDetailsService.loadUserByUsername(username);

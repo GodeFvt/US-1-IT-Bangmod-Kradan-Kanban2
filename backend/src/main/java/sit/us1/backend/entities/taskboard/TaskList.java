@@ -1,12 +1,8 @@
 package sit.us1.backend.entities.taskboard;
 
-
 import jakarta.persistence.*;
 import lombok.*;
-
-
 import java.time.ZonedDateTime;
-
 
 @Entity
 @Data
@@ -30,11 +26,14 @@ public class TaskList {
     @JoinColumn(name = "statusId")
     private TaskStatus status;
 
+    @ManyToOne
+    @JoinColumn(name = "boardId")
+    private Board board;
+
     @Column(updatable = false, insertable = false)
     private ZonedDateTime createdOn;
     @Column(updatable = false, insertable = false)
     private ZonedDateTime updatedOn;
-
 
 
 }

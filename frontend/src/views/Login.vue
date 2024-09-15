@@ -1,11 +1,13 @@
 <script setup>
 import { loginAccount } from "../lib/fetchUtill.js";
 import { useUserStore } from "../stores/user.js";
-import { ref, computed, onMounted , onBeforeUnmount} from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import TaskStatusCard from "../components/status/TaskStatusCard.vue";
 import HeaderView from "./HeaderView.vue";
+import { getAllBoards } from "../lib/fetchUtill.js";
+
 const toggleIcon = ref(false);
 const user = ref({
   userName: "",
@@ -36,7 +38,6 @@ onBeforeUnmount(() => {
 });
 
 function animation() {
-  console.log("playAnimation");
   borderAnimate.value = `border-animate`;
   cardAnimate.value = `card-animate`;
   timeoutId = setTimeout(() => {
@@ -68,15 +69,26 @@ const isNotValid = computed(() => {
 });
 
 const messageShow = ref("");
+const inert = ref(false);
 
 async function signInOnClick(userLogin) {
   let res;
   if (userLogin.userName.length > 0 && userLogin.password.length > 0) {
     res = await loginAccount(userLogin);
     if (typeof res === "object") {
-      // const decodedToken = VueJwtDecode.decode(res.access_token);
+      inert.value = true;
       userStore.setAuthToken(res.access_token);
-      router.push({ name: "task" });
+      const resBoard = await getAllBoards();
+      userStore.setAllBoard(resBoard);
+      if (resBoard.length === 1) {
+        router.push({
+          name: "task",
+          params: { boardId: userStore.boards[0].id },
+        });
+      } else{
+        router.push({ name: "board" });
+      }
+
     } else if (res === 400 || res === 401) {
       showMessage.value = true;
       messageShow.value = "Username or Password is incorrect.";
@@ -94,7 +106,7 @@ async function signInOnClick(userLogin) {
       <HeaderView class="h-full w-full" />
     </div>
     <div
-      class="h-[100%] max-lg:h-[92%]  bg-[url('/bg-img3.jpg')] bg-cover bg-center bg-no-repeat"
+      class="h-[100%] max-lg:h-[92%] bg-[url('/bg-img3.jpg')] bg-cover bg-center bg-no-repeat"
     >
       <div class="h-[100%] w-full">
         <div class="h-full flex max-lg:flex w-full">
@@ -119,74 +131,80 @@ async function signInOnClick(userLogin) {
                       Sign in to your account
                     </h1>
                   </div>
-                  <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-900"
-                      >Username</label
-                    >
-                    <input
-                      type="text"
-                      class="itbkk-username bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring focus:ring-gray-800 focus:border-gray-100 block w-full p-2.5"
-                      placeholder="username"
-                      maxlength="50"
-                      v-model="user.userName"
-                    />
-                  </div>
-                  <div class="max-w-lg">
-                    <div class="flex items-center">
+                  <form action="#">
+                    <div>
                       <label
                         class="block mb-2 text-sm font-medium text-gray-900"
-                        >Password</label
+                        >Username</label
                       >
-                      <a
-                        href="#"
-                        className="ml-auto inline-block text-sm underline text-gray-900 mb-2"
-                      >
-                        Forgot password?
-                      </a>
-                    </div>
-                    <div class="relative">
                       <input
-                        :type="typePassword"
-                        placeholder="••••••••"
-                        maxlength="14"
-                        v-model="user.password"
-                        class="itbkk-password py-3 ps-4 pe-10 text-gray-900 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring focus:ring-gray-800 focus:border-gray-100 block w-full p-2.5"
+                        type="text"
+                        class="itbkk-username bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring focus:ring-gray-800 focus:border-gray-100 block w-full p-2.5"
+                        placeholder="username"
+                        maxlength="50"
+                        v-model="user.userName"
+                        autocomplete="username"
+                        :inert="inert"
                       />
-                      <button
-                        @mousedown="toggleIcon = true"
-                        @mouseup="toggleIcon = false"
-                        type="button"
-                        autocapitalize="none"
-                        class="absolute inset-y-0 end-0 flex items-center z-20 px-3 cursor-pointer text-gray-400 rounded-e-md focus:outline-none focus:text-blue-600 "
-                      >
-                        <svg
-                          v-if="toggleIcon === true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fill="#808080"
-                            d="M10 4.4C3.439 4.4 0 9.232 0 10c0 .766 3.439 5.6 10 5.6c6.56 0 10-4.834 10-5.6c0-.768-3.44-5.6-10-5.6m0 9.907c-2.455 0-4.445-1.928-4.445-4.307S7.545 5.691 10 5.691s4.444 1.93 4.444 4.309s-1.989 4.307-4.444 4.307M10 10c-.407-.447.663-2.154 0-2.154c-1.228 0-2.223.965-2.223 2.154s.995 2.154 2.223 2.154s2.223-.965 2.223-2.154c0-.547-1.877.379-2.223 0"
-                          />
-                        </svg>
-                        <svg
-                          v-if="toggleIcon === false"
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fill="#808080"
-                            d="M18.521 1.478a1 1 0 0 0-1.414 0L1.48 17.107a1 1 0 1 0 1.414 1.414L18.52 2.892a1 1 0 0 0 0-1.414zM3.108 13.498l2.56-2.56A4.2 4.2 0 0 1 5.555 10c0-2.379 1.99-4.309 4.445-4.309c.286 0 .564.032.835.082l1.203-1.202A13 13 0 0 0 10 4.401C3.44 4.4 0 9.231 0 10c0 .423 1.057 2.09 3.108 3.497zm13.787-6.993l-2.562 2.56c.069.302.111.613.111.935c0 2.379-1.989 4.307-4.444 4.307c-.284 0-.56-.032-.829-.081l-1.204 1.203c.642.104 1.316.17 2.033.17c6.56 0 10-4.833 10-5.599c0-.424-1.056-2.09-3.105-3.495"
-                          />
-                        </svg>
-                      </button>
                     </div>
-                  </div>
-
+                    <div class="max-w-lg">
+                      <div class="flex items-center">
+                        <label
+                          class="block mb-2 text-sm font-medium text-gray-900"
+                          >Password</label
+                        >
+                        <a
+                          href="#"
+                          className="ml-auto inline-block text-sm underline text-gray-900 mb-2"
+                        >
+                          Forgot password?
+                        </a>
+                      </div>
+                      <div class="relative">
+                        <input
+                          :type="typePassword"
+                          placeholder="••••••••"
+                          maxlength="14"
+                          v-model="user.password"
+                          name="password"
+                          autocomplete="current-password"
+                          class="itbkk-password py-3 ps-4 pe-10 text-gray-900 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring focus:ring-gray-800 focus:border-gray-100 block w-full p-2.5"
+                        />
+                        <button
+                          @mousedown="toggleIcon = true"
+                          @mouseup="toggleIcon = false"
+                          type="button"
+                          autocapitalize="none"
+                          class="absolute inset-y-0 end-0 flex items-center z-20 px-3 cursor-pointer text-gray-400 rounded-e-md focus:outline-none focus:text-blue-600"
+                        >
+                          <svg
+                            v-if="toggleIcon === true"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fill="#808080"
+                              d="M10 4.4C3.439 4.4 0 9.232 0 10c0 .766 3.439 5.6 10 5.6c6.56 0 10-4.834 10-5.6c0-.768-3.44-5.6-10-5.6m0 9.907c-2.455 0-4.445-1.928-4.445-4.307S7.545 5.691 10 5.691s4.444 1.93 4.444 4.309s-1.989 4.307-4.444 4.307M10 10c-.407-.447.663-2.154 0-2.154c-1.228 0-2.223.965-2.223 2.154s.995 2.154 2.223 2.154s2.223-.965 2.223-2.154c0-.547-1.877.379-2.223 0"
+                            />
+                          </svg>
+                          <svg
+                            v-if="toggleIcon === false"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fill="#808080"
+                              d="M18.521 1.478a1 1 0 0 0-1.414 0L1.48 17.107a1 1 0 1 0 1.414 1.414L18.52 2.892a1 1 0 0 0 0-1.414zM3.108 13.498l2.56-2.56A4.2 4.2 0 0 1 5.555 10c0-2.379 1.99-4.309 4.445-4.309c.286 0 .564.032.835.082l1.203-1.202A13 13 0 0 0 10 4.401C3.44 4.4 0 9.231 0 10c0 .423 1.057 2.09 3.108 3.497zm13.787-6.993l-2.562 2.56c.069.302.111.613.111.935c0 2.379-1.989 4.307-4.444 4.307c-.284 0-.56-.032-.829-.081l-1.204 1.203c.642.104 1.316.17 2.033.17c6.56 0 10-4.833 10-5.599c0-.424-1.056-2.09-3.105-3.495"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </form>
                   <div class="flex items-start">
                     <div v-if="showMessage" class="itbkk-message text-red-500">
                       <p>{{ messageShow }}</p>
