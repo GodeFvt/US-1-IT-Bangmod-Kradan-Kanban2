@@ -37,6 +37,8 @@ public class SimpleStatusDTO {
     public void setColor(String value) {
         if (value == null || value.isEmpty()) {
             this.color = "#828282";
+        }else {
+            this.color = value;
         }
     }
 
