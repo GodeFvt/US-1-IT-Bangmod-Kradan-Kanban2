@@ -24,7 +24,6 @@ function signOut(){
 onMounted(async () => {
    userStore.initializeAuthToken();
   if (!isTokenValid(userStore.authToken)) {
-    console.log(userStore.authToken)
         showPopUp.value = true;
         return;
       } else {
@@ -34,7 +33,6 @@ onMounted(async () => {
         showPopUp.value = true
       }
      else {
-      console.log(userStore.authToken)
        userStore.setAllBoard(resBoard);
       }
     }
