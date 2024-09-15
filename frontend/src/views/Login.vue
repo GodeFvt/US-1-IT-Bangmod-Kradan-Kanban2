@@ -80,8 +80,6 @@ async function signInOnClick(userLogin) {
     if (typeof res === "object") {
       inert.value = true
       userStore.setAuthToken(res.access_token);
-      userStore.updateIsAuthen(true)
-
       const resBoard = await getAllBoards();
      userStore.setAllBoard(resBoard);
 

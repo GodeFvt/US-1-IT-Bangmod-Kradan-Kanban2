@@ -6,26 +6,37 @@ export const useUserStore = defineStore("userStore", {
   state: () => ({
     authToken: (() => {
       const token = localStorage.getItem("authToken") || null;
-      if (isTokenValid(token)) {
+      if ( token) {
         const decodeToken = VueJwtDecode.decode(token);
         return decodeToken;
-      } else {
-        localStorage.removeItem("authToken");
-        return null;
       }
-    })(),
+    }),
     boards: [],
     isAuthenticated : !!localStorage.getItem('authToken'),
   }),
   
   actions: {
+    initializeAuthToken() {
+      const token = localStorage.getItem('authToken');
+      if (token && isTokenValid(token)) {
+        const decodeToken = VueJwtDecode.decode(token);
+        this.authToken = decodeToken;
+        this.isAuthenticated = true;
+      } else {
+        localStorage.removeItem('authToken');
+        this.authToken = null;
+        this.isAuthenticated = false;
+      }
+    },
     setAuthToken(token) {
       const decodeToken = VueJwtDecode.decode(token)
       this.authToken = { ...decodeToken };
       localStorage.setItem("authToken", token);
+      this.isAuthenticated = true;
     },
     clearAuthToken() {
       this.authToken = null;
+      this.isAuthenticated = false;
       localStorage.removeItem("authToken");
     },
     addBoard(board) {

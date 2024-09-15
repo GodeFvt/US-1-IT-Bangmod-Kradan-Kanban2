@@ -77,9 +77,10 @@ const countStatus = computed(() => {
 });
 
 async function fetchData() {
-
-  if(isTokenValid(userStore.authToken)){
-    console.log("asdasd")
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
     const oidByToken = userStore.authToken.oid;
     const res = await getBoardsById(boardId.value);
     if (res === 404 || res === 400 || res === 500) {
@@ -104,8 +105,6 @@ async function fetchData() {
   } else {
     taskStore.setAllTask(resTask);
     allTask.value = taskStore.allTask;
-    // const res = await getBoardsById(boardId.value);
-    // boardName.value = res.name;
   }
 
   maximumTask.value = statusStore.maximumTask;
@@ -136,7 +135,6 @@ async function fetchData() {
 
   showLoading.value = false;
 }
-else{showPopUp.value = true}
 }
 
 function countStatuses() {
@@ -167,6 +165,10 @@ watch(
   () => route.params.taskId,
   async (newId, oldId) => {
     if (newId !== undefined) {
+      if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
       const res = await getTaskById(boardId.value,newId);
       if (res === 404 || res === 400 || res === 500) {
         router.push({ name: "TaskNotFound", params: { page: "Task" } });
@@ -185,11 +187,16 @@ watch(
       }
       showLoading.value = false;
     }
-  },
+  }
+},
   { immediate: true }
 );
 
 async function confirmLimit(action) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   if (action === false) {
     showSettingModal.value = false;
     toggleActive.value = statusStore.isLimit;
@@ -239,6 +246,7 @@ async function confirmLimit(action) {
   }
   showSettingModal.value = false;
 }
+}
 // react to route changes path add task
 watch(
   () => route.path,
@@ -283,6 +291,10 @@ async function addEditTask(newTask) {
 }
 
 async function addTask(newTask) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   if (newTask.title === null || newTask.title === "") {
     typeToast.value = "warning";
     messageToast.value = `The title is required`;
@@ -311,8 +323,13 @@ async function addTask(newTask) {
   
   }
 }
+}
 
 async function editTask(editedTask) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   editedTask.status = editedTask.status.name;
   const res = await updateTask(boardId.value,editedTask);
   if (res === 422 || res === 400 || res === 500 || res === 404) {
@@ -332,8 +349,13 @@ async function editTask(editedTask) {
   }
   showToast.value = true;
 }
+}
 
 async function removeTask(index, confirmDelete = false) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   showDeleteModal.value = true;
   task.value = allTask.value[index];
   indexToRemove.value = index;
@@ -359,6 +381,7 @@ async function removeTask(index, confirmDelete = false) {
     showDeleteModal.value = false;
     showToast.value = true;
   }
+}
 }
 </script>
 

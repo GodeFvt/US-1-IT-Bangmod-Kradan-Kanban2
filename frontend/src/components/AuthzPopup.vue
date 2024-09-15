@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
 import { isTokenValid } from "../lib/utill.js";
 
+
 const showPopUp = ref(false);
 const timeCount = ref(3);
 const intervals = [];
@@ -30,7 +31,7 @@ intervals.push(
   }
 onMounted(() => {  
   if(!isTokenValid(token)){
-userStore.updateIsAuthen(false)
+userStore.clearAuthToken();
   }
   tokenNotPass();
 
@@ -60,6 +61,7 @@ onBeforeUnmount(() => {
         </p>
       </template>
     </PopUp>
+    
   </template>
 <style scoped>
 

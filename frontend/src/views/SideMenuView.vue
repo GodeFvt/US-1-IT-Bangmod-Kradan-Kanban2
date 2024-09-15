@@ -6,6 +6,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
 import AuthzPopup from '../components/AuthzPopup.vue';
+import { isTokenValid } from "../lib/utill.js";
 
 const userStore = useUserStore();
 const route = useRoute();
@@ -21,14 +22,24 @@ function signOut(){
   router.push({ name: "Login"});
 }
 onMounted(async () => {
+   userStore.initializeAuthToken();
+  if (!isTokenValid(userStore.authToken)) {
+    console.log(userStore.authToken)
+        showPopUp.value = true;
+        return;
+      } else {
   if(userStore.boards.length ===0){
      const resBoard = await getAllBoards();
      if(resBoard === 401){
         showPopUp.value = true
       }
      else {
+      console.log(userStore.authToken)
        userStore.setAllBoard(resBoard);
-      }}
+      }
+    }
+    }
+  
 });
 
 

@@ -1,3 +1,5 @@
+import VueJwtDecode from "vue-jwt-decode";
+
 function convertString(string) {
   return string
     ?.toLowerCase()
@@ -31,41 +33,46 @@ function validateSizeInput(...properties) {
   });
 }
 
-function isTokenValid(token){
+function isTokenValid(token) {
   if (!token) {
+    console.log("No token found");
     return false; // No token found
   }
 
   let decodeToken;
 
   if (typeof token === 'string') {
-    // Token is a string, try to decode it
     const parts = token.split('.');
     if (parts.length !== 3) {
+      console.log("Token is not well-formed");
       return false; // Token is not well-formed (JWT must have three parts)
     }
 
     try {
       decodeToken = VueJwtDecode.decode(token);
     } catch (error) {
+      console.log("Error decoding token:", error);
       return false; // Error in decoding token or invalid JSON
     }
   } else if (typeof token === 'object') {
-    // Token is already decoded (assumed to be an object)
     decodeToken = token;
   } else {
+    console.log("Token is not a valid format");
     return false; // Token is not a valid format
   }
 
   if (!decodeToken.exp) {
+    console.log("No expiration field found");
     return false; // No expiration field found
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
   if (decodeToken.exp < currentTime) {
+    console.log("Token is expired");
     return false; // Token is expired
   }
 
+  console.log("Token is valid");
   return true; // Token is valid
 }
 

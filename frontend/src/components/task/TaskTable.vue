@@ -6,6 +6,7 @@ import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { getFilteredTask } from "../../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
+import AuthzPopup from "../AuthzPopup.vue";
 
 defineEmits(["removeTask"]);
 const props = defineProps({
@@ -36,7 +37,7 @@ const sortType = ref("default");
 const statusStore = useStatusStore();
 const taskFiltered = ref([]);
 const windowWidth = ref(window.innerWidth);
-
+const showPopUp = ref(false);
 const isVisible = ref([]);
 watch(
   () => props.allTask,
@@ -70,7 +71,11 @@ watch(
     if (statusFilter.length === 0) {
       taskFiltered.value = allTask;
     } else {
-      taskFiltered.value = await getFilteredTask(route.params.boardId,statusFilter);
+    const res = await getFilteredTask(route.params.boardId,statusFilter);
+      if(res === 401) {
+       showPopUp.value = true
+      }
+      else{taskFiltered.value = res}
     }
     sortByStatus();
   },
@@ -297,6 +302,7 @@ onUnmounted(() => {
       </tbody>
     </table>
   </div>
+  <AuthzPopup v-if="showPopUp" />
 </template>
 
 <style scoped>

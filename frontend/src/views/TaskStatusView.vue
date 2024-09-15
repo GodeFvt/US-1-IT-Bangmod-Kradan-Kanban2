@@ -25,6 +25,7 @@ import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import AuthzPopup from '../components/AuthzPopup.vue';
 import { useUserStore } from "../stores/user.js";
+import { isTokenValid } from "../lib/utill.js";
 
 const userStore = useUserStore();
 const statusStore = useStatusStore();
@@ -59,8 +60,12 @@ const tranferStatus = ref("No Status");
 const boardName = ref();
 
 async function fetchData() {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   const oidByToken = userStore.authToken.oid;
-    const res = await getBoardsById(boardId.value);
+  const res = await getBoardsById(boardId.value);
     if (res === 404 || res === 400 || res === 500) {
         router.push({ name: "TaskNotFound", params: { page: "Board" } });
       }
@@ -74,7 +79,6 @@ async function fetchData() {
         router.push({ name: "TaskNotFound", params: { page: "Board" } });
        } 
       }
-
    const resStatus = await getAllStatus(boardId.value);
   if (resStatus === undefined) {
     showErrorMSG.value = true;
@@ -112,6 +116,9 @@ async function fetchData() {
   }
 
   showLoading.value = false;
+
+}
+
 }
 
 onMounted(() => {
@@ -144,6 +151,11 @@ watch(
   () => route.params.statusId,
   async (newId, oldId) => {
     if (newId !== undefined) {
+      if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
+        showLoading.value = true;
       const res = await getStatusById(boardId.value,newId);
       if (res === 404 || res === 400) {
         router.push({ name: "TaskNotFound", params: { page: "Status" } });
@@ -161,6 +173,7 @@ watch(
       }
       showLoading.value = false;
     }
+  }
   },
   { immediate: true }
 );
@@ -204,6 +217,10 @@ async function addEditStatus(newStatus) {
 }
 
 async function addStatus(newStatus) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   if (newStatus.name === null || newStatus.name === "") {
     typeToast.value = "warning";
     messageToast.value = `The name is required`;
@@ -228,8 +245,13 @@ async function addStatus(newStatus) {
     }
   }
 }
+}
 
 async function editStatus(editedStatus) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   const res = await updateStatus(boardId.value,editedStatus);
   if (res === 422 || res === 400 || res === 500 || res === 404) {
     typeToast.value = "warning";
@@ -247,6 +269,7 @@ async function editStatus(editedStatus) {
     messageToast.value = `The status has been updated`;
   }
   showToast.value = true;
+}
 }
 
 const countTask = ref(0);
@@ -273,6 +296,10 @@ const limitThisTask = computed(() => {
 });
 
 async function confirmLimit(action) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   if (action === false) {
     showSettingModal.value = false;
     toggleActive.value = statusStore.isLimit;
@@ -323,8 +350,13 @@ async function confirmLimit(action) {
   }
   showSettingModal.value = false;
 }
+}
 
 async function removeStatus(index, confirmDelete = false) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   //ได้ id ที่จะ tranfer
   let newStatus = allStatus.value.find((e) => e.name === tranferStatus.value);
   let res;
@@ -362,8 +394,13 @@ async function removeStatus(index, confirmDelete = false) {
     showToast.value = true;
   }
 }
+}
 
 async function clickRemove(index) {
+  if (!isTokenValid(userStore.authToken)) {
+        showPopUp.value = true;
+        return;
+      } else {
   showDeleteModal.value = true;
   status.value = allStatus.value[index];
   indexToRemove.value = index;
@@ -383,6 +420,7 @@ async function clickRemove(index) {
       showTranfer.value = false;
     }
   }
+}
 }
 </script>
 <template>
