@@ -116,7 +116,7 @@ public class TaskService {
     @Transactional
     public SimpleTaskDTO deleteTask(String boardId , Integer taskId) {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-        TaskList taskList = taskRepository.findByBoardIdAndId(boardId,taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+        TaskList taskList = taskRepository.findByBoardIdAndId(boardId,taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         taskRepository.delete(taskList);
         return mapper.map(taskList, SimpleTaskDTO.class);
     }

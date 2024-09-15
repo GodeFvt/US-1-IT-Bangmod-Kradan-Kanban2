@@ -18,9 +18,9 @@ import sit.us1.backend.validations.ValidationGroups;
 
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
-@RestController
-@RequestMapping("/statuses")
+//@CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
+//@RestController
+//@RequestMapping("/statuses")
 public class StatusController {
 //    @Autowired
 //    private StatusService service;

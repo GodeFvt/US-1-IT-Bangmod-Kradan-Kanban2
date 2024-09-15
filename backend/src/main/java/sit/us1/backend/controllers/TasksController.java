@@ -13,9 +13,9 @@ import sit.us1.backend.services.TaskService;
 
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
-@RestController
-@RequestMapping("/tasks")
+//@CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
+//@RestController
+//@RequestMapping("/tasks")
 public class TasksController {
 //    @Autowired
 //    private TaskService service;

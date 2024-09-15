@@ -16,7 +16,7 @@ public class ValidationUtil {
         Set<ConstraintViolation<T>> violations = validator.validate(object, groups);
         if (!violations.isEmpty()) {
             if(violations.iterator().next().getPropertyPath().toString().isEmpty() || violations.iterator().next().getPropertyPath().toString().isBlank()){
-                throw new BadRequestException(violations.iterator().next().getMessage());
+                throw new NotFoundException(violations.iterator().next().getMessage());
             }
             else {
                 ValidationException validationException = new ValidationException("Validation error. Check 'errors' field for details.");

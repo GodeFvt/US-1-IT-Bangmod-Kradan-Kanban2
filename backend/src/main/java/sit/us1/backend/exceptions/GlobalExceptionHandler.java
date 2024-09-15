@@ -15,13 +15,11 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import sit.us1.backend.validations.ValidBoardUser;
 
-import java.util.List;
 
-
-@RestControllerAdvice
 //(assignableTypes = {TaskController.class})
 // ดักแค่ controller 1 ตัวนี้เท่านั้น ถ้าปิด คือดักทุกอัน
 // extends ResponseEntityExceptionHandler
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
