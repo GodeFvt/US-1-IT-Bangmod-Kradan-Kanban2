@@ -7,12 +7,10 @@ import org.springframework.stereotype.Service;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.dtos.tasksDTO.SimpleTaskDTO;
+import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.*;
 import sit.us1.backend.exceptions.BadRequestException;
-import sit.us1.backend.repositories.taskboard.BoardRepository;
-import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
-import sit.us1.backend.repositories.taskboard.TaskListRepository;
-import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
+import sit.us1.backend.repositories.taskboard.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +26,8 @@ public class BoardService {
     private TaskStatusRepository taskStatusRepository;
     @Autowired
     private TaskListRepository taskListRepository;
+    @Autowired
+    BoardUserRepository boardUserRepository;
     @Autowired
     private ListMapper listMapper;
     @Autowired
@@ -47,22 +47,38 @@ public class BoardService {
     }
 
     public SimpleBoardDTO createBoard(BoardRequestDTO newBoard) {
-        Board board = mapper.map(newBoard, Board.class);
-        board.setId(NanoIdUtils.randomNanoId(10));
-        BoardUser owner = new BoardUser();
-        owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
-        board.setOwner(owner);
-        board.setIsCustomStatus(false);
-        TaskLimit taskLimit = new TaskLimit();
-        taskLimit.setIsLimit(false);
-        taskLimit.setMaximumTask(10);
+        String Oid = SecurityUtil.getCurrentUserDetails().getOid();
+        CustomUserDetails userDetails = SecurityUtil.getCurrentUserDetails();
         try {
-            taskLimit.setBoardId(boardRepository.save(board).getId());
+            if (boardUserRepository.findById(Oid).isEmpty()) {
+                BoardUser user = new BoardUser();
+                user.setId(userDetails.getOid());
+                boardUserRepository.save(user);
+            }
         } catch (Exception e) {
-            board.setId(NanoIdUtils.randomNanoId(10));
-            taskLimit.setBoardId(boardRepository.save(board).getId());
+            throw new BadRequestException("Cannot create user");
         }
+//        try {
+//            taskLimit.setBoardId(boardRepository.save(board).getId());
+//        } catch (Exception e) {
+//            board.setId(NanoIdUtils.randomNanoId(10));
+//            taskLimit.setBoardId(boardRepository.save(board).getId());
+//        }
+        Board board = mapper.map(newBoard, Board.class);
         try {
+            String boardId;
+            do {
+                boardId = NanoIdUtils.randomNanoId(10);
+            } while (boardRepository.existsById(boardId));
+            board.setId(boardId);
+            BoardUser owner = new BoardUser();
+            owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
+            board.setOwner(owner);
+            board.setIsCustomStatus(false);
+            TaskLimit taskLimit = new TaskLimit();
+            taskLimit.setIsLimit(false);
+            taskLimit.setMaximumTask(10);
+            taskLimit.setBoardId(boardRepository.save(board).getId());
             taskLimitRepository.save(taskLimit);
         } catch (Exception e) {
             throw new BadRequestException("Cannot create board");
@@ -97,7 +113,11 @@ public class BoardService {
     public SimpleBoardDTO updateBoardById(String id, BoardRequestDTO newBoard) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
         board.setName(newBoard.getName());
-        boardRepository.save(board);
+        try {
+            boardRepository.save(board);
+        } catch (Exception e) {
+            throw new BadRequestException("Cannot update board");
+        }
         return mapper.map(board, SimpleBoardDTO.class);
     }
 }
