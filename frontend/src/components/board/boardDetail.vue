@@ -137,7 +137,7 @@ const disabledSave = computed(() => {
               </div> -->
             </div>
             <textarea
-              class="itbkk-status-name read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none"
+              class="itbkk-board-name read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none"
               :class="
                 (editMode
                   ? countBoardName <= 0

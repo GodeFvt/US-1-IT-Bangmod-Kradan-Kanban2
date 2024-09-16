@@ -228,6 +228,7 @@ function openBoard(boardId) {
 
   <boardDetail
     v-if="showBoardModal"
+    class="itbkk-modal-new"
     @user-action="closeBoard"
     @addEdit="addEditBoard"
     :board="board"
