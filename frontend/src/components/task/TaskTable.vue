@@ -250,10 +250,18 @@ onUnmounted(() => {
             class="itbkk-status w-[20%] px-4 py-4 max-md:w-[30%] max-md:px-2 max-md:py-3 cursor-pointer flex justify-center items-center"
           >
             <div
-              class="itbkk-button-action flex flex-row gap-1 max-sm:flex-col"
-            >   
-            <router-link :to="{ name: 'EditTask', params: { taskId: task.id } }"><div  class="itbkk-button-edit  cursor-pointer"> <EditIcon /></div></router-link>
-             <div  class="itbkk-button-delete cursor-pointer" @click="$emit('removeTask', index)"><DeleteIcon /></div>
+              class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
+            >
+              <router-link
+                :to="{ name: 'EditTask', params: { taskId: task.id } }"
+                ><div class="itbkk-button-edit cursor-pointer"><EditIcon /></div
+              ></router-link>
+              <div
+                class="itbkk-button-delete cursor-pointer"
+                @click="$emit('removeTask', index)"
+              >
+                <DeleteIcon />
+              </div>
             </div>
           </td>
         </tr>

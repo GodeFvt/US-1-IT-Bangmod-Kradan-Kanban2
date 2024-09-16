@@ -120,7 +120,7 @@ watch(
           >
             <div
               v-if="status.name !== 'No Status' && status.name !== 'Done'"
-              class="flex flex-row gap-1 max-sm:flex-col"
+              class="flex flex-row gap-4 max-sm:flex-col"
             >
               <router-link
                 :to="{
