@@ -31,7 +31,7 @@ const showBoardModal = ref(false);
 const isEdit = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
-
+// console.log(userStore.authToken.name);
 watch(
   () => route.path,
   (newPath, oldPath) => {
@@ -232,6 +232,7 @@ function openBoard(boardId) {
     @addEdit="addEditBoard"
     :board="board"
     :isEdit="isEdit"
+    :username="userStore.authToken.name"
   >
   </boardDetail>
 

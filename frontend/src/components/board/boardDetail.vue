@@ -20,6 +20,9 @@ const props = defineProps({
   showLoading: {
     type: Boolean,
   },
+  username: {
+    type: String,
+  },
 });
 const router = useRouter();
 const duplicateBoard = ref({});
@@ -27,7 +30,6 @@ const editMode = ref(props.isEdit);
 const validate = ref({ name: {}, description: {} });
 const allBoard = ref([]);
 
-console.log( props.board);
 
 watch(
   () => props.board,
@@ -39,6 +41,7 @@ watch(
       }
     }
     duplicateBoard.value = { ...newBoard };
+    duplicateBoard.value.name = `${props.username} personal board` 
   },
   { immediate: true }
 );
