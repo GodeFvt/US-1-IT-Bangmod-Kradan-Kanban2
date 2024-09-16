@@ -151,7 +151,8 @@ const disabledSave = computed(() => {
               name="statusName"
               id="statusName"
               v-model="duplicateBoard.name"
-              placeholder="No Name Provided"
+              placeholder="Enter your board name"
+              maxlength="120"
             >
                 {{
                 duplicateBoard.name === null ||
