@@ -13,6 +13,8 @@ const userStore = useUserStore();
 let token = localStorage.getItem("authToken") || null;
 
 function tokenNotPass() {
+  localStorage.removeItem("authToken");
+  userStore.updateIsAuthen(false);
   showPopUp.value = true;
   intervals.push(
     setTimeout(() => {

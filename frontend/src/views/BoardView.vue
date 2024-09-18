@@ -21,7 +21,7 @@ const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 
-const allBoard = ref([]);
+const allBoard = ref(userStore.boards);
 const board = ref({});
 const typeToast = ref("");
 const messageToast = ref("");
@@ -31,6 +31,11 @@ const showBoardModal = ref(false);
 const isEdit = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
+// console.log(userStore.authToken.name);
+
+// onMounted(() => {
+//   allBoard.value = userStore.boards;
+// });
 
 watch(
   () => route.path,
@@ -57,7 +62,7 @@ watch(
   } else {
       if (route.path === `/board/${newId}/edit`) {
         console.log("edit eiei");
-        board.value = allBoard.value.find((board) => board.id === newId);
+        board.value = userStore.boards.find((board) => board.id === newId);
         console.log(board.value);
 
         showBoardModal.value = true;
@@ -85,7 +90,7 @@ function ClickAdd() {
 }
 
 async function addEditBoard(newBoard) {
-  const indexToCheck = allBoard.value.findIndex(
+  const indexToCheck = userStore.boards.findIndex(
     (board) => board.id === newBoard.id
   );
 
@@ -139,7 +144,7 @@ async function editBoard(boardId, editedBoard) {
     showPopUp.value = true;
   } else {
     typeToast.value = "success";
-    const indexToUpdate = allBoard.value.findIndex(
+    const indexToUpdate = userStore.boards.findIndex(
       (board) => board.id === editedBoard.id
     );
     userStore.editBoard(indexToUpdate, res);
@@ -163,7 +168,7 @@ async function removeBoard(boardId, confirmDelete = false) {
   console.log(typeof boardId);
   if (typeof boardId === "string") {
     boardIdForDelete.value = boardId;
-    board.value = allBoard.value.find((board) => board.id === boardId);
+    board.value = userStore.boards.find((board) => board.id === boardId);
   }
   if (confirmDelete) {
     const res = await deleteBoard(boardIdForDelete.value);
@@ -228,10 +233,12 @@ function openBoard(boardId) {
 
   <boardDetail
     v-if="showBoardModal"
+    class="itbkk-modal-new"
     @user-action="closeBoard"
     @addEdit="addEditBoard"
     :board="board"
     :isEdit="isEdit"
+    :username="userStore.authToken.name"
   >
   </boardDetail>
 
@@ -239,7 +246,7 @@ function openBoard(boardId) {
     v-if="showDeleteModal"
     @user-action="showDeleteModal = false"
     @confirm="removeBoard"
-    :index="allBoard.findIndex((board) => board.id === boardIdForDelete)"
+    :index="userStore.boards.findIndex((board) => board.id === boardIdForDelete)"
     class="z-50"
     width="w-[42vh]"
   >

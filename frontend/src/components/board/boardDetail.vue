@@ -20,6 +20,9 @@ const props = defineProps({
   showLoading: {
     type: Boolean,
   },
+  username: {
+    type: String,
+  },
 });
 const router = useRouter();
 const duplicateBoard = ref({});
@@ -27,7 +30,6 @@ const editMode = ref(props.isEdit);
 const validate = ref({ name: {}, description: {} });
 const allBoard = ref([]);
 
-console.log( props.board);
 
 watch(
   () => props.board,
@@ -39,6 +41,7 @@ watch(
       }
     }
     duplicateBoard.value = { ...newBoard };
+    duplicateBoard.value.name = `${props.username} personal board` 
   },
   { immediate: true }
 );
@@ -134,7 +137,7 @@ const disabledSave = computed(() => {
               </div> -->
             </div>
             <textarea
-              class="itbkk-status-name read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none"
+              class="itbkk-board-name read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none"
               :class="
                 (editMode
                   ? countBoardName <= 0
@@ -148,7 +151,8 @@ const disabledSave = computed(() => {
               name="statusName"
               id="statusName"
               v-model="duplicateBoard.name"
-              placeholder="No Name Provided"
+              placeholder="Enter your board name"
+              maxlength="120"
             >
                 {{
                 duplicateBoard.name === null ||
