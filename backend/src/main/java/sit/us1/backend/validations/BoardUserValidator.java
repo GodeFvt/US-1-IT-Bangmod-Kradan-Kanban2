@@ -3,8 +3,10 @@ package sit.us1.backend.validations;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.Board;
 import sit.us1.backend.entities.taskboard.TaskLimit;
+import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.repositories.taskboard.BoardRepository;
 import sit.us1.backend.services.SecurityUtil;
 
@@ -22,18 +24,20 @@ public class BoardUserValidator implements ConstraintValidator<ValidBoardUser, S
     public boolean isValid(String boardId, ConstraintValidatorContext context) {
         Optional<Board> board = boardRepository.findById(boardId);
         if(board.isEmpty()){
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("Board Id does not exist")
-                    .addConstraintViolation();
-            return false;
+            throw new NotFoundException("Board Id does not exist");
+//            context.disableDefaultConstraintViolation();
+//            context.buildConstraintViolationWithTemplate("Board Id does not exist")
+//                    .addConstraintViolation();
+//            return false;
         }
-        String currentUserOid = SecurityUtil.getCurrentUserDetails().getOid();
-        if (!board.get().getOwner().getId().equals(currentUserOid)) {
+        CustomUserDetails currentUserOid = SecurityUtil.getCurrentUserDetails();
+        if (currentUserOid != null &&!board.get().getOwner().getId().equals(currentUserOid.getOid())) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("You are not the owner of this board")
                     .addConstraintViolation();
             return false;
-        } else {
+        }
+        else {
             return true;
         }
     }

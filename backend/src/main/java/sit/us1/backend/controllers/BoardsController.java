@@ -9,6 +9,7 @@ import jakarta.validation.groups.Default;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
@@ -20,6 +21,7 @@ import sit.us1.backend.dtos.tasksDTO.*;
 import sit.us1.backend.entities.taskboard.TaskLimit;
 import sit.us1.backend.exceptions.ValidationUtil;
 import sit.us1.backend.services.BoardService;
+import sit.us1.backend.services.SecurityUtil;
 import sit.us1.backend.services.StatusService;
 import sit.us1.backend.services.TaskService;
 import sit.us1.backend.validations.ValidBoardUser;
@@ -43,12 +45,26 @@ public class BoardsController {
     @Autowired
     private Validator validator;
 
-    private final ValidationUtil validationUtil ;
+    private final ValidationUtil validationUtil;
 
     public BoardsController(Validator validator) {
         this.validator = validator;
         this.validationUtil = new ValidationUtil(validator);
     }
+
+    private ResponseEntity isPublic(String boardId, ResponseEntity<?> responseEntity) {
+        if (boardService.isBoardPublic(boardId)) {
+            return responseEntity;
+        } else {
+            String oid =  SecurityUtil.getCurrentUserDetails().getOid();
+            if (boardService.isOwnerOfBoard(boardId, oid)) {
+                return responseEntity;
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not the owner of this board");
+            }
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<SimpleBoardDTO>> getBoard() {
         return ResponseEntity.ok(boardService.getAllBoardByOid());
@@ -61,7 +77,7 @@ public class BoardsController {
 
     @GetMapping("/{id}")
     public ResponseEntity<SimpleBoardDTO> getBoardById(@ValidBoardUser @PathVariable String id) {
-        return ResponseEntity.ok(boardService.getBoardById(id));
+        return isPublic(id, ResponseEntity.ok(boardService.getBoardById(id)));
     }
 
     @DeleteMapping("/{id}")
@@ -74,17 +90,22 @@ public class BoardsController {
         return ResponseEntity.ok(boardService.updateBoardById(id, board));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<SimpleBoardDTO> updateVisibilityById(@ValidBoardUser @PathVariable String id, @RequestBody SimpleBoardDTO board) {
+        return ResponseEntity.ok(boardService.updateVisibilityById(id, board.getVisibility()));
+    }
+
     // Task
     @GetMapping("/{id}/tasks")
     public ResponseEntity<List<SimpleTaskDTO>> getTaskFiltered(@RequestParam(defaultValue = "") String sortBy,
                                                                @RequestParam(defaultValue = "") String[] filterStatuses,
                                                                @ValidBoardUser @PathVariable String id) {
-        return ResponseEntity.ok(taskService.getTaskFiltered(sortBy, filterStatuses, id));
+        return isPublic(id,ResponseEntity.ok(taskService.getTaskFiltered(sortBy, filterStatuses, id)));
     }
 
     @GetMapping("/{id}/tasks/{taskId}")
     public ResponseEntity<TaskDetailDTO> getTaskById(@ValidBoardUser @PathVariable String id, @PathVariable Integer taskId) {
-        return ResponseEntity.ok(taskService.getTaskById(id, taskId));
+        return isPublic(id,ResponseEntity.ok(taskService.getTaskById(id, taskId)));
     }
 
     @GetMapping("/{id}/tasks/count/status/{statusId}")
@@ -93,7 +114,7 @@ public class BoardsController {
     }
 
     @PostMapping("/{id}/tasks")
-    public ResponseEntity<TaskResponseDTO> createTask(@ValidBoardUser @PathVariable String id,@RequestBody TaskRequestDTO newTask){
+    public ResponseEntity<TaskResponseDTO> createTask(@ValidBoardUser @PathVariable String id, @RequestBody TaskRequestDTO newTask) {
         newTask.setBoardId(id);
         validationUtil.validateAndThrow(newTask);
         TaskResponseDTO taskList = taskService.createTask(id, newTask);
@@ -117,44 +138,44 @@ public class BoardsController {
     // Status
     @GetMapping("/{id}/statuses")
     public ResponseEntity<List<SimpleStatusDTO>> getStatusList(@ValidBoardUser @PathVariable String id) {
-        return ResponseEntity.ok(statusService.getAllStatus(id));
+        return isPublic(id,ResponseEntity.ok(statusService.getAllStatus(id)));
     }
 
     @GetMapping("/{id}/statuses/{statusId}")
-    public ResponseEntity<SimpleStatusDTO> getStatusById(@ValidBoardUser @PathVariable String id ,@PathVariable Integer statusId) {
-        return ResponseEntity.ok(statusService.getStatusById(id,statusId));
+    public ResponseEntity<SimpleStatusDTO> getStatusById(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId) {
+        return isPublic(id,ResponseEntity.ok(statusService.getStatusById(id, statusId)));
     }
 
     @GetMapping("/{id}/statuses/limit")
     public ResponseEntity<TaskLimit> getStatusLimit(@ValidBoardUser @PathVariable String id) {
-        return ResponseEntity.ok(statusService.getStatusLimit(id));
+        return isPublic(id,ResponseEntity.ok(statusService.getStatusLimit(id)));
     }
 
     @PostMapping("/{id}/statuses")
-    public ResponseEntity<SimpleStatusDTO> createStatus(@ValidBoardUser @PathVariable String id,@Valid @RequestBody SimpleStatusDTO newStatus) {
+    public ResponseEntity<SimpleStatusDTO> createStatus(@ValidBoardUser @PathVariable String id, @Valid @RequestBody SimpleStatusDTO newStatus) {
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setName(newStatus.getName());
         validationUtil.validateAndThrow(statusAllId, ValidationGroups.OnCreate.class);
-        SimpleStatusDTO status = statusService.createStatus(id,newStatus);
+        SimpleStatusDTO status = statusService.createStatus(id, newStatus);
         return ResponseEntity.status(HttpStatus.CREATED).body(status);
     }
 
     @PutMapping("/{id}/statuses/{statusId}")
-    public ResponseEntity<SimpleStatusDTO> updateStatus(@ValidBoardUser @PathVariable String id,@PathVariable Integer statusId, @Validated @RequestBody SimpleStatusDTO statusDTO) {
+    public ResponseEntity<SimpleStatusDTO> updateStatus(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId, @Validated @RequestBody SimpleStatusDTO statusDTO) {
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setOnPathStatusId(statusId);
         statusAllId.setOnStatusDTOId(statusDTO.getId());
         statusAllId.setName(statusDTO.getName());
         validationUtil.validateAndThrow(statusAllId, ValidationGroups.OnUpdate.class);
-        SimpleStatusDTO status = statusService.updateStatus(id,statusId, statusDTO);
+        SimpleStatusDTO status = statusService.updateStatus(id, statusId, statusDTO);
         return ResponseEntity.ok(status);
     }
 
     @PatchMapping("/{id}/statuses/all/maximum-task")
-    public ResponseEntity<List<StatusLimitResponseDTO>> updateLimitMaxiMunTask(@ValidBoardUser @PathVariable String id,@RequestParam @Min(0) @Max(30) Integer maximumTask, @RequestParam Boolean isLimit) {
-        List<StatusLimitResponseDTO> status = statusService.updateLimitMaxiMunTask(id,maximumTask, isLimit);
+    public ResponseEntity<List<StatusLimitResponseDTO>> updateLimitMaxiMunTask(@ValidBoardUser @PathVariable String id, @RequestParam @Min(0) @Max(30) Integer maximumTask, @RequestParam Boolean isLimit) {
+        List<StatusLimitResponseDTO> status = statusService.updateLimitMaxiMunTask(id, maximumTask, isLimit);
         return ResponseEntity.ok(status);
     }
 
@@ -164,19 +185,19 @@ public class BoardsController {
         statusAllId.setBoardId(id);
         statusAllId.setOnPathStatusId(statusId);
         validationUtil.validateAndThrow(statusAllId, ValidationGroups.OnDeleteStatus.class);
-        SimpleStatusDTO status = statusService.deleteStatus(id,statusId);
+        SimpleStatusDTO status = statusService.deleteStatus(id, statusId);
         return ResponseEntity.ok(status);
     }
 
     @DeleteMapping("/{id}/statuses/{statusId}/{newStatusId}")
-    public ResponseEntity<SimpleStatusDTO> deleteStatusAndTransferStatusInAllTask(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId,@PathVariable Integer newStatusId) {
+    public ResponseEntity<SimpleStatusDTO> deleteStatusAndTransferStatusInAllTask(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId, @PathVariable Integer newStatusId) {
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setOnPathStatusId(statusId);
         statusAllId.setOldStatusId(statusId);
         statusAllId.setNewStatusId(newStatusId);
         validationUtil.validateAndThrow(statusAllId, ValidationGroups.OnDeleteStatusAndTransfer.class);
-        SimpleStatusDTO status = statusService.deleteStatusAndTransferStatusInAllTask(id,statusId, newStatusId);
+        SimpleStatusDTO status = statusService.deleteStatusAndTransferStatusInAllTask(id, statusId, newStatusId);
         return ResponseEntity.ok(status);
     }
 

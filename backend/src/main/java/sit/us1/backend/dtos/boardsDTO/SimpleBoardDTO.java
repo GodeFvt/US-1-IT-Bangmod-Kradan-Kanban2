@@ -7,5 +7,14 @@ import sit.us1.backend.entities.taskboard.BoardUser;
 public class SimpleBoardDTO {
     private String id;
     private String name;
+    private String visibility = "PRIVATE";
     private BoardUser owner;
+
+    public void setVisibility(String visibility) {
+        if (visibility == null || visibility.isEmpty()) {
+            this.visibility = "PRIVATE";
+        } else {
+            this.visibility = visibility.toUpperCase();
+        }
+    }
 }

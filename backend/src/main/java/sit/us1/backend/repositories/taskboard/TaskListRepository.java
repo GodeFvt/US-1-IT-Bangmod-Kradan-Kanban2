@@ -28,11 +28,17 @@ public interface TaskListRepository extends JpaRepository<TaskList, Integer> {
     @Query("SELECT new sit.us1.backend.dtos.tasksDTO.StatusCountDTO( COUNT(ts), ts.status.name) FROM TaskList ts WHERE ts.status.name NOT IN :nonDeletableStatuses GROUP BY ts.status.name HAVING COUNT(ts) > :maximumTask")
     List<StatusCountDTO> countTasksExceedingMaxAndNotInNonDeletableStatuses(@Param("nonDeletableStatuses") String[] nonDeletableStatuses, @Param("maximumTask") Integer maximumTask);
 
-    @Query("SELECT t FROM TaskList t JOIN Board b ON t.board.id = b.id WHERE b.id=:boardID AND b.owner.id = :oid AND t.status.name IN :filterStatuses")
-    List<TaskList> findByStatusNamesSorted(@Param("filterStatuses") String[] filterStatuses, @Param("boardID") String boardID, @Param("oid") String oid, Sort sort);
+//    @Query("SELECT t FROM TaskList t JOIN Board b ON t.board.id = b.id WHERE b.id=:boardID AND b.owner.id = :oid AND t.status.name IN :filterStatuses")
+//    List<TaskList> findByStatusNamesSorted(@Param("filterStatuses") String[] filterStatuses, @Param("boardID") String boardID, @Param("oid") String oid, Sort sort);
+//
+//    @Query("SELECT t FROM TaskList t JOIN Board b ON t.board.id = b.id WHERE b.id=:boardID AND b.owner.id = :oid")
+//    List<TaskList> findAllByBoardIdAndOid(@Param("boardID") String boardID, @Param("oid") String oid,Sort sort);
 
-    @Query("SELECT t FROM TaskList t JOIN Board b ON t.board.id = b.id WHERE b.id=:boardID AND b.owner.id = :oid")
-    List<TaskList> findAllByBoardIdAndOid(@Param("boardID") String boardID, @Param("oid") String oid,Sort sort);
+    @Query("SELECT t FROM TaskList t JOIN Board b ON t.board.id = b.id WHERE b.id=:boardID  AND t.status.name IN :filterStatuses")
+    List<TaskList> findByStatusNamesSorted(@Param("filterStatuses") String[] filterStatuses, @Param("boardID") String boardID, Sort sort);
+
+    @Query("SELECT t FROM TaskList t JOIN Board b ON t.board.id = b.id WHERE b.id=:boardID")
+    List<TaskList> findAllByBoardId(@Param("boardID") String boardID,Sort sort);
 
     List<TaskList> findAllByStatusId(Integer statusId);
 
