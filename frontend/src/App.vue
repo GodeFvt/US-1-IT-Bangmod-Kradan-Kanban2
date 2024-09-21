@@ -9,7 +9,7 @@ const disabledSideMenu = ref(false);
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    if (newPath === "/login" || newPath === "/login/" || newPath === "/"  ) {
+    if (newPath === "/login" || newPath === "/login/" || newPath === "/"  || newPath.includes("TaskNotFound") ) {
       disabledSideMenu.value = true;
     } else {
       disabledSideMenu.value = false;
