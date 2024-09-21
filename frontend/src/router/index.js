@@ -88,11 +88,11 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from) => {
-  if (to.name === "EditStatus" && to.params.statusId === "1") {
-    return { name: "ManageStatus" };
-  }
-});
+// router.beforeEach((to, from) => {
+//   if (to.name === "EditStatus" && to.params.statusId === "1") {
+//     return { name: "ManageStatus" };
+//   }
+// });
 
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();

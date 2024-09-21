@@ -90,45 +90,42 @@ async function fetchData() {
       if (oidByGet !== oidByToken) {
         router.push({ name: "TaskNotFound", params: { page: "Board" } });
       }
-    }
-
-    const resTask = await getFilteredTask(boardId.value);
-    if (resTask === undefined) {
-      showErrorMSG.value = true;
-    } else if (resTask === 401) {
-      showPopUp.value = true;
-    } else {
-      taskStore.setAllTask(resTask);
-      allTask.value = taskStore.allTask;
-    }
-
-    maximumTask.value = statusStore.maximumTask;
-    toggleActive.value = statusStore.isLimit;
-    statusStore.setNoOftask(countStatus.value);
-
-    if (statusStore.allStatus.length === 0) {
-      const resStatus = await getAllStatus(boardId.value);
-      if (resStatus === undefined) {
+      const resTask = await getFilteredTask(boardId.value);
+      if (resTask === undefined) {
         showErrorMSG.value = true;
-      } else if (resStatus === 401) {
+      } else if (resTask === 401) {
         showPopUp.value = true;
       } else {
-        statusStore.setAllStatus(resStatus);
+        taskStore.setAllTask(resTask);
+        allTask.value = taskStore.allTask;
+        maximumTask.value = statusStore.maximumTask;
+        toggleActive.value = statusStore.isLimit;
+        statusStore.setNoOftask(countStatus.value);
+
+        if (statusStore.allStatus.length === 0) {
+          const resStatus = await getAllStatus(boardId.value);
+          if (resStatus === undefined) {
+            showErrorMSG.value = true;
+          } else if (resStatus === 401) {
+            showPopUp.value = true;
+          } else {
+            statusStore.setAllStatus(resStatus);
+          }
+        }
+        if (statusStore.maximumTask === undefined) {
+          const resLimit = await getLimit(boardId.value);
+          if (resLimit === 401) {
+            showPopUp.value = true;
+          }
+          statusStore.setMaximumTaskStatus(resLimit.maximumTask);
+          statusStore.setLimitStatus(resLimit.isLimit);
+          maximumTask.value = statusStore.maximumTask;
+          toggleActive.value = statusStore.isLimit;
+        }
+
+        showLoading.value = false;
       }
     }
-
-    if (statusStore.maximumTask === undefined) {
-      const resLimit = await getLimit(boardId.value);
-      if (resLimit === 401) {
-        showPopUp.value = true;
-      }
-      statusStore.setMaximumTaskStatus(resLimit.maximumTask);
-      statusStore.setLimitStatus(resLimit.isLimit);
-      maximumTask.value = statusStore.maximumTask;
-      toggleActive.value = statusStore.isLimit;
-    }
-
-    showLoading.value = false;
   }
 }
 

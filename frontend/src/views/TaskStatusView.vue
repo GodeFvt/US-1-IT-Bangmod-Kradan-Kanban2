@@ -75,10 +75,10 @@ async function fetchData() {
       const oidByGet = res.owner.id;
       if (oidByGet !== oidByToken) {
         router.push({ name: "TaskNotFound", params: { page: "Board" } });
-      }
-    }
-    const resStatus = await getAllStatus(boardId.value);
-    if (resStatus === undefined) {
+      
+      
+      }const resStatus = await getAllStatus(boardId.value);
+      if (resStatus === undefined) {
       showErrorMSG.value = true;
     } else if (resStatus === 401) {
       // go login
@@ -86,8 +86,7 @@ async function fetchData() {
     } else {
       statusStore.setAllStatus(resStatus);
       allStatus.value = statusStore.allStatus;
-    }
-    maximumTask.value = statusStore.maximumTask;
+      maximumTask.value = statusStore.maximumTask;
     toggleActive.value = statusStore.isLimit;
     statusStore.setNoOftask(countStatus.value);
     if (statusStore.maximumTask === undefined) {
@@ -114,6 +113,10 @@ async function fetchData() {
     }
 
     showLoading.value = false;
+    }
+    }
+   
+
   }
 }
 
@@ -160,6 +163,7 @@ watch(
         } else {
           status.value = res;
           if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
+    
             isEdit.value = true;
           } else {
             isEdit.value = false;
