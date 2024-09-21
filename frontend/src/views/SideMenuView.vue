@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { getAllBoards } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
@@ -24,8 +25,6 @@ onMounted(async () => {
   if (!isTokenValid(userStore.authToken)) {
     showPopUp.value = true;
     return;
-  } else {
-
   }
 });
 const open = ref(true);

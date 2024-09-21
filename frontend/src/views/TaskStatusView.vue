@@ -71,56 +71,56 @@ async function fetchData() {
         showPopUp.value = true;
       } else {
         userStore.setAllBoard(resBoard);
-        const oidByToken = userStore.authToken.oid;
-        const res = await getBoardsById(boardId.value);
-        if (res === 404 || res === 400 || res === 500) {
-          router.push({ name: "TaskNotFound", params: { page: "Board" } });
-        } else if (res === 401) {
-          showPopUp.value = true;
-        } else {
-          boardName.value = res.name;
-          const oidByGet = res.owner.id;
-          if (oidByGet !== oidByToken) {
-            router.push({ name: "TaskNotFound", params: { page: "Board" } });
+      }
+    }
+    const oidByToken = userStore.authToken.oid;
+    const res = await getBoardsById(boardId.value);
+    if (res === 404 || res === 400 || res === 500) {
+      router.push({ name: "TaskNotFound", params: { page: "Board" } });
+    } else if (res === 401) {
+      showPopUp.value = true;
+    } else {
+      boardName.value = res.name;
+      const oidByGet = res.owner.id;
+      if (oidByGet !== oidByToken) {
+        router.push({ name: "TaskNotFound", params: { page: "Board" } });
+      }
+      const resStatus = await getAllStatus(boardId.value);
+      if (resStatus === undefined) {
+        showErrorMSG.value = true;
+      } else if (resStatus === 401) {
+        // go login
+        showPopUp.value = true;
+      } else {
+        statusStore.setAllStatus(resStatus);
+        allStatus.value = statusStore.allStatus;
+        maximumTask.value = statusStore.maximumTask;
+        toggleActive.value = statusStore.isLimit;
+        statusStore.setNoOftask(countStatus.value);
+        if (statusStore.maximumTask === undefined) {
+          const resLimit = await getLimit(boardId.value);
+          if (resLimit === 401) {
+            // go login
+            showPopUp.value = true;
           }
-          const resStatus = await getAllStatus(boardId.value);
-          if (resStatus === undefined) {
+          statusStore.setMaximumTaskStatus(resLimit.maximumTask);
+          statusStore.setLimitStatus(resLimit.isLimit);
+          maximumTask.value = statusStore.maximumTask;
+          toggleActive.value = statusStore.isLimit;
+        }
+        if (taskStore.allTask.length === 0) {
+          const resTask = await getFilteredTask(boardId.value);
+          if (resTask === undefined) {
             showErrorMSG.value = true;
-          } else if (resStatus === 401) {
+          } else if (resTask === 401) {
             // go login
             showPopUp.value = true;
           } else {
-            statusStore.setAllStatus(resStatus);
-            allStatus.value = statusStore.allStatus;
-            maximumTask.value = statusStore.maximumTask;
-            toggleActive.value = statusStore.isLimit;
-            statusStore.setNoOftask(countStatus.value);
-            if (statusStore.maximumTask === undefined) {
-              const resLimit = await getLimit(boardId.value);
-              if (resLimit === 401) {
-                // go login
-                showPopUp.value = true;
-              }
-              statusStore.setMaximumTaskStatus(resLimit.maximumTask);
-              statusStore.setLimitStatus(resLimit.isLimit);
-              maximumTask.value = statusStore.maximumTask;
-              toggleActive.value = statusStore.isLimit;
-            }
-            if (taskStore.allTask.length === 0) {
-              const resTask = await getFilteredTask(boardId.value);
-              if (resTask === undefined) {
-                showErrorMSG.value = true;
-              } else if (resTask === 401) {
-                // go login
-                showPopUp.value = true;
-              } else {
-                taskStore.setAllTask(resTask);
-              }
-            }
-
-            showLoading.value = false;
+            taskStore.setAllTask(resTask);
           }
         }
+
+        showLoading.value = false;
       }
     }
   }
