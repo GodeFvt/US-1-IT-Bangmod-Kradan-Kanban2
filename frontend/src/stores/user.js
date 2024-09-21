@@ -4,13 +4,13 @@ import { isTokenValid } from "../lib/utill.js";
 
 export const useUserStore = defineStore("userStore", {
   state: () => ({
-    authToken: () => {
+    authToken: (() => {
       const token = localStorage.getItem("authToken") || null;
       if (token) {
         const decodeToken = VueJwtDecode.decode(token);
         return decodeToken;
       }
-    },
+    })(),
     boards: [],
     isAuthenticated: !!localStorage.getItem("authToken"),
   }),
