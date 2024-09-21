@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { getAllBoards } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
@@ -26,21 +25,7 @@ onMounted(async () => {
     showPopUp.value = true;
     return;
   } else {
-    if (userStore.boards.length === 0) {
-      const resBoard = await getAllBoards();
-      if (resBoard === 401) {
-        showPopUp.value = true;
-      } else {
-        userStore.setAllBoard(resBoard);
-        // if (resBoard.length === 1) {
-        //   console.log("redirect to task");
-        //   router.push({
-        //     name: "task",
-        //     params: { boardId: userStore.boards[0].id },
-        //   });
-        // }
-      }
-    }
+
   }
 });
 const open = ref(true);

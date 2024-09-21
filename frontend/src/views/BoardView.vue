@@ -20,8 +20,6 @@ import { isTokenValid } from "../lib/utill.js";
 const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
-
-const allBoard = ref(userStore.boards);
 const board = ref({});
 const typeToast = ref("");
 const messageToast = ref("");
@@ -33,16 +31,22 @@ const showToast = ref(false);
 const showDeleteModal = ref(false);
 // console.log(userStore.authToken.name);
 
-// onMounted(() => {
-//   allBoard.value = userStore.boards;
-// });
+onMounted(async () => {
+ if(userStore.boards.length === 0) {
+      const resBoard = await getAllBoards();
+      if (resBoard === 401) {
+        showPopUp.value = true;
+      } else {
+        userStore.setAllBoard(resBoard);}
+}
+});
 
 watch(
   () => route.path,
   (newPath, oldPath) => {
     // if (oldPath === "/login") {
-      
-    // } 
+
+    // }
     // else {fetchData();
     // }
     if (newPath === "/board/add") {
@@ -246,7 +250,9 @@ function openBoard(boardId) {
     v-if="showDeleteModal"
     @user-action="showDeleteModal = false"
     @confirm="removeBoard"
-    :index="userStore.boards.findIndex((board) => board.id === boardIdForDelete)"
+    :index="
+      userStore.boards.findIndex((board) => board.id === boardIdForDelete)
+    "
     class="z-50"
     width="w-[42vh]"
   >
