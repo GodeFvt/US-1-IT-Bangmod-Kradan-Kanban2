@@ -5,7 +5,8 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3 [step 4]\n
                     -  [step 4] FE should redirect to /login without calling BE`, () => {
 
     it('[Step 4.1] Open the /board page and should redirect to /login without calling BE.', () => {
-        cy.intercept('GET','http://localhost:8080/**').as('request')
+        // cy.intercept('GET','http://localhost:8080/**').as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**').as('request')
 
         cy.visit('/board')
 
@@ -19,7 +20,8 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3 [step 4]\n
 
 
     it('[Step 4.2] Open the /board/1/task/add page and should redirect to /login without calling BE.', () => {
-        cy.intercept('GET','http://localhost:8080/**').as('request')
+        // cy.intercept('GET','http://localhost:8080/**').as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**').as('request')
 
         cy.visit('/board/1/task/add')
 
@@ -33,7 +35,8 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3 [step 4]\n
 
 
     it('[Step 4.3] Open the /board/1/task/1 page and should redirect to /login without calling BE.', () => {
-        cy.intercept('GET','http://localhost:8080/**').as('request')
+        // cy.intercept('GET','http://localhost:8080/**').as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**').as('request')
 
         cy.visit('/board/1/task/1/edit')
 
@@ -46,7 +49,8 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3 [step 4]\n
     })
 
     it('[Step 4.4] Open the /board/1/status page and should redirect to /login without calling BE.', () => {
-        cy.intercept('GET','http://localhost:8080/**').as('request')
+        // cy.intercept('GET','http://localhost:8080/**').as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**').as('request')
 
         cy.visit('/board/1/status')
 
@@ -59,7 +63,8 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3 [step 4]\n
     })
 
     it('[Step 4.5] Open the /board/1/status/add page and should redirect to /login without calling BE.', () => {
-        cy.intercept('GET','http://localhost:8080/**').as('request')
+        // cy.intercept('GET','http://localhost:8080/**').as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**').as('request')
 
         cy.visit('/board/1/status/add')
 
@@ -73,8 +78,9 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3 [step 4]\n
 
 
     it('[Step 4.6] Open the /board/1/status/1/edit page and should redirect to /login without calling BE.', () => {
-        cy.intercept('GET','http://localhost:8080/**').as('request')
-
+        // cy.intercept('GET','http://localhost:8080/**').as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**').as('request')
+        
         cy.visit('/board/1/status/1/edit')
 
         cy.wait(100)
