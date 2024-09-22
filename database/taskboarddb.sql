@@ -1,10 +1,6 @@
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-
--- -----------------------------------------------------
--- Schema taskboard
--- -----------------------------------------------------
 DROP SCHEMA IF EXISTS `taskboard` ;
 
 CREATE SCHEMA IF NOT EXISTS `taskboard` DEFAULT CHARACTER SET utf8mb3 ;
@@ -13,6 +9,7 @@ USE `taskboard` ;
 -- -----------------------------------------------------
 -- Table `taskboard`.`users`
 -- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `taskboard`.`users` (
   `oid` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`oid`))
@@ -23,11 +20,13 @@ DEFAULT CHARACTER SET = utf8mb3;
 -- -----------------------------------------------------
 -- Table `taskboard`.`boards`
 -- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `taskboard`.`boards` (
   `boardId` VARCHAR(10) NOT NULL,
   `boardName` VARCHAR(200) NOT NULL,
   `isCustomStatus` TINYINT NOT NULL DEFAULT '0',
   `oid` VARCHAR(40) NOT NULL,
+  `visibility` VARCHAR(10) NOT NULL DEFAULT 'PRIVATE',
   PRIMARY KEY (`boardId`),
   INDEX `fk_board_user_idx` (`oid` ASC) VISIBLE,
   CONSTRAINT `fk_board_user`
@@ -40,6 +39,7 @@ DEFAULT CHARACTER SET = utf8mb3;
 -- -----------------------------------------------------
 -- Table `taskboard`.`tasklimits`
 -- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `taskboard`.`tasklimits` (
   `taskLimitId` INT NOT NULL AUTO_INCREMENT,
   `maximumTask` INT NULL DEFAULT '10',
@@ -52,19 +52,19 @@ CREATE TABLE IF NOT EXISTS `taskboard`.`tasklimits` (
     FOREIGN KEY (`boardId`)
     REFERENCES `taskboard`.`boards` (`boardId`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb3;
 
 
 -- -----------------------------------------------------
 -- Table `taskboard`.`taskstatus`
 -- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `taskboard`.`taskstatus` (
   `statusId` INT NOT NULL AUTO_INCREMENT,
   `statusName` VARCHAR(50) NOT NULL,
   `statusDescription` VARCHAR(200) NULL DEFAULT NULL,
   `statusColor` VARCHAR(10) NULL DEFAULT '#828282',
-  `boardId` VARCHAR(10) NULL,
+  `boardId` VARCHAR(10) NULL DEFAULT NULL,
   PRIMARY KEY (`statusId`),
   UNIQUE INDEX `idtaskstatus_UNIQUE` (`statusId` ASC) VISIBLE,
   INDEX `fk_taskstatus_boards1_idx` (`boardId` ASC) VISIBLE,
@@ -72,13 +72,13 @@ CREATE TABLE IF NOT EXISTS `taskboard`.`taskstatus` (
     FOREIGN KEY (`boardId`)
     REFERENCES `taskboard`.`boards` (`boardId`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb3;
 
 
 -- -----------------------------------------------------
 -- Table `taskboard`.`tasklists`
 -- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `taskboard`.`tasklists` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(100) NOT NULL,
@@ -98,7 +98,30 @@ CREATE TABLE IF NOT EXISTS `taskboard`.`tasklists` (
     FOREIGN KEY (`statusId`)
     REFERENCES `taskboard`.`taskstatus` (`statusId`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+DEFAULT CHARACTER SET = utf8mb3;
+
+
+-- -----------------------------------------------------
+-- Table `taskboard`.`boards_has_users`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `taskboard`.`boards_has_users` (
+  `boardId` VARCHAR(10) NOT NULL,
+  `oid` VARCHAR(40) NOT NULL,
+  PRIMARY KEY (`boardId`, `oid`),
+  INDEX `fk_boards_has_users_users1_idx` (`oid` ASC) VISIBLE,
+  INDEX `fk_boards_has_users_boards1_idx` (`boardId` ASC) VISIBLE,
+  CONSTRAINT `fk_boards_has_users_boards1`
+    FOREIGN KEY (`boardId`)
+    REFERENCES `taskboard`.`boards` (`boardId`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_boards_has_users_users1`
+    FOREIGN KEY (`oid`)
+    REFERENCES `taskboard`.`users` (`oid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
 SET SQL_MODE=@OLD_SQL_MODE;
