@@ -21,7 +21,6 @@ const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 
-const allBoard = ref(userStore.boards);
 const board = ref({});
 const typeToast = ref("");
 const messageToast = ref("");
@@ -33,9 +32,16 @@ const showToast = ref(false);
 const showDeleteModal = ref(false);
 // console.log(userStore.authToken.name);
 
-// onMounted(() => {
-//   allBoard.value = userStore.boards;
-// });
+onMounted(async () => {
+  if (userStore.boards.length === 0) {
+      const resBoard = await getAllBoards();
+      if (resBoard === 401) {
+        showPopUp.value = true;
+      } else {
+        userStore.setAllBoard(resBoard);
+      }
+    }
+});
 
 watch(
   () => route.path,
