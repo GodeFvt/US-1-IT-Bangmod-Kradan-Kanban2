@@ -19,7 +19,7 @@ describe(`TC-PBI18-PERSIONAL-BOARD-1-FE-v3\n
     })
 
     it('[Step 2.1] Should get statusCode 404 when opening the /board/1 page', () => {
-        cy.intercept('GET','http://localhost:8080/boards/1').as('request')
+        cy.intercept('GET','http://localhost:8080/v3/boards/1').as('request')
 
         cy.visit('/board/1')
 
@@ -41,7 +41,7 @@ describe(`TC-PBI18-PERSIONAL-BOARD-1-FE-v3\n
     // })   
 
     it('[Step 2.3] Should get statusCode 404 when opening the /board/1/task/1/edit page', () => {
-        cy.intercept('GET','http://localhost:8080/boards/1/tasks/1').as('request')
+        cy.intercept('GET','http://localhost:8080/v3/boards/1/tasks/1').as('request')
 
         cy.visit('/board/1/task/1/edit')
 
@@ -52,7 +52,7 @@ describe(`TC-PBI18-PERSIONAL-BOARD-1-FE-v3\n
     })   
 
     it('[Step 2.4] Should get statusCode 404 when opening the /board/1/status page', () => {
-        cy.intercept('GET','http://localhost:8080/boards/1/statuses').as('request')
+        cy.intercept('GET','http://localhost:8080/v3/boards/1/statuses').as('request')
 
         cy.visit('/board/1/status')
 
@@ -74,7 +74,7 @@ describe(`TC-PBI18-PERSIONAL-BOARD-1-FE-v3\n
     // })   
 
     it('[Step 2.6] Should get statusCode 404 when opening the /board/1/status/1/edit page', () => {
-        cy.intercept('GET','http://localhost:8080/boards/1/statuses/1').as('request')
+        cy.intercept('get','http://localhost:8080/v3/boards/1/statuses/1').as('request')
 
         cy.visit('/board/1/status/1/edit')
 

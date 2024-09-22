@@ -79,7 +79,6 @@ async function fetchData() {
     showPopUp.value = true;
     return;
   } else {
-    
     const oidByToken = userStore.authToken.oid;
     const res = await getBoardsById(boardId.value);
     if (res === 404 || res === 400 || res === 500) {
@@ -93,18 +92,20 @@ async function fetchData() {
         router.push({ name: "TaskNotFound", params: { page: "Board" } });
       }
       if (userStore.boards.length === 0) {
-      const resBoard = await getAllBoards();
-      if (resBoard === 401) {
-        showPopUp.value = true;
-      } else {
-        userStore.setAllBoard(resBoard);
+        const resBoard = await getAllBoards();
+        if (resBoard === 401) {
+          showPopUp.value = true;
+        } else {
+          userStore.setAllBoard(resBoard);
+        }
       }
-    }
       const resTask = await getFilteredTask(boardId.value);
       if (resTask === undefined) {
         showErrorMSG.value = true;
       } else if (resTask === 401) {
         showPopUp.value = true;
+      } else if (resTask === 404) {
+        router.push({ name: "TaskNotFound", params: { page: "Board" } });
       } else {
         taskStore.setAllTask(resTask);
         allTask.value = taskStore.allTask;

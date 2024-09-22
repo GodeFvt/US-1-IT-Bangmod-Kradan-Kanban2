@@ -65,39 +65,42 @@ async function fetchData() {
     showPopUp.value = true;
     return;
   } else {
-    
-    const oidByToken = userStore.authToken.oid;
-    const res = await getBoardsById(boardId.value);
-    if (res === 404 || res === 400 || res === 500) {
-      router.push({ name: "TaskNotFound", params: { page: "Board" } });
-    } else if (res === 401) {
+    const resStatus = await getAllStatus(boardId.value);
+    if (resStatus === undefined) {
+      showErrorMSG.value = true;
+    } else if (resStatus === 401) {
+      // go login
       showPopUp.value = true;
+    } else if (resStatus === 404) {
+      router.push({ name: "TaskNotFound", params: { page: "Board" } });
     } else {
-      boardName.value = res.name;
-      const oidByGet = res.owner.id;
-      if (oidByGet !== oidByToken) {
+      statusStore.setAllStatus(resStatus);
+      allStatus.value = statusStore.allStatus;
+      maximumTask.value = statusStore.maximumTask;
+      toggleActive.value = statusStore.isLimit;
+      statusStore.setNoOftask(countStatus.value);
+
+      const oidByToken = userStore.authToken.oid;
+      const res = await getBoardsById(boardId.value);
+      if (res === 404 || res === 400 || res === 500) {
         router.push({ name: "TaskNotFound", params: { page: "Board" } });
-      }
-      if (userStore.boards.length === 0) {
-      const resBoard = await getAllBoards();
-      if (resBoard === 401) {
+      } else if (res === 401) {
         showPopUp.value = true;
       } else {
-        userStore.setAllBoard(resBoard);
-      }
-    }
-      const resStatus = await getAllStatus(boardId.value);
-      if (resStatus === undefined) {
-        showErrorMSG.value = true;
-      } else if (resStatus === 401) {
-        // go login
-        showPopUp.value = true;
-      } else {
-        statusStore.setAllStatus(resStatus);
-        allStatus.value = statusStore.allStatus;
-        maximumTask.value = statusStore.maximumTask;
-        toggleActive.value = statusStore.isLimit;
-        statusStore.setNoOftask(countStatus.value);
+        boardName.value = res.name;
+        const oidByGet = res.owner.id;
+        if (oidByGet !== oidByToken) {
+          router.push({ name: "TaskNotFound", params: { page: "Board" } });
+        }
+        if (userStore.boards.length === 0) {
+          const resBoard = await getAllBoards();
+          if (resBoard === 401) {
+            showPopUp.value = true;
+          } else {
+            userStore.setAllBoard(resBoard);
+          }
+        }
+
         if (statusStore.maximumTask === undefined) {
           const resLimit = await getLimit(boardId.value);
           if (resLimit === 401) {
