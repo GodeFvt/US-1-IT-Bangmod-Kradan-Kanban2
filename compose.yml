@@ -38,6 +38,7 @@ services:
       - ACCOUNT_DB_PASSWORD=${AC_DB_PASSWORD}
       - ACCOUNT_DB_URL=${AC_DB_URL}
       - JWT_SECRET=${SECRET}
+      - JWT_SECRET_REFRESH=${SECRET_REFRESH}
       - JWT_ISSUER=${ISSUER}
     build:
       context: backend
