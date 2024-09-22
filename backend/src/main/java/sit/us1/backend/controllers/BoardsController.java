@@ -18,12 +18,17 @@ import sit.us1.backend.dtos.limitsDTO.StatusLimitResponseDTO;
 import sit.us1.backend.dtos.statusesDTO.SimpleStatusDTO;
 import sit.us1.backend.dtos.statusesDTO.StatusValidDTO;
 import sit.us1.backend.dtos.tasksDTO.*;
+import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.TaskLimit;
+import sit.us1.backend.exceptions.AccessDeniedException;
+import sit.us1.backend.exceptions.BadRequestException;
+import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.exceptions.ValidationUtil;
 import sit.us1.backend.services.BoardService;
 import sit.us1.backend.services.SecurityUtil;
 import sit.us1.backend.services.StatusService;
 import sit.us1.backend.services.TaskService;
+import sit.us1.backend.validations.ValidBoardExists;
 import sit.us1.backend.validations.ValidBoardUser;
 import sit.us1.backend.validations.ValidationGroups;
 
@@ -53,17 +58,33 @@ public class BoardsController {
     }
 
     private ResponseEntity isPublic(String boardId, ResponseEntity<?> responseEntity) {
+        validateBoardExists(boardId);
         if (boardService.isBoardPublic(boardId)) {
             return responseEntity;
         } else {
-            String oid =  SecurityUtil.getCurrentUserDetails().getOid();
-            if (boardService.isOwnerOfBoard(boardId, oid)) {
+            CustomUserDetails user = SecurityUtil.getCurrentUserDetails();
+            if (user != null && boardService.isOwnerOfBoard(boardId, user.getOid())) {
                 return responseEntity;
             } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not the owner of this board");
+                throw new AccessDeniedException("You are not the owner of this board");
             }
         }
     }
+
+    private void checkBoardAndOwnership(String boardId) {
+        validateBoardExists(boardId);
+        CustomUserDetails user = SecurityUtil.getCurrentUserDetails();
+        if (user != null && !boardService.isOwnerOfBoard(boardId, user.getOid())) {
+            throw new AccessDeniedException("You are not the owner of this board");
+        }
+    }
+
+    private void validateBoardExists(String boardId) {
+        if (!boardService.boardExists(boardId)) {
+            throw new NotFoundException("Board not found");
+        }
+    }
+
 
     @GetMapping
     public ResponseEntity<List<SimpleBoardDTO>> getBoard() {
@@ -76,22 +97,25 @@ public class BoardsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SimpleBoardDTO> getBoardById(@ValidBoardUser @PathVariable String id) {
+    public ResponseEntity<SimpleBoardDTO> getBoardById(@PathVariable String id) {
         return isPublic(id, ResponseEntity.ok(boardService.getBoardById(id)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<SimpleBoardDTO> deleteBoardById(@ValidBoardUser @PathVariable String id) {
+    public ResponseEntity<SimpleBoardDTO> deleteBoardById(@PathVariable String id) {
+        checkBoardAndOwnership(id);
         return ResponseEntity.ok(boardService.deleteBoardById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SimpleBoardDTO> updateBoardById(@ValidBoardUser @PathVariable String id, @Valid @RequestBody BoardRequestDTO board) {
+    public ResponseEntity<SimpleBoardDTO> updateBoardById(@PathVariable String id, @Valid @RequestBody BoardRequestDTO board) {
+        checkBoardAndOwnership(id);
         return ResponseEntity.ok(boardService.updateBoardById(id, board));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<SimpleBoardDTO> updateVisibilityById(@ValidBoardUser @PathVariable String id, @RequestBody SimpleBoardDTO board) {
+    public ResponseEntity<SimpleBoardDTO> updateVisibilityById(@PathVariable String id, @RequestBody SimpleBoardDTO board) {
+        checkBoardAndOwnership(id);
         return ResponseEntity.ok(boardService.updateVisibilityById(id, board.getVisibility()));
     }
 
@@ -99,22 +123,23 @@ public class BoardsController {
     @GetMapping("/{id}/tasks")
     public ResponseEntity<List<SimpleTaskDTO>> getTaskFiltered(@RequestParam(defaultValue = "") String sortBy,
                                                                @RequestParam(defaultValue = "") String[] filterStatuses,
-                                                               @ValidBoardUser @PathVariable String id) {
-        return isPublic(id,ResponseEntity.ok(taskService.getTaskFiltered(sortBy, filterStatuses, id)));
+                                                               @PathVariable String id) {
+        return isPublic(id, ResponseEntity.ok(taskService.getTaskFiltered(sortBy, filterStatuses, id)));
     }
 
     @GetMapping("/{id}/tasks/{taskId}")
-    public ResponseEntity<TaskDetailDTO> getTaskById(@ValidBoardUser @PathVariable String id, @PathVariable Integer taskId) {
-        return isPublic(id,ResponseEntity.ok(taskService.getTaskById(id, taskId)));
+    public ResponseEntity<TaskDetailDTO> getTaskById(@PathVariable String id, @PathVariable Integer taskId) {
+        return isPublic(id, ResponseEntity.ok(taskService.getTaskById(id, taskId)));
     }
 
     @GetMapping("/{id}/tasks/count/status/{statusId}")
-    public StatusCountDTO countTasksByStatusId(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId) {
-        return taskService.getCountByStatusIdAndReturnStatusName(id, statusId);
+    public ResponseEntity<StatusCountDTO> countTasksByStatusId(@PathVariable String id, @PathVariable Integer statusId) {
+        return isPublic(id, ResponseEntity.ok(taskService.getCountByStatusIdAndReturnStatusName(id, statusId)));
     }
 
     @PostMapping("/{id}/tasks")
-    public ResponseEntity<TaskResponseDTO> createTask(@ValidBoardUser @PathVariable String id, @RequestBody TaskRequestDTO newTask) {
+    public ResponseEntity<TaskResponseDTO> createTask(@PathVariable String id, @RequestBody TaskRequestDTO newTask) {
+        checkBoardAndOwnership(id);
         newTask.setBoardId(id);
         validationUtil.validateAndThrow(newTask);
         TaskResponseDTO taskList = taskService.createTask(id, newTask);
@@ -122,7 +147,8 @@ public class BoardsController {
     }
 
     @PutMapping("/{id}/tasks/{taskId}")
-    public ResponseEntity<TaskResponseDTO> updateTask(@ValidBoardUser @PathVariable String id, @PathVariable Integer taskId, @RequestBody TaskRequestDTO newTask) {
+    public ResponseEntity<TaskResponseDTO> updateTask(@PathVariable String id, @PathVariable Integer taskId, @RequestBody TaskRequestDTO newTask) {
+        checkBoardAndOwnership(id);
         newTask.setBoardId(id);
         validationUtil.validateAndThrow(newTask);
         TaskResponseDTO taskList = taskService.updateTask(id, taskId, newTask);
@@ -130,29 +156,31 @@ public class BoardsController {
     }
 
     @DeleteMapping("/{id}/tasks/{taskId}")
-    public ResponseEntity<SimpleTaskDTO> deleteTask(@ValidBoardUser @PathVariable String id, @PathVariable Integer taskId) {
+    public ResponseEntity<SimpleTaskDTO> deleteTask(@PathVariable String id, @PathVariable Integer taskId) {
+        checkBoardAndOwnership(id);
         SimpleTaskDTO taskList = taskService.deleteTask(id, taskId);
         return ResponseEntity.ok(taskList);
     }
 
     // Status
     @GetMapping("/{id}/statuses")
-    public ResponseEntity<List<SimpleStatusDTO>> getStatusList(@ValidBoardUser @PathVariable String id) {
-        return isPublic(id,ResponseEntity.ok(statusService.getAllStatus(id)));
+    public ResponseEntity<List<SimpleStatusDTO>> getStatusList(@PathVariable String id) {
+        return isPublic(id, ResponseEntity.ok(statusService.getAllStatus(id)));
     }
 
     @GetMapping("/{id}/statuses/{statusId}")
-    public ResponseEntity<SimpleStatusDTO> getStatusById(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId) {
-        return isPublic(id,ResponseEntity.ok(statusService.getStatusById(id, statusId)));
+    public ResponseEntity<SimpleStatusDTO> getStatusById(@PathVariable String id, @PathVariable Integer statusId) {
+        return isPublic(id, ResponseEntity.ok(statusService.getStatusById(id, statusId)));
     }
 
     @GetMapping("/{id}/statuses/limit")
-    public ResponseEntity<TaskLimit> getStatusLimit(@ValidBoardUser @PathVariable String id) {
-        return isPublic(id,ResponseEntity.ok(statusService.getStatusLimit(id)));
+    public ResponseEntity<TaskLimit> getStatusLimit(@PathVariable String id) {
+        return isPublic(id, ResponseEntity.ok(statusService.getStatusLimit(id)));
     }
 
     @PostMapping("/{id}/statuses")
-    public ResponseEntity<SimpleStatusDTO> createStatus(@ValidBoardUser @PathVariable String id, @Valid @RequestBody SimpleStatusDTO newStatus) {
+    public ResponseEntity<SimpleStatusDTO> createStatus(@PathVariable String id, @Valid @RequestBody SimpleStatusDTO newStatus) {
+        checkBoardAndOwnership(id);
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setName(newStatus.getName());
@@ -162,7 +190,8 @@ public class BoardsController {
     }
 
     @PutMapping("/{id}/statuses/{statusId}")
-    public ResponseEntity<SimpleStatusDTO> updateStatus(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId, @Validated @RequestBody SimpleStatusDTO statusDTO) {
+    public ResponseEntity<SimpleStatusDTO> updateStatus(@PathVariable String id, @PathVariable Integer statusId, @Validated @RequestBody SimpleStatusDTO statusDTO) {
+        checkBoardAndOwnership(id);
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setOnPathStatusId(statusId);
@@ -174,13 +203,15 @@ public class BoardsController {
     }
 
     @PatchMapping("/{id}/statuses/all/maximum-task")
-    public ResponseEntity<List<StatusLimitResponseDTO>> updateLimitMaxiMunTask(@ValidBoardUser @PathVariable String id, @RequestParam @Min(0) @Max(30) Integer maximumTask, @RequestParam Boolean isLimit) {
+    public ResponseEntity<List<StatusLimitResponseDTO>> updateLimitMaxiMunTask(@PathVariable String id, @RequestParam @Min(0) @Max(30) Integer maximumTask, @RequestParam Boolean isLimit) {
+        checkBoardAndOwnership(id);
         List<StatusLimitResponseDTO> status = statusService.updateLimitMaxiMunTask(id, maximumTask, isLimit);
         return ResponseEntity.ok(status);
     }
 
     @DeleteMapping("/{id}/statuses/{statusId}")
-    public ResponseEntity<SimpleStatusDTO> deleteStatus(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId) {
+    public ResponseEntity<SimpleStatusDTO> deleteStatus(@PathVariable String id, @PathVariable Integer statusId) {
+        checkBoardAndOwnership(id);
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setOnPathStatusId(statusId);
@@ -190,7 +221,8 @@ public class BoardsController {
     }
 
     @DeleteMapping("/{id}/statuses/{statusId}/{newStatusId}")
-    public ResponseEntity<SimpleStatusDTO> deleteStatusAndTransferStatusInAllTask(@ValidBoardUser @PathVariable String id, @PathVariable Integer statusId, @PathVariable Integer newStatusId) {
+    public ResponseEntity<SimpleStatusDTO> deleteStatusAndTransferStatusInAllTask(@PathVariable String id, @PathVariable Integer statusId, @PathVariable Integer newStatusId) {
+        checkBoardAndOwnership(id);
         StatusValidDTO statusAllId = new StatusValidDTO();
         statusAllId.setBoardId(id);
         statusAllId.setOnPathStatusId(statusId);

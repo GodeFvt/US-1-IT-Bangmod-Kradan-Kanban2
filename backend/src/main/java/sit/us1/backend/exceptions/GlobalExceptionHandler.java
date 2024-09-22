@@ -16,6 +16,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import sit.us1.backend.validations.ValidBoardExists;
 import sit.us1.backend.validations.ValidBoardUser;
 
 
@@ -97,16 +98,13 @@ public class GlobalExceptionHandler {
 
     // ดัก exception ที่เกิดจาก  Validate ไม่ผ่าน Handler เอง
     @ExceptionHandler(HandlerMethodValidationException.class)
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleHandlerMethodValidationException (HandlerMethodValidationException exception, WebRequest request) {
-        boolean isValidBoardUserError = exception.getAllValidationResults().stream()
-                .anyMatch(result -> result.getMethodParameter().hasParameterAnnotation(ValidBoardUser.class));
-        HttpStatus status = isValidBoardUserError ? HttpStatus.FORBIDDEN : HttpStatus.BAD_REQUEST;
-        ErrorResponse errorResponse = new ErrorResponse(status.value(), "Validation error. Check 'errors' field for details.", request.getDescription(false));
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Validation error. Check 'errors' field for details.", request.getDescription(false));
         for (ParameterValidationResult param : exception.getAllValidationResults()) {
             errorResponse.addValidationError(param.getMethodParameter().getParameterName(), param.getResolvableErrors().get(0).getDefaultMessage());
         }
-        return ResponseEntity.status(status).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     // ดัก exception ที่เกิดจาก ValidationException
@@ -123,6 +121,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ErrorResponse> handleItemNotFoundException(NotFoundException exception, WebRequest request) {
         return buildErrorResponse(exception, exception.getMessage(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException exception, WebRequest request) {
+        return buildErrorResponse(exception, exception.getMessage(), HttpStatus.FORBIDDEN, request);
     }
 
     // ดัก exception BadRequestException

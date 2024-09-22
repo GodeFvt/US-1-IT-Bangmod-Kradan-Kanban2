@@ -43,7 +43,6 @@ public class BoardService {
         if (boardId == null) {
             throw new BadRequestException("the specified board does not exist");
         }
-
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
         System.out.println("PUBLIC".equalsIgnoreCase(board.getVisibility()));
         return "PUBLIC".equalsIgnoreCase(board.getVisibility());
@@ -55,6 +54,13 @@ public class BoardService {
         }
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
         return board.getOwner().getId().equals(oid);
+    }
+
+    public boolean boardExists(String boardId) {
+        if (boardId == null) {
+            throw new BadRequestException("the specified board does not exist");
+        }
+        return boardRepository.existsById(boardId);
     }
 
     public List<SimpleBoardDTO> getAllBoardByOid() {
