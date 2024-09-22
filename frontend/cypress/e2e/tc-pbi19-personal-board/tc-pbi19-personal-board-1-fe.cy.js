@@ -43,8 +43,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-1-FE\n
         // cy.intercept('POST','http://localhost:8080/v3/*',{
         //     statusCode: 401
         // }).as('mockAPI')
-
-        cy.intercept('POST','http://intproj23.sit.kmutt.ac.th/us1/api/v3/*',{
+        cy.intercept('POST','http://intproj23.sit.kmutt.ac.th/us1/api/**',{
             statusCode: 401
         }).as('mockAPI')
 
@@ -66,7 +65,11 @@ describe(`TC-PBI19-PERSIONAL-BOARD-1-FE\n
 
     it('[Step 6] Open /board page and redirect to /login',()=>{
         // let apiUrl = Cypress.env('apiUrl')
-        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/v3/boards',{
+        //http://localhost:8080/v3/boards http://intproj23.sit.kmutt.ac.th/us1/api/v3
+        // cy.intercept('GET','http://localhost:8080/v3/*',{
+        //     statusCode: 401
+        // }).as('mockAPI')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/v3/**',{
             statusCode: 401
         }).as('mockAPI')
 

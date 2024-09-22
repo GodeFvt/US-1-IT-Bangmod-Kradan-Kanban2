@@ -18,7 +18,7 @@ async function getFilteredTask(boardId, [...filter] = "", sortBy = "id") {
       const tasks = await res.json();
       return tasks;
     }
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 404) {
       return res.status;
     } else {
       return undefined;
@@ -179,9 +179,11 @@ async function getAllStatus(boardId) {
       const tasks = await res.json();
       return tasks;
     }
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 404) {
       return res.status;
-    } else {
+    } 
+    
+    else {
       return undefined;
     }
   } catch (error) {

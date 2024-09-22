@@ -16,10 +16,16 @@ onMounted(() => {
       }
       if (TaskNotFound.value === "Board") {
         router.push({ name: "board" });
-      } else {
+      }
+      if (TaskNotFound.value === "Task"){
         router.push({
           name: "task",
-          params: { boardId: userStore.boards[0].id },
+          params: { boardId: route.params.boardId } ,
+        });
+      }
+      else {
+        router.push({
+          name: "board",
         });
       }
     }, 3000)

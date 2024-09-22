@@ -40,7 +40,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-3-FE-1\n
         cy.get('@item').contains('.itbkk-status',"Doing")
     })
 
-    it('Should have "No Description Provided","Unassigned" and "No Status".',()=>{
+    it('Should have "No Description Provided","Unassigned" and "Doing".',()=>{
         cy.get('.itbkk-title').contains('user2 first task').click()
     
         cy.wait(200)
