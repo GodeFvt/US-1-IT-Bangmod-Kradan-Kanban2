@@ -40,6 +40,7 @@ public class WebSecurityConfig {
         httpSecurity.csrf(csrf -> csrf.disable())
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/token").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v3/boards/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

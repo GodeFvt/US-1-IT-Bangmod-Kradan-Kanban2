@@ -16,6 +16,7 @@ import sit.us1.backend.repositories.account.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
@@ -37,6 +38,23 @@ public class JwtUserDetailsService implements UserDetailsService {
         };
         authorities.add(grantedAuthority);
         return  new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole(), authorities);
+    }
+
+    public CustomUserDetails loadUserByOid(String oid)  {
+        System.out.println("oid: " + oid);
+        Optional<User> user = userRepository.findById(oid);
+        if (user.get() == null) {
+            throw new InternalAuthenticationServiceException("adwd");
+        }
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        GrantedAuthority grantedAuthority = new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return user.get().getRole().toString();
+            }
+        };
+        authorities.add(grantedAuthority);
+        return new CustomUserDetails(user.get().getUsername(),user.get().getName(), user.get().getOid(),user.get().getEmail() ,user.get().getPassword(), user.get().getRole(), authorities);
     }
 }
 

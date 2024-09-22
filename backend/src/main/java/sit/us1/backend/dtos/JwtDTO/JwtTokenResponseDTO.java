@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @Data
 public class JwtTokenResponseDTO {
     private String access_token;
+    private String refresh_token;
 }
