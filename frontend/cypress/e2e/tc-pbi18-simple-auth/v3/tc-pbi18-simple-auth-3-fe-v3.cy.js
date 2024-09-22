@@ -19,10 +19,12 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3\n
     })
 
     it('[Step 3.2] Should get statusCode 401 when opening the /board/1 page and redirect to /login', () => {
-        cy.intercept('GET','http://localhost:8080/**',{
+        // cy.intercept('GET','http://localhost:8080/**',{
+        //     statusCode: 401
+        // }).as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**',{
             statusCode: 401
         }).as('request')
-
         cy.visit('/board/1')
 
         cy.wait('@request').then((interception) =>{
@@ -34,7 +36,10 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3\n
     })
 
     it('[Step 3.3] Should get statusCode 401 when opening the /board/1/task/1/edit page and redirect to /login', () => {
-        cy.intercept('GET','http://localhost:8080/**',{
+        // cy.intercept('GET','http://localhost:8080/**',{
+        //     statusCode: 401
+        // }).as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**',{
             statusCode: 401
         }).as('request')
 
@@ -50,7 +55,10 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3\n
    
 
     it('[Step 3.4] Should get statusCode 401 when opening the /board/1/status page and redirect to /login', () => {
-        cy.intercept('GET','http://localhost:8080/**',{
+        // cy.intercept('GET','http://localhost:8080/**',{
+        //     statusCode: 401
+        // }).as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**',{
             statusCode: 401
         }).as('request')
 
@@ -65,7 +73,10 @@ describe(`TC-PBI18-PERSIONAL-BOARD-3-FE-v3\n
     })
 
     it('[Step 3.6] Should get statusCode 401 when opening the /board/1/status/1/edit page and redirect to /login', () => {
-        cy.intercept('GET','http://localhost:8080/**',{
+        // cy.intercept('GET','http://localhost:8080/**',{
+        //     statusCode: 401
+        // }).as('request')
+        cy.intercept('GET','http://intproj23.sit.kmutt.ac.th/us1/api/**',{
             statusCode: 401
         }).as('request')
 
