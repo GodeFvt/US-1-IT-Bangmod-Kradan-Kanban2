@@ -76,11 +76,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
 
-            CustomUserDetails user = SecurityUtil.getCurrentUserDetails();
-            String boardId = request.getRequestURI().split("/")[3];
+
             boolean isGetMethod = request.getMethod().equals("GET");
 
             if (request.getRequestURI().startsWith("/v3/boards/")) {
+                CustomUserDetails user = SecurityUtil.getCurrentUserDetails();
+                String boardId = request.getRequestURI().split("/")[3];
                 boolean boardExists = boardService.boardExists(boardId);
                 boolean isPublicBoard = boardService.isBoardPublic(boardId);
                 boolean isOwner = user != null && boardService.isOwnerOfBoard(boardId, user.getOid());
