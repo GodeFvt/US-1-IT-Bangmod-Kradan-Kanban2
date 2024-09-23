@@ -1,4 +1,9 @@
 import VueJwtDecode from "vue-jwt-decode";
+import {
+  refreshAccessToken,
+} from "./fetchUtill.js";
+import { useUserStore } from "../stores/user.js";
+
 
 function convertString(string) {
   return string
@@ -33,40 +38,46 @@ function validateSizeInput(...properties) {
   });
 }
 
-function isTokenValid(token) {
+async function isTokenValid(token) {
+  const userStore = useUserStore();
+
   if (!token) {
-    return false; // No token found
+    return false; // ไม่มีToken
   }
 
-  let decodeToken;
-
-  if (typeof token === "string") {
-    const parts = token.split(".");
-    if (parts.length !== 3) {
-      return false; // Token is not well-formed (JWT must have three parts)
-    }
-
-    try {
-      decodeToken = VueJwtDecode.decode(token);
-    } catch (error) {
-      return false; // Error in decoding token or invalid JSON
-    }
-  } else if (typeof token === "object") {
-    decodeToken = token;
-  } else {
-    return false; // Token is not a valid format
+  let decodedToken;
+  try {
+    decodedToken = VueJwtDecode.decode(token);
+  } catch (error) {
+    return false; // Tokenไม่สามารถ decode ได้
   }
 
-  if (!decodeToken.exp) {
-    return false; // No expiration field found
+  if (!decodedToken || !decodedToken.exp) {
+    const refreshTokenSuccess = await refreshAccessToken();
+
+    if (refreshTokenSuccess) {
+      userStore.setAuthToken(refreshTokenSuccess.access_token)
+      return true;
+    } else {
+      return false;
+    }
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
-  if (decodeToken.exp < currentTime) {
-    return false; // Token is expired
+  if (!decodedToken.exp || decodedToken.exp < currentTime) {
+    // ถ้าโทเค็นหมดอายุ พยายามรีเฟรชโทเค็น
+    const refreshTokenSuccess = await refreshAccessToken();
+    if (typeof refreshTokenSuccess === "string") {
+      userStore.setAuthToken(refreshTokenSuccess.access_token)
+      return true;
+    }
+     else {
+      return false;
+    }
   }
 
-  return true; // Token is valid
+  return true; // Tokenยังใช้ได้
 }
+
 
 export { convertString, toFormatDate, validateSizeInput, isTokenValid };

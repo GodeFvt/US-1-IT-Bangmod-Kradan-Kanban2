@@ -1,36 +1,37 @@
 import { defineStore, acceptHMRUpdate } from "pinia";
 import VueJwtDecode from "vue-jwt-decode";
-import { isTokenValid } from "../lib/utill.js";
 
 export const useUserStore = defineStore("userStore", {
   state: () => ({
-    authToken: (() => {
-      const token = localStorage.getItem("authToken") || null;
-      if (token) {
-        const decodeToken = VueJwtDecode.decode(token);
-        return decodeToken;
-      }
-    })(),
+    authToken: null,
+    encodeToken: localStorage.getItem("authToken") || null,
     boards: [],
-    isAuthenticated: !!localStorage.getItem("authToken"),
+    isAuthenticated: false,
   }),
 
   actions: {
-    initializeAuthToken() {
+    initializeToken() {
       const token = localStorage.getItem("authToken");
-      if (token && isTokenValid(token)) {
-        const decodeToken = VueJwtDecode.decode(token);
-        this.authToken = decodeToken;
-        this.isAuthenticated = true;
+      if (token) {
+        try {
+          const decodedToken = VueJwtDecode.decode(token);
+          this.authToken = decodedToken;
+          this.encodeToken = token;
+          this.isAuthenticated = true;
+
+        } catch (error) {
+          console.error("Error decoding token:", error);
+          this.clearAuthToken();
+        }
       } else {
-        localStorage.removeItem("authToken");
-        this.authToken = null;
-        this.isAuthenticated = false;
+        this.clearAuthToken();
       }
     },
+
     setAuthToken(token) {
-      const decodeToken = VueJwtDecode.decode(token);
-      this.authToken = { ...decodeToken };
+      const decodedToken = VueJwtDecode.decode(token);
+      this.authToken = { ...decodedToken };
+      this.encodeToken = token;
       localStorage.setItem("authToken", token);
       this.isAuthenticated = true;
     },
@@ -38,6 +39,7 @@ export const useUserStore = defineStore("userStore", {
       this.authToken = null;
       this.isAuthenticated = false;
       localStorage.removeItem("authToken");
+      localStorage.removeItem("refresh_token");
     },
     addBoard(board) {
       this.boards.push(board);

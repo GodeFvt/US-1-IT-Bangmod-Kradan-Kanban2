@@ -33,7 +33,11 @@ const showDeleteModal = ref(false);
 // console.log(userStore.authToken.name);
 
 onMounted(async () => {
-  if (userStore.boards.length === 0) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showPopUp.value = true;
+    return;
+  } else {
+  if(userStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       if (resBoard === 401) {
         showPopUp.value = true;
@@ -41,6 +45,7 @@ onMounted(async () => {
         userStore.setAllBoard(resBoard);
       }
     }
+  }
 });
 
 watch(
@@ -62,7 +67,7 @@ watch(
   () => route.params.boardId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      if (!isTokenValid(userStore.authToken)) {
+      if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -109,7 +114,7 @@ async function addEditBoard(newBoard) {
 }
 
 async function addBoard(newBoard) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -138,7 +143,7 @@ async function addBoard(newBoard) {
 }
 
 async function editBoard(boardId, editedBoard) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -166,7 +171,7 @@ function closeBoard(action) {
 }
 
 async function removeBoard(boardId, confirmDelete = false) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -244,7 +249,7 @@ function openBoard(boardId) {
     @addEdit="addEditBoard"
     :board="board"
     :isEdit="isEdit"
-    :username="userStore.authToken.name"
+    :username="userStore.authToken?.name"
   >
   </boardDetail>
 

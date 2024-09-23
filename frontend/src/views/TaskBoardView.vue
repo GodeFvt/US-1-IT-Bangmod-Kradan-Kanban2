@@ -75,7 +75,7 @@ const countStatus = computed(() => {
 });
 
 async function fetchData() {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -168,7 +168,7 @@ watch(
   () => route.params.taskId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      if (!isTokenValid(userStore.authToken)) {
+      if (!(await isTokenValid(userStore.encodeToken))) {
         showPopUp.value = true;
         return;
       } else {
@@ -196,7 +196,7 @@ watch(
 );
 
 async function confirmLimit(action) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -300,7 +300,7 @@ async function addEditTask(newTask) {
 }
 
 async function addTask(newTask) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -333,7 +333,7 @@ async function addTask(newTask) {
 }
 
 async function editTask(editedTask) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -359,7 +359,7 @@ async function editTask(editedTask) {
 }
 
 async function removeTask(index, confirmDelete = false) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {

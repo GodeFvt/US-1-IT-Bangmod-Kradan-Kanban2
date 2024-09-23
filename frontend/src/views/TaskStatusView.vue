@@ -61,7 +61,7 @@ const tranferStatus = ref("No Status");
 const boardName = ref();
 
 async function fetchData() {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -159,7 +159,7 @@ watch(
   () => route.params.statusId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      if (!isTokenValid(userStore.authToken)) {
+      if (!(await isTokenValid(userStore.encodeToken))) {
         showPopUp.value = true;
         return;
       } else {
@@ -225,7 +225,7 @@ async function addEditStatus(newStatus) {
 }
 
 async function addStatus(newStatus) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -256,7 +256,7 @@ async function addStatus(newStatus) {
 }
 
 async function editStatus(editedStatus) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -303,7 +303,7 @@ const limitThisTask = computed(() => {
 });
 
 async function confirmLimit(action) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -365,7 +365,7 @@ async function confirmLimit(action) {
 }
 
 async function removeStatus(index, confirmDelete = false) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -413,7 +413,7 @@ async function removeStatus(index, confirmDelete = false) {
 }
 
 async function clickRemove(index) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {

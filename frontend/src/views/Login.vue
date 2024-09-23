@@ -77,6 +77,7 @@ async function signInOnClick(userLogin) {
     res = await loginAccount(userLogin);
     if (typeof res === "object") {
       inert.value = true;
+      localStorage.setItem("refresh_token",res.refresh_token)
       userStore.setAuthToken(res.access_token);
       const resBoard = await getAllBoards();
       userStore.setAllBoard(resBoard);

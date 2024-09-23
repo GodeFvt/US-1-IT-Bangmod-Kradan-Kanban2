@@ -1,8 +1,10 @@
+import { useUserStore } from "../stores/user.js";
 const BASE_URL = import.meta.env.VITE_API_ROOT;
 
 async function getFilteredTask(boardId, [...filter] = "", sortBy = "id") {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`,
@@ -30,7 +32,8 @@ async function getFilteredTask(boardId, [...filter] = "", sortBy = "id") {
 
 async function toggleLimitTask(boardId, maximum, isLimit) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
@@ -55,8 +58,9 @@ async function toggleLimitTask(boardId, maximum, isLimit) {
 }
 
 async function getTaskById(boardId, taskId) {
-  let res;
-  const token = localStorage.getItem("authToken");
+let res;
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}`, {
       method: "GET",
@@ -78,7 +82,8 @@ async function getTaskById(boardId, taskId) {
 
 async function getTaskByStatus(boardId, statusId) {
   let res;
-  const token = localStorage.getItem("authToken");
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/tasks/count/status/${statusId}`,
@@ -103,7 +108,8 @@ async function getTaskByStatus(boardId, statusId) {
 
 async function createTask(boardId, task) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks`, {
       method: "POST",
@@ -126,7 +132,8 @@ async function createTask(boardId, task) {
 
 async function updateTask(boardId, task) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${task.id}`, {
       method: "PUT",
@@ -149,7 +156,8 @@ async function updateTask(boardId, task) {
 
 async function deleteTask(boardId, taskId) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}`, {
       method: "DELETE",
@@ -166,7 +174,8 @@ async function deleteTask(boardId, taskId) {
 
 async function getAllStatus(boardId) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses`, {
       method: "GET",
@@ -193,7 +202,8 @@ async function getAllStatus(boardId) {
 
 async function getStatusById(boardId, statusId) {
   let res;
-  const token = localStorage.getItem("authToken");
+  const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/${statusId}`, {
       method: "GET",
@@ -215,7 +225,8 @@ async function getStatusById(boardId, statusId) {
 
 async function createStatus(boardId, Statuses) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses`, {
       method: "POST",
@@ -238,7 +249,8 @@ async function createStatus(boardId, Statuses) {
 
 async function updateStatus(boardId, Statuses) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/statuses/${Statuses.id}`,
@@ -264,7 +276,8 @@ async function updateStatus(boardId, Statuses) {
 
 async function deleteStatus(boardId, statusId) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/${statusId}`, {
       method: "DELETE",
@@ -280,7 +293,8 @@ async function deleteStatus(boardId, statusId) {
 }
 async function deleteStatusAndTranfer(boardId, OldStatusId, newStatusId) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/statuses/${OldStatusId}/${newStatusId}`,
@@ -300,7 +314,8 @@ async function deleteStatusAndTranfer(boardId, OldStatusId, newStatusId) {
 
 async function getLimit(boardId) {
   let res;
-  const token = localStorage.getItem("authToken");
+  const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/limit`, {
       method: "GET",
@@ -343,7 +358,8 @@ async function loginAccount(user) {
 
 async function getAllBoards() {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards`, {
       method: "GET",
@@ -368,7 +384,9 @@ async function getAllBoards() {
 
 async function createBoard(board) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
+
   try {
     res = await fetch(`${BASE_URL}/v3/boards`, {
       method: "POST",
@@ -391,7 +409,8 @@ async function createBoard(board) {
 
 async function getBoardsById(boardId) {
   let res;
-  const token = localStorage.getItem("authToken");
+  const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
       method: "GET",
@@ -413,7 +432,8 @@ async function getBoardsById(boardId) {
 
 async function updateBoard(boardId, board) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
       method: "PUT",
@@ -436,7 +456,8 @@ async function updateBoard(boardId, board) {
 
 async function deleteBoard(boardId) {
   let res;
-  const token = localStorage.getItem("authToken");
+const userStore = useUserStore();
+const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
       method: "DELETE",
@@ -446,6 +467,27 @@ async function deleteBoard(boardId) {
       },
     });
     return res.status;
+  } catch (error) {
+    return undefined;
+  }
+}
+async function refreshAccessToken() {
+  let res;
+  const refresh_Token = localStorage.getItem("refresh_token")
+  try {
+    res = await fetch(`${BASE_URL}/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${refresh_Token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (res.status === 200) {
+      const access_token = await res.json();
+      return access_token;
+    } else {
+      return res.status;
+    }
   } catch (error) {
     return undefined;
   }
@@ -472,4 +514,5 @@ export {
   getBoardsById,
   updateBoard,
   deleteBoard,
+  refreshAccessToken,
 };

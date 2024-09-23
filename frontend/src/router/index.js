@@ -5,6 +5,9 @@ import TaskStatusView from "../views/TaskStatusView.vue";
 import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
+import {
+  getBoardsById
+} from "../lib/fetchUtill.js";
 
 const routes = [
   {
@@ -94,9 +97,31 @@ const router = createRouter({
 //   }
 // });
 
-router.beforeEach((to, from, next) => {
+
+
+
+//ยังไม่เสร็จ
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
 
+if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
+    const boardId = to.params.boardId;
+    const board = await getBoardsById(boardId);
+    if (board === 404 || board === 400 || board === 500) {
+      router.push({ name: "TaskNotFound", params: { page: "Board" } });
+      return;
+    }
+    if(board.visibility === "PUBLIC"){
+    next();
+  }
+   else if(board.visibility ==="PRIVATE" && userStore.isAuthenticated === false){
+    next({ name: "Login" });  
+    }
+    else{
+    next();
+    }
+}
+else{
   if (userStore.isAuthenticated === false && to.name !== "Login") {
     next({ name: "Login" });
   } else if (to.name === "Login" && userStore.isAuthenticated === true) {
@@ -104,6 +129,7 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
+}
 });
 
 export default router;

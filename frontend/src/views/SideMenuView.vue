@@ -21,11 +21,12 @@ function signOut() {
 }
 
 onMounted(async () => {
-  userStore.initializeAuthToken();
-  if (!isTokenValid(userStore.authToken)) {
+
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   }
+
 });
 const open = ref(true);
 </script>
