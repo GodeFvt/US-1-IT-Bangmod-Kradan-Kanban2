@@ -40,18 +40,11 @@ public class BoardService {
     }
 
     public boolean isBoardPublic(String boardId) {
-        if (boardId == null) {
-            throw new BadRequestException("the specified board does not exist");
-        }
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
-        System.out.println("PUBLIC".equalsIgnoreCase(board.getVisibility()));
         return "PUBLIC".equalsIgnoreCase(board.getVisibility());
     }
 
     public boolean isOwnerOfBoard(String boardId, String oid) {
-        if (boardId == null) {
-            throw new BadRequestException("the specified board does not exist");
-        }
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
         return board.getOwner().getId().equals(oid);
     }

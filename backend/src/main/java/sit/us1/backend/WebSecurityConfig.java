@@ -41,7 +41,8 @@ public class WebSecurityConfig {
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/token").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v3/boards/**").permitAll()
+//                        .requestMatchers(HttpMethod.GET, "/v3/boards/**").permitAll()
+                        .requestMatchers( "/v3/boards/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
