@@ -7,6 +7,7 @@ export const useUserStore = defineStore("userStore", {
     encodeToken: localStorage.getItem("authToken") || null,
     boards: [],
     isAuthenticated: false,
+    visibilityPublic : false,
   }),
 
   actions: {
@@ -55,6 +56,9 @@ export const useUserStore = defineStore("userStore", {
     },
     updateIsAuthen(Boolean) {
       this.isAuthenticated = Boolean;
+    },
+    updatevIsibilityPublic(Boolean) {
+      this.visibilityPublic = Boolean;
     },
   },
 });

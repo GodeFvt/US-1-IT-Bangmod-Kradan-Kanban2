@@ -27,6 +27,7 @@ import SettingIcon from "../components/icon/SettingIcon.vue";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
 import { isTokenValid } from "../lib/utill.js";
+import Toggle   from "../components/icon/Toggle.vue";
 
 const userStore = useUserStore();
 const statusStore = useStatusStore();
@@ -628,18 +629,9 @@ async function clickRemove(index) {
           @click="toggleActive = !toggleActive"
         >
           <span>Limit task in this status</span>
-          <!-- Switch Container -->
-          <div
-            class="itbkk-limit-task w-12 h-[1.2rem] flex items-center bg-gray-300 rounded-full p-1"
-            :class="toggleActive ? 'bg-gray-500' : 'bg-gray-300'"
-          >
-            <!-- Switch -->
-            <div
-              class="w-6 h-6 rounded-full shadow-md transform ease-out duration-300"
-              :class="toggleActive ? 'translate-x-6 bg-black' : 'bg-gray-500'"
-            ></div>
-          </div>
-          <!-- Switch Container End -->
+          <Toggle 
+            :toggleActive="toggleActive"
+            />        
         </div>
         <div class="flex flex-col items-center mt-2 gap-2">
           <span>Maximum tasks</span>

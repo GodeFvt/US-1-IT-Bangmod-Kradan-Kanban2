@@ -57,6 +57,32 @@ const token = userStore.encodeToken;
   }
 }
 
+async function toggleVisibility(boardId , visibility) {
+  let res;
+const userStore = useUserStore();
+const token = userStore.encodeToken;
+  try {
+    res = await fetch(
+      `${BASE_URL}/v3/boards/${boardId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(visibility),
+      });
+    if (res.status === 200) {
+      const data = await res.json();
+      return data;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
 async function getTaskById(boardId, taskId) {
 let res;
 const userStore = useUserStore();
@@ -515,4 +541,5 @@ export {
   updateBoard,
   deleteBoard,
   refreshAccessToken,
+  toggleVisibility,
 };

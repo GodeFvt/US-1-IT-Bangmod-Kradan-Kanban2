@@ -25,6 +25,8 @@ const board = ref({});
 const typeToast = ref("");
 const messageToast = ref("");
 const boardIdForDelete = ref("");
+
+//show component
 const showPopUp = ref(false);
 const showBoardModal = ref(false);
 const isEdit = ref(false);
