@@ -106,15 +106,16 @@ router.beforeEach(async (to, from, next) => {
 
 if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
     const boardId = to.params.boardId;
+    console.log(userStore.encodeToken)
     const board = await getBoardsById(boardId);
     if (board === 404 || board === 400 || board === 500) {
       router.push({ name: "TaskNotFound", params: { page: "Board" } });
       return;
     }
-    if(board.visibility === "PUBLIC"){
+    if(board?.visibility === "PUBLIC"){
     next();
   }
-   else if(board.visibility ==="PRIVATE" && userStore.isAuthenticated === false){
+   else if(board?.visibility ==="PRIVATE" && userStore.authToken === null){
     next({ name: "Login" });  
     }
     else{
@@ -122,9 +123,10 @@ if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
     }
 }
 else{
-  if (userStore.isAuthenticated === false && to.name !== "Login") {
+  if (userStore.authToken === null && to.name !== "Login") {
+    console.log(" not auth not task or status")
     next({ name: "Login" });
-  } else if (to.name === "Login" && userStore.isAuthenticated === true) {
+  } else if (to.name === "Login" && userStore.authToken !== null) {
     next({ name: "board" });
   } else {
     next();

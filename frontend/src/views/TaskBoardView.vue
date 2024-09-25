@@ -88,36 +88,7 @@ async function fetchData() {
     showPopUp.value = true;
     return;
   } else {
-    const oidByToken = userStore.authToken.oid;
-    const res = await getBoardsById(boardId.value);
-    if (res === 404 || res === 400 || res === 500) {
-      router.push({ name: "TaskNotFound", params: { page: "Board" } });
-    } else if (res === 401) {
-      showPopUp.value = true;
-    } else if (res === 403) {
-      //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
-      authorizAccess.value = true;
-     // showPopUp.value = true;
-    } else {
-      userStore.updatevIsibilityPublic(
-        res.visibility === "PUBLIC" ? true : false
-      );
-      toggleVisibleActive.value = userStore.visibilityPublic;
-      console.log(toggleVisibleActive.value);
-      boardName.value = res.name;
-      const oidByGet = res.owner.id;
-      // isCanEdit true จะ edit ได้
-      userStore.updatevIsCanEdit(isNotDisable(
-        toggleVisibleActive.value,
-        oidByToken,
-        oidByGet
-      ))
-      console.log(userStore.visibilityPublic);
-      console.log(toggleVisibleActive.value);
-      console.log(userStore.isCanEdit);
-      console.log(oidByGet);
-      console.log(oidByToken);
-
+    if (userStore.authToken !== null) {
       if (userStore.boards.length === 0) {
         const resBoard = await getAllBoards();
         if (resBoard === 401) {
@@ -126,44 +97,71 @@ async function fetchData() {
           userStore.setAllBoard(resBoard);
         }
       }
-      const resTask = await getFilteredTask(boardId.value);
-      if (resTask === undefined) {
-        showErrorMSG.value = true;
-      } else if (resTask === 401) {
-        showPopUp.value = true;
-      } else if (resTask === 404) {
-        router.push({ name: "TaskNotFound", params: { page: "Board" } });
-      } else {
-        taskStore.setAllTask(resTask);
-        allTask.value = taskStore.allTask;
+    }
+    const resTask = await getFilteredTask(boardId.value);
+    if (resTask === undefined) {
+      showErrorMSG.value = true;
+    } else if (resTask === 401) {
+      showPopUp.value = true;
+    } else if (resTask === 404) {
+      router.push({ name: "TaskNotFound", params: { page: "Board" } });
+    } else {
+      taskStore.setAllTask(resTask);
+      allTask.value = taskStore.allTask;
+      maximumTask.value = statusStore.maximumTask;
+      toggleActive.value = statusStore.isLimit;
+      statusStore.setNoOftask(countStatus.value);
+
+      if (statusStore.allStatus.length === 0) {
+        const resStatus = await getAllStatus(boardId.value);
+        if (resStatus === undefined) {
+          showErrorMSG.value = true;
+        } else if (resStatus === 401) {
+          showPopUp.value = true;
+        } else {
+          statusStore.setAllStatus(resStatus);
+        }
+      }
+      if (statusStore.maximumTask === undefined) {
+        const resLimit = await getLimit(boardId.value);
+        if (resLimit === 401) {
+          showPopUp.value = true;
+        }
+        statusStore.setMaximumTaskStatus(resLimit.maximumTask);
+        statusStore.setLimitStatus(resLimit.isLimit);
         maximumTask.value = statusStore.maximumTask;
         toggleActive.value = statusStore.isLimit;
-        statusStore.setNoOftask(countStatus.value);
-
-        if (statusStore.allStatus.length === 0) {
-          const resStatus = await getAllStatus(boardId.value);
-          if (resStatus === undefined) {
-            showErrorMSG.value = true;
-          } else if (resStatus === 401) {
-            showPopUp.value = true;
-          } else {
-            statusStore.setAllStatus(resStatus);
-          }
-        }
-        if (statusStore.maximumTask === undefined) {
-          const resLimit = await getLimit(boardId.value);
-          if (resLimit === 401) {
-            showPopUp.value = true;
-          }
-          statusStore.setMaximumTaskStatus(resLimit.maximumTask);
-          statusStore.setLimitStatus(resLimit.isLimit);
-          maximumTask.value = statusStore.maximumTask;
-          toggleActive.value = statusStore.isLimit;
-        }
-
-        showLoading.value = false;
       }
+
+      showLoading.value = false;
     }
+  }
+}
+
+async function handleBoardDetail() {
+  const res = await getBoardsById(boardId.value);
+  if (res === 404 || res === 400 || res === 500) {
+    router.push({ name: "TaskNotFound", params: { page: "Board" } });
+  } else if (res === 401) {
+    showPopUp.value = true;
+  } else if (res === 403) {
+    //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
+    authorizAccess.value = true;
+    // showPopUp.value = true;
+  } else {
+    userStore.updatevIsibilityPublic(
+      res.visibility === "PUBLIC" ? true : false
+    );
+    toggleVisibleActive.value = userStore.visibilityPublic;
+    boardName.value = res.name;
+
+    // if(userStore.visibilityPublic === false){
+    const oidByGet = res.owner.id;
+    const oidByToken = userStore.authToken.oid;
+    userStore.updatevIsCanEdit(
+      isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
+    );
+    // }
   }
 }
 
@@ -176,9 +174,21 @@ function countStatuses() {
   });
 }
 
-onMounted(() => {
-  fetchData();
-  countStatuses();
+onMounted(async () => {
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    await handleBoardDetail();
+    if (userStore.visibilityPublic === false) {
+      showPopUp.value = true;
+      return;
+    } else {
+      fetchData();
+      countStatuses();
+    }
+  } else {
+    handleBoardDetail();
+    fetchData();
+    countStatuses();
+  }
 });
 
 watch(
@@ -437,7 +447,9 @@ async function removeTask(index, confirmDelete = false) {
     showPopUp.value = true;
     return;
   } else {
-    userStore.isCanEdit ? (showDeleteModal.value = true) :(showDeleteModal.value = false );
+    userStore.isCanEdit
+      ? (showDeleteModal.value = true)
+      : (showDeleteModal.value = false);
     task.value = allTask.value[index];
     indexToRemove.value = index;
     if (confirmDelete) {
@@ -504,7 +516,7 @@ async function removeTask(index, confirmDelete = false) {
         <div class="flex items-end w-full justify-end sm:mt-0 mt-5 mb-2">
           <div class="flex flex-row items-center gap-1">
             <div
-              class="itbkk-board-visibility flex flex-col items-center cursor-pointer gap-2 mt-2 mr-1"
+              class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2"
               @click="
                 userStore.isCanEdit
                   ? (showVisibilityModal = true)
@@ -512,27 +524,33 @@ async function removeTask(index, confirmDelete = false) {
               "
             >
               <div
-                :class="userStore.isCanEdit ? '' : 'tooltip tooltip-bottom tooltip-hover'"
+                :class="
+                  userStore.isCanEdit
+                    ? ''
+                    : 'tooltip tooltip-bottom tooltip-hover'
+                "
                 data-tip="You need to be board owner to perform this action."
               >
+                <span class="font-bold">
+                  {{ userStore.visibilityPublic ? "Public" : "Private" }}</span
+                >
                 <Toggle
                   :toggleActive="toggleVisibleActive"
                   :class="
-                    userStore.isCanEdit ? 'cursor-pointer' : 'cursor-not-allowed disabled'
+                    userStore.isCanEdit
+                      ? 'cursor-pointer'
+                      : 'cursor-not-allowed disabled'
                   "
                 />
               </div>
-
-              <span>
-                {{ userStore.visibilityPublic ? "Public" : "Private" }}</span
-              >
             </div>
-
             <div class="">
               <router-link :to="{ name: 'AddTask' }">
                 <div
                   :class="
-                    userStore.isCanEdit ? '' : 'tooltip tooltip-bottom tooltip-hover'
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-bottom tooltip-hover'
                   "
                   data-tip="You need to be board owner to perform this action."
                 >

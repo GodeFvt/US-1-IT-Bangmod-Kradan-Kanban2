@@ -1,4 +1,6 @@
 import { useUserStore } from "../stores/user.js";
+import { tokenIsNull } from "./utill.js";
+
 const BASE_URL = import.meta.env.VITE_API_ROOT;
 
 async function getFilteredTask(boardId, [...filter] = "", sortBy = "id") {
@@ -10,10 +12,7 @@ const token = userStore.encodeToken;
       `${BASE_URL}/v3/boards/${boardId}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`,
       {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: tokenIsNull(token),
       }
     );
     if (res.status === 200) {
@@ -90,10 +89,7 @@ const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: tokenIsNull(token),
     });
     if (res.status === 200) {
       const task = await res.json();
@@ -115,10 +111,7 @@ async function getTaskByStatus(boardId, statusId) {
       `${BASE_URL}/v3/boards/${boardId}/tasks/count/status/${statusId}`,
       {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: tokenIsNull(token),
       }
     );
     if (res.status === 200) {
@@ -205,10 +198,7 @@ const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: tokenIsNull(token),
     });
     if (res.status === 200) {
       const tasks = await res.json();
@@ -233,10 +223,7 @@ const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/${statusId}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: tokenIsNull(token),
     });
     if (res.status === 200) {
       const task = await res.json();
@@ -345,10 +332,7 @@ const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/limit`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: tokenIsNull(token),
     });
     if (res.status === 200) {
       const statusLimit = await res.json();
@@ -440,11 +424,9 @@ const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+      headers: tokenIsNull(token), // Pass the dynamic headers object here
+    }
+  );
     if (res.status === 200) {
       const board = await res.json();
       return board;

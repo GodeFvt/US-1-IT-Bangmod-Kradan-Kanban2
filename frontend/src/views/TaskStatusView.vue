@@ -63,12 +63,9 @@ const showSettingModal = ref(false);
 const boardId = ref(route.params.boardId);
 const tranferStatus = ref("No Status");
 const boardName = ref();
+const toggleVisibleActive = ref(false);
 
 async function fetchData() {
-  if (!(await isTokenValid(userStore.encodeToken))) {
-    showPopUp.value = true;
-    return;
-  } else {
     const resStatus = await getAllStatus(boardId.value);
     if (resStatus === undefined) {
       showErrorMSG.value = true;
@@ -84,34 +81,7 @@ async function fetchData() {
       maximumTask.value = statusStore.maximumTask;
       toggleActive.value = statusStore.isLimit;
       statusStore.setNoOftask(countStatus.value);
-
-    
-
-      const oidByToken = userStore.authToken.oid;
-      const res = await getBoardsById(boardId.value);
-      if (res === 404 || res === 400 || res === 500) {
-        console.log(404);
-        router.push({ name: "TaskNotFound", params: { page: "Board" } });
-      } else if (res === 401) {
-        showPopUp.value = true;
-      } else if (res === 403) {
-      //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
-        authorizAccess.value = true;
-        //showPopUp.value = true;
-    }   else {
-        boardName.value = res.name;
-        const oidByGet = res.owner.id;
-        //set visibility to  userStore.visibilityPublic
-        userStore.updatevIsibilityPublic(
-        resStatus.visibility === "PUBLIC" ? true : false
-      );
-      // set isCanEdit 
-      userStore.updatevIsCanEdit(isNotDisable(
-        userStore.visibilityPublic,
-        oidByToken,
-        oidByGet
-      ))
-
+      if(userStore.authToken !== null){
         if (userStore.boards.length === 0) {
           const resBoard = await getAllBoards();
           if (resBoard === 401) {
@@ -120,6 +90,7 @@ async function fetchData() {
             userStore.setAllBoard(resBoard);
           }
         }
+      }
 
         if (statusStore.maximumTask === undefined) {
           const resLimit = await getLimit(boardId.value);
@@ -146,12 +117,57 @@ async function fetchData() {
 
         showLoading.value = false;
       }
-    }
   }
+
+
+async function handleBoardDetail(){
+  const res = await getBoardsById(boardId.value);
+    if (res === 404 || res === 400 || res === 500) {
+      router.push({ name: "TaskNotFound", params: { page: "Board" } });
+    }
+     else if (res === 401) {
+      showPopUp.value = true;
+    } 
+    else if (res === 403) {
+      //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
+      authorizAccess.value = true;
+     // showPopUp.value = true;
+    }
+    else {
+      userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
+      toggleVisibleActive.value = userStore.visibilityPublic
+      boardName.value = res.name;
+      // if(userStore.visibilityPublic === false){
+      const oidByGet = res.owner.id;
+      const oidByToken = userStore.authToken.oid;
+      userStore.updatevIsCanEdit(isNotDisable(
+        userStore.visibilityPublic,
+        oidByToken,
+        oidByGet
+      ))
+    // }
+    }
 }
 
-onMounted(() => {
+
+onMounted(async () => {
+
+if (!(await isTokenValid(userStore.encodeToken))) {
+  await handleBoardDetail()
+  if(userStore.visibilityPublic === false){
+  showPopUp.value = true;
+  return
+  }
+  else {
+    fetchData();
+  }
+}
+else
+{
+
+  handleBoardDetail()
   fetchData();
+}
 });
 
 watch(
