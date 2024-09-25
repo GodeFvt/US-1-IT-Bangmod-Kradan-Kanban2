@@ -38,45 +38,41 @@ function validateSizeInput(...properties) {
   });
 }
 
-async function isTokenValid(token) {
+async function refreshTokenAndReturn() {
   const userStore = useUserStore();
-
-  if (!token) {
-    return false; // ไม่มีToken
+  const refreshTokenSuccess = await refreshAccessToken();
+  if (refreshTokenSuccess) {
+    userStore.setAuthToken(refreshTokenSuccess.access_token);
+    console.log(refreshTokenSuccess.access_token)
+    return true; 
   }
+  return false; 
+}
 
+async function isTokenValid(token) {
   let decodedToken;
+  const refresh_token = localStorage.getItem("refresh_token")
+
+  // Validate the token format
+  if (!token && !refresh_token) {
+    return false
+  }
   try {
     decodedToken = VueJwtDecode.decode(token);
   } catch (error) {
-    return false; // Tokenไม่สามารถ decode ได้
+    return await refreshTokenAndReturn();
   }
 
   if (!decodedToken || !decodedToken.exp) {
-    const refreshTokenSuccess = await refreshAccessToken();
-
-    if (refreshTokenSuccess) {
-      userStore.setAuthToken(refreshTokenSuccess.access_token)
-      return true;
-    } else {
-      return false;
-    }
+    return await refreshTokenAndReturn()
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
-  if (!decodedToken.exp || decodedToken.exp < currentTime) {
-    // ถ้าโทเค็นหมดอายุ พยายามรีเฟรชโทเค็น
-    const refreshTokenSuccess = await refreshAccessToken();
-    if (typeof refreshTokenSuccess === "string") {
-      userStore.setAuthToken(refreshTokenSuccess.access_token)
-      return true;
-    }
-     else {
-      return false;
-    }
+  if (decodedToken.exp < currentTime) {
+    return await refreshTokenAndReturn()
+  } else {
+    return true
   }
-
-  return true; // Tokenยังใช้ได้
 }
 
 function isNotDisable(isPublic , user=null ,owner) {
@@ -95,4 +91,13 @@ function isNotDisable(isPublic , user=null ,owner) {
   }
 }
 
-export { convertString, toFormatDate, validateSizeInput, isTokenValid ,isNotDisable};
+//ไม่ส่ง header ถ้า Token is null
+function tokenIsNull(token){
+return {
+  "Content-Type": "application/json",
+  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+};
+}
+
+export { convertString, toFormatDate, validateSizeInput, isTokenValid,tokenIsNull,isNotDisable };
+

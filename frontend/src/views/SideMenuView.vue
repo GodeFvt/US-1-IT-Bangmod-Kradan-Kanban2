@@ -25,16 +25,18 @@ const countBoard = computed(() => {
 
 function signOut() {
   userStore.clearAuthToken();
-  userStore.updateIsAuthen(false);
+  // userStore.updateIsAuthen(false);
   router.push({ name: "Login" });
 }
 
-onMounted(async () => {
-  if (!(await isTokenValid(userStore.encodeToken))) {
-    showPopUp.value = true;
-    return;
-  }
-});
+// onMounted(async () => {
+//   if (!(await isTokenValid(userStore.encodeToken))) {
+//     if(userStore.visibilityPublic === false){
+//     showPopUp.value = true;
+//     return
+//     }
+//   }
+// });
 const open = ref(true);
 </script>
 

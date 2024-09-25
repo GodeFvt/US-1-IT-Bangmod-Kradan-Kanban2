@@ -4,26 +4,30 @@ import VueJwtDecode from "vue-jwt-decode";
 export const useUserStore = defineStore("userStore", {
   state: () => ({
     authToken: null,
-    encodeToken: localStorage.getItem("authToken") || null,  
-    isAuthenticated: false,
+    encodeToken: localStorage.getItem("authToken") || null,
     boards: [],
-    visibilityPublic : false, // false คือ private
+    visibilityPublic : false,
     isCanEdit : true,
+    // isAuthenticated: false,
   }),
 
   actions: {
     initializeToken() {
       const token = localStorage.getItem("authToken");
-      if (token) {
+      const refresh_Token = localStorage.getItem("refresh_token")
+      if (token || refresh_Token) {
         try {
           const decodedToken = VueJwtDecode.decode(token);
-          this.authToken = decodedToken;
-          this.encodeToken = token;
-          this.isAuthenticated = true;
-
+          if(decodedToken === "{}"){
+          this.authToken = null;
+          this.encodeToken = null;
+        }
+          else{
+           this.authToken = decodedToken;
+            this.encodeToken = token;
+         }
+          // this.isAuthenticated = true;
         } catch (error) {
-          console.error("Error decoding token:", error);
-          this.clearAuthToken();
         }
       } else {
         this.clearAuthToken();
@@ -32,14 +36,15 @@ export const useUserStore = defineStore("userStore", {
 
     setAuthToken(token) {
       const decodedToken = VueJwtDecode.decode(token);
-      this.authToken = { ...decodedToken };
+      this.authToken = decodedToken
       this.encodeToken = token;
       localStorage.setItem("authToken", token);
-      this.isAuthenticated = true;
+      // this.isAuthenticated = true;
     },
     clearAuthToken() {
       this.authToken = null;
-      this.isAuthenticated = false;
+      this.encodeToken = null;
+      // this.isAuthenticated = false;
       localStorage.removeItem("authToken");
       localStorage.removeItem("refresh_token");
     },
@@ -55,9 +60,9 @@ export const useUserStore = defineStore("userStore", {
     setAllBoard(newAllBoard) {
       this.boards = [...newAllBoard];
     },
-    updateIsAuthen(Boolean) {
-      this.isAuthenticated = Boolean;
-    },
+    // updateIsAuthen(Boolean) {
+    //   this.isAuthenticated = Boolean;
+    // },
     updatevIsibilityPublic(Boolean) {
       this.visibilityPublic = Boolean;
     },
