@@ -78,7 +78,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
 
             boolean isGetMethod = request.getMethod().equals("GET");
-
             if (request.getRequestURI().startsWith("/v3/boards/")) {
                 CustomUserDetails user = SecurityUtil.getCurrentUserDetails();
                 String boardId = request.getRequestURI().split("/")[3];
@@ -107,6 +106,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (requestTokenHeader == null && !isPublicBoard) {
                     throw new UnauthorizedException("JWT Token is required");
                 }
+            }
+
+            if (requestTokenHeader == null && request.getRequestURI().equals("/v3/boards")) {
+                throw new UnauthorizedException("JWT Token is required");
             }
 
             chain.doFilter(request, response);

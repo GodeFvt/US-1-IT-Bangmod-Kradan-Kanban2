@@ -79,7 +79,7 @@ public class AuthenticationService {
         if (userOid != null) {
             CustomUserDetails userDetails = jwtUserDetailsService.loadUserByOid(userOid);
             if (jwtTokenUtil.validateToken(refreshToken, userDetails, true)) {
-                String accessToken = jwtTokenUtil.generateToken(userDetails, true);
+                String accessToken = jwtTokenUtil.generateToken(userDetails, false);
                 JwtTokenResponseDTO authResponse = new JwtTokenResponseDTO(accessToken, refreshToken);
                 response.setContentType("application/json");
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
