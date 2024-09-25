@@ -4,10 +4,11 @@ import VueJwtDecode from "vue-jwt-decode";
 export const useUserStore = defineStore("userStore", {
   state: () => ({
     authToken: null,
-    encodeToken: localStorage.getItem("authToken") || null,
-    boards: [],
+    encodeToken: localStorage.getItem("authToken") || null,  
     isAuthenticated: false,
-    visibilityPublic : false,
+    boards: [],
+    visibilityPublic : false, // false คือ private
+    isCanEdit : true,
   }),
 
   actions: {
@@ -59,6 +60,9 @@ export const useUserStore = defineStore("userStore", {
     },
     updatevIsibilityPublic(Boolean) {
       this.visibilityPublic = Boolean;
+    },
+    updatevIsCanEdit(Boolean) {
+      this.isCanEdit = Boolean;
     },
   },
 });

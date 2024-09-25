@@ -6,10 +6,5 @@
 </template>
 
 <style scoped>
-.icon {
-  fill: #8a8989;
-}
-.icon:hover {
-  fill: #292929;
-}
+
 </style>

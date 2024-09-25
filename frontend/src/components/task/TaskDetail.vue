@@ -6,6 +6,8 @@ import CloseIcon from "../icon/CloseIcon.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
+import { useUserStore } from "../../stores/user.js";
+
 const router = useRouter();
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
@@ -31,6 +33,7 @@ const isLimit = computed(() => statusStore.isLimit);
 const allTaskLimit = ref(props.allTaskLimit);
 const maximumTask = computed(() => statusStore.maximumTask);
 const noOftask = computed(() => statusStore.noOftask);
+const userStore = useUserStore();
 
 watch(
   () => props.task,
@@ -106,8 +109,10 @@ function textShow(text) {
   }
 }
 function edit(taskId) {
+  if (userStore.isCanEdit) {
   editMode.value = true;
-  router.push({ name: "EditTask", params: { taskId: taskId } });
+  router.push({ name: "EditTask", params: { taskId: taskId } }); 
+  }
 }
 const limitThisTask = computed(() => {
   if (isLimit.value) {
@@ -181,12 +186,26 @@ const limitThisTask = computed(() => {
             {{ duplicateTask.title }}
             </textarea>
             <div
+                  :class="
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-bottom tooltip-hover '
+                  "
+                  data-tip="You need to be board owner to perform this action."
+                >
+            <div
               v-show="$route.path !== '/task/add'"
-              class="cursor-pointer text-2xl hover:bg-gray-200 rounded-full"
+              class=" text-2xl hover:bg-gray-200 rounded-full"
+              :class="
+                      userStore.isCanEdit
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
               @click="edit(task.id)"
             >
               <EditTaskIcon />
             </div>
+          </div>
           </div>
           <div
             class="px-9 flex flex-col justify-end items-end w-[85%]"

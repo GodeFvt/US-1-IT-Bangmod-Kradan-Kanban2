@@ -26,8 +26,9 @@ import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
-import { isTokenValid } from "../lib/utill.js";
-import Toggle   from "../components/icon/Toggle.vue";
+import { isTokenValid ,isNotDisable} from "../lib/utill.js";
+import Toggle from "../components/icon/Toggle.vue";
+import PopUp from "../components/modal/PopUp.vue";
 
 const userStore = useUserStore();
 const statusStore = useStatusStore();
@@ -50,6 +51,8 @@ const showAddModal = ref(false);
 const showDeleteModal = ref(false);
 const showPopUp = ref(false);
 const isEdit = ref(false);
+const authorizAccess = ref(false);
+
 const toggleActive = ref(statusStore.isLimit);
 const indexToRemove = ref(-1);
 const messageToast = ref("");
@@ -73,6 +76,7 @@ async function fetchData() {
       // go login
       showPopUp.value = true;
     } else if (resStatus === 404) {
+      console.log(4041);
       router.push({ name: "TaskNotFound", params: { page: "Board" } });
     } else {
       statusStore.setAllStatus(resStatus);
@@ -81,18 +85,33 @@ async function fetchData() {
       toggleActive.value = statusStore.isLimit;
       statusStore.setNoOftask(countStatus.value);
 
+    
+
       const oidByToken = userStore.authToken.oid;
       const res = await getBoardsById(boardId.value);
       if (res === 404 || res === 400 || res === 500) {
+        console.log(404);
         router.push({ name: "TaskNotFound", params: { page: "Board" } });
       } else if (res === 401) {
         showPopUp.value = true;
-      } else {
+      } else if (res === 403) {
+      //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
+        authorizAccess.value = true;
+        //showPopUp.value = true;
+    }   else {
         boardName.value = res.name;
         const oidByGet = res.owner.id;
-        if (oidByGet !== oidByToken) {
-          router.push({ name: "TaskNotFound", params: { page: "Board" } });
-        }
+        //set visibility to  userStore.visibilityPublic
+        userStore.updatevIsibilityPublic(
+        resStatus.visibility === "PUBLIC" ? true : false
+      );
+      // set isCanEdit 
+      userStore.updatevIsCanEdit(isNotDisable(
+        userStore.visibilityPublic,
+        oidByToken,
+        oidByGet
+      ))
+
         if (userStore.boards.length === 0) {
           const resBoard = await getAllBoards();
           if (resBoard === 401) {
@@ -418,23 +437,27 @@ async function clickRemove(index) {
     showPopUp.value = true;
     return;
   } else {
-    showDeleteModal.value = true;
-    status.value = allStatus.value[index];
-    indexToRemove.value = index;
-    const res = await getTaskByStatus(boardId.value, status.value.id);
-    if (res === 400 || res === 404 || res === 500) {
-      typeToast.value = "danger";
-      messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
-    } else if (res === 401) {
-      // go login
-      showPopUp.value = true;
-    } else {
-      if (res.count >= 1) {
-        tranferStatus.value = "No Status";
-        showTranfer.value = true;
-        countTask.value = res.count;
+    userStore.isCanEdit
+      ? (showDeleteModal.value = true)
+      : (showDeleteModal.value = false);
+    if (showDeleteModal.value) {
+      status.value = allStatus.value[index];
+      indexToRemove.value = index;
+      const res = await getTaskByStatus(boardId.value, status.value.id);
+      if (res === 400 || res === 404 || res === 500) {
+        typeToast.value = "danger";
+        messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
+      } else if (res === 401) {
+        // go login
+        showPopUp.value = true;
       } else {
-        showTranfer.value = false;
+        if (res.count >= 1) {
+          tranferStatus.value = "No Status";
+          showTranfer.value = true;
+          countTask.value = res.count;
+        } else {
+          showTranfer.value = false;
+        }
       }
     }
   }
@@ -494,11 +517,24 @@ async function clickRemove(index) {
           >
             <div class="">
               <router-link :to="{ name: 'AddStatus' }">
+                <div
+                  :class="
+                    userStore.isCanEdit ? '' : 'tooltip tooltip-bottom tooltip-hover'
+                  "
+                  data-tip="You need to be board owner to perform this action."
+                >
                 <button
                   class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                  :disabled="!userStore.isCanEdit"
+                    :class="
+                      userStore.isCanEdit
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
                 >
                   Add Status
                 </button>
+              </div>
               </router-link>
             </div>
             <!-- status setting -->
@@ -629,9 +665,7 @@ async function clickRemove(index) {
           @click="toggleActive = !toggleActive"
         >
           <span>Limit task in this status</span>
-          <Toggle 
-            :toggleActive="toggleActive"
-            />        
+          <Toggle :toggleActive="toggleActive" />
         </div>
         <div class="flex flex-col items-center mt-2 gap-2">
           <span>Maximum tasks</span>
@@ -656,6 +690,13 @@ async function clickRemove(index) {
       class="z-50"
     >
     </limitModal>
+    <PopUp v-if="authorizAccess">
+        <template #message>
+          <p class="text-lg text-gray-700">
+            Access denied, you do not have permission to view this page
+          </p>
+        </template>
+      </PopUp>
     <AuthzPopup v-if="showPopUp" />
   </div>
 </template>

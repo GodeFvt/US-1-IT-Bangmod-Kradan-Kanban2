@@ -1,6 +1,8 @@
 <script setup>
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
+import { useUserStore } from "../../stores/user.js";
+
 import { ref, watch } from "vue";
 import EditIcon from "../icon/EditIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
@@ -21,6 +23,7 @@ const props = defineProps({
 });
 
 const statusStore = useStatusStore();
+const userStore = useUserStore();
 
 const isVisible = ref([]);
 watch(
@@ -34,6 +37,18 @@ watch(
   },
   { deep: true }
 );
+
+function editStatus(id , name) {
+  if (userStore.isCanEdit) {
+   // ***
+    if (props.status.name !=="No Status" && props.status.name !=="Done") {
+    editMode.value = !editMode.value;
+    router.push({ name: "EditStatus", params: { statusId: id } });
+    }
+  }
+}
+
+
 </script>
 
 <template>
@@ -85,6 +100,7 @@ watch(
           <td
             class="h-full w-[25%] px-6 py-4 max-lg:w-[30%] max-lg:px-2 max-lg:py-3 hover:bg-neutral-100"
           >
+          
             <router-link
               :to="{
                 name: 'StatusDetail',
@@ -122,23 +138,60 @@ watch(
               v-if="status.name !== 'No Status' && status.name !== 'Done'"
               class="flex flex-row gap-4 max-sm:flex-col"
             >
-              <router-link
-                :to="{
-                  name: 'EditStatus',
-                  params: { statusId: status.id },
-                }"
-              >
-                <div class="itbkk-button-edit cursor-pointer">
-                  <EditIcon />
+             <div
+                  :class="
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-top tooltip-hover'
+                  "
+                  data-tip="You need to be board owner to perform this action."
+                >
+                <div class="itbkk-button-edit"
+                :class="
+                      userStore.isCanEdit
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
+                    @click="editStatus"
+                >
+                  <EditIcon 
+                  class="fill-zinc-500"
+                  :class="
+                      userStore.isCanEdit
+                        ? ' hover:fill-zinc-700'
+                        : ' hover:fill-zinc-500'
+                    "
+                  />
                 </div>
-              </router-link>
-
-              <div
-              class="itbkk-button-delete cursor-pointer text-white"
-                @click="$emit('removeStatus', index)"
-              >
-                <DeleteIcon />
+           
               </div>
+              <div
+                  :class="
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-top tooltip-hover'
+                  "
+                  data-tip="You need to be board owner to perform this action."
+                >
+              <div
+              class="itbkk-button-delete  text-white fill-rose-300"
+       
+                @click="$emit('removeStatus', index)"
+                :class="
+                      userStore.isCanEdit
+                      ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
+              >
+                <DeleteIcon 
+                :class="
+                      userStore.isCanEdit
+                        ? ' hover:fill-rose-400'
+                        : ' hover:fill-rose-300'
+                    "
+                />
+              </div>
+            </div>
             </div>
           </td>
         </tr>

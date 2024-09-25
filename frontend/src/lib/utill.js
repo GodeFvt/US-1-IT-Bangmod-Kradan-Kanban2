@@ -79,5 +79,19 @@ async function isTokenValid(token) {
   return true; // Tokenยังใช้ได้
 }
 
+function isNotDisable(isPublic , user ,owner) {
+  //isPublic ถ้า True จะเป็น public
+  if (isPublic) {
+    // board เป็น public แก้ไขได้ 
+    if (user != owner) {
+    //ถ้า เป็น public แต้ไม่ใช่ owner ก็แก้ไข ไม่ได้
+      return false
+    }
+    return true
+  } else {
+    //ถ้า เป็น private แต้เป็น owner ก็แก้ไขได้
+    return false
+  }
+}
 
-export { convertString, toFormatDate, validateSizeInput, isTokenValid };
+export { convertString, toFormatDate, validateSizeInput, isTokenValid ,isNotDisable};

@@ -4,6 +4,7 @@ import MoreActionIcon from "../icon/MoreActionIcon.vue";
 import SortIcon from "../icon/SortIcon.vue";
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
+import { useUserStore } from "../../stores/user.js";
 import { getFilteredTask } from "../../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import AuthzPopup from "../AuthzPopup.vue";
@@ -41,6 +42,8 @@ const taskFiltered = ref([]);
 const windowWidth = ref(window.innerWidth);
 const showPopUp = ref(false);
 const isVisible = ref([]);
+const userStore = useUserStore();
+
 watch(
   () => props.allTask,
   () => {
@@ -125,6 +128,12 @@ function updateBorderStyle(name) {
       "border-color": statusStore.getColorStatus(name),
       "border-bottom-color": "rgb(229 231 235 / 0.5)",
     };
+  }
+}
+
+function editTask(id) {
+  if (userStore.isCanEdit) {
+    router.push({ name: "EditTask", params: { taskId: id } });
   }
 }
 
@@ -252,15 +261,59 @@ onUnmounted(() => {
             <div
               class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
             >
-              <router-link
-                :to="{ name: 'EditTask', params: { taskId: task.id } }"
-                ><div class="itbkk-button-edit cursor-pointer"><EditIcon /></div
-              ></router-link>
               <div
-                class="itbkk-button-delete cursor-pointer"
-                @click="$emit('removeTask', index)"
+                :class="
+                  userStore.isCanEdit
+                    ? ''
+                    : 'tooltip tooltip-bottom tooltip-hover'
+                "
+                data-tip="You need to be board owner to perform this action."
               >
-                <DeleteIcon />
+                <div
+                  class="itbkk-button-edit"
+                  :class="
+                    userStore.isCanEdit
+                      ? 'cursor-pointer'
+                      : 'cursor-not-allowed disabled'
+                  "
+                  @click="editTask(task.id)"
+                >
+                  <EditIcon
+                    class="fill-zinc-500"
+                    :class="
+                      userStore.isCanEdit
+                        ? ' hover:fill-zinc-700'
+                        : ' hover:fill-zinc-500'
+                    "
+                  />
+                </div>
+              </div>
+              <div
+                :class="
+                  userStore.isCanEdit
+                    ? ''
+                    : 'tooltip tooltip-bottom tooltip-hover'
+                "
+                data-tip="You need to be board owner to perform this action."
+              >
+                <div
+                  class="itbkk-button-delete"
+                  @click="$emit('removeTask', index)"
+                  :class="
+                    userStore.isCanEdit
+                      ? 'cursor-pointer'
+                      : 'cursor-not-allowed disabled'
+                  "
+                >
+                  <DeleteIcon
+                    class="fill-rose-300"
+                    :class="
+                      userStore.isCanEdit
+                        ? ' hover:fill-rose-400'
+                        : ' hover:fill-rose-300'
+                    "
+                  />
+                </div>
               </div>
             </div>
           </td>

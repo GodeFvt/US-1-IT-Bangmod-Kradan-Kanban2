@@ -30,8 +30,10 @@ import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
-import { isTokenValid } from "../lib/utill.js";
+import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
+import PopUp from "../components/modal/PopUp.vue";
+
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
 const userStore = useUserStore();
@@ -60,6 +62,8 @@ const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
 const showVisibilityModal = ref(false);
+
+const authorizAccess = ref(false);
 
 const boardId = ref(route.params.boardId);
 const maximumTask = ref(statusStore.maximumTask);
@@ -90,14 +94,30 @@ async function fetchData() {
       router.push({ name: "TaskNotFound", params: { page: "Board" } });
     } else if (res === 401) {
       showPopUp.value = true;
+    } else if (res === 403) {
+      //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
+      authorizAccess.value = true;
+     // showPopUp.value = true;
     } else {
-       userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
-       toggleVisibleActive.value = userStore.visibilityPublic
+      userStore.updatevIsibilityPublic(
+        res.visibility === "PUBLIC" ? true : false
+      );
+      toggleVisibleActive.value = userStore.visibilityPublic;
+      console.log(toggleVisibleActive.value);
       boardName.value = res.name;
       const oidByGet = res.owner.id;
-      if (oidByGet !== oidByToken) {
-        router.push({ name: "TaskNotFound", params: { page: "Board" } });
-      }
+      // isCanEdit true จะ edit ได้
+      userStore.updatevIsCanEdit(isNotDisable(
+        toggleVisibleActive.value,
+        oidByToken,
+        oidByGet
+      ))
+      console.log(userStore.visibilityPublic);
+      console.log(toggleVisibleActive.value);
+      console.log(userStore.isCanEdit);
+      console.log(oidByGet);
+      console.log(oidByToken);
+
       if (userStore.boards.length === 0) {
         const resBoard = await getAllBoards();
         if (resBoard === 401) {
@@ -265,47 +285,48 @@ async function confirmLimit(action) {
 }
 
 async function confirmVisibility(action) {
-  console.log("bafore fetch",toggleVisibleActive.value);
+  console.log("bafore fetch", toggleVisibleActive.value);
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
-    toggleVisibleActive.value=!toggleVisibleActive.value
+    toggleVisibleActive.value = !toggleVisibleActive.value;
     if (action === false) {
       showVisibilityModal.value = false;
       toggleVisibleActive.value = userStore.visibilityPublic;
     } else if (action) {
-      let visibility = toggleVisibleActive.value ? {"visibility" : "PUBLIC"} : {"visibility" : "PRIVATE"}
-      const res = await toggleVisibility(boardId.value,visibility );
-      // console.log(visibility);
+      let visibility = toggleVisibleActive.value
+        ? { visibility: "PUBLIC" }
+        : { visibility: "PRIVATE" };
+      const res = await toggleVisibility(boardId.value, visibility);
+      console.log(res);
       // console.log( "after fetch",toggleVisibleActive.value);
 
       if (res === 400 || res === 404) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred enable visibility`;
         showToast.value = true;
-
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
         showToast.value = true;
-
       } else if (res === 401) {
         // go login
         showPopUp.value = true;
       } else {
         console.log(res.visibility);
-        // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true 
-        userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
-        toggleVisibleActive.value = userStore.visibilityPublic
-       // console.log("200 fetch", toggleVisibleActive.value);
-
+        // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
+        userStore.updatevIsibilityPublic(
+          res.visibility === "PUBLIC" ? true : false
+        );
+        toggleVisibleActive.value = userStore.visibilityPublic;
+        // console.log("200 fetch", toggleVisibleActive.value);
 
         // typeToast.value = "success";
         // messageToast.value = `The Kanban board now limits ${maximumTask.value} tasks in each status`;
       }
       showVisibilityModal.value = false;
-    } 
+    }
   }
 }
 
@@ -416,7 +437,7 @@ async function removeTask(index, confirmDelete = false) {
     showPopUp.value = true;
     return;
   } else {
-    showDeleteModal.value = true;
+    userStore.isCanEdit ? (showDeleteModal.value = true) :(showDeleteModal.value = false );
     task.value = allTask.value[index];
     indexToRemove.value = index;
     if (confirmDelete) {
@@ -483,20 +504,50 @@ async function removeTask(index, confirmDelete = false) {
         <div class="flex items-end w-full justify-end sm:mt-0 mt-5 mb-2">
           <div class="flex flex-row items-center gap-1">
             <div
-              class="itbkk-board-visibility flex flex-col items-center cursor-pointer gap-2 mt-2"
-              @click="showVisibilityModal=true"
+              class="itbkk-board-visibility flex flex-col items-center cursor-pointer gap-2 mt-2 mr-1"
+              @click="
+                userStore.isCanEdit
+                  ? (showVisibilityModal = true)
+                  : (showVisibilityModal = false)
+              "
             >
-              <Toggle :toggleActive="toggleVisibleActive" />
-             <span> {{userStore.visibilityPublic ? "Public" : "Private"}}</span> 
+              <div
+                :class="userStore.isCanEdit ? '' : 'tooltip tooltip-bottom tooltip-hover'"
+                data-tip="You need to be board owner to perform this action."
+              >
+                <Toggle
+                  :toggleActive="toggleVisibleActive"
+                  :class="
+                    userStore.isCanEdit ? 'cursor-pointer' : 'cursor-not-allowed disabled'
+                  "
+                />
+              </div>
+
+              <span>
+                {{ userStore.visibilityPublic ? "Public" : "Private" }}</span
+              >
             </div>
 
             <div class="">
               <router-link :to="{ name: 'AddTask' }">
-                <button
-                  class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                <div
+                  :class="
+                    userStore.isCanEdit ? '' : 'tooltip tooltip-bottom tooltip-hover'
+                  "
+                  data-tip="You need to be board owner to perform this action."
                 >
-                  Add Task
-                </button>
+                  <button
+                    class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                    :disabled="!userStore.isCanEdit"
+                    :class="
+                      userStore.isCanEdit
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
+                  >
+                    Add Task
+                  </button>
+                </div>
               </router-link>
             </div>
 
@@ -694,8 +745,12 @@ async function removeTask(index, confirmDelete = false) {
         </template>
         <template #body>
           <span class="itbkk-message">
-           {{ toggleVisibleActive ? "In private, only board owner can access/control board. Do you want to change the visibility to Private": 
-           "In public, any one can view  the task list and task detail of tasks in the board. Do you want to change the visibility to Public" }} ? 
+            {{
+              toggleVisibleActive
+                ? "In private, only board owner can access/control board. Do you want to change the visibility to Private"
+                : "In public, any one can view  the task list and task detail of tasks in the board. Do you want to change the visibility to Public"
+            }}
+            ?
           </span>
         </template>
       </ConfirmModal>
@@ -709,6 +764,14 @@ async function removeTask(index, confirmDelete = false) {
       </limitModal>
 
       <AuthzPopup v-if="showPopUp" />
+
+      <PopUp v-if="authorizAccess">
+        <template #message>
+          <p class="text-lg text-gray-700">
+            Access denied, you do not have permission to view this page
+          </p>
+        </template>
+      </PopUp>
     </div>
     <div
       class="fixed flex items-center w-full max-w-xs right-5 bottom-5"

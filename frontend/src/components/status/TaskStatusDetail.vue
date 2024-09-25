@@ -5,6 +5,7 @@ import CloseIcon from "../icon/CloseIcon.vue";
 import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useStatusStore } from "../../stores/statuses.js";
+import { useUserStore } from "../../stores/user.js";
 
 const statusStore = useStatusStore();
 defineEmits(["userAction", "addEdit"]);
@@ -26,6 +27,7 @@ const duplicateStatus = ref({});
 const editMode = ref(props.isEdit);
 const validate = ref({ name: {}, description: {} });
 const alltask = ref([]);
+const userStore = useUserStore();
 
 watch(
   () => props.status,
@@ -59,10 +61,15 @@ function textShow(text) {
   }
 }
 function edit(statusId) {
-  if (statusId !== 1) {
+  console.log(props.status.name);
+  if (userStore.isCanEdit) {
+   // ***
+    if (props.status.name !=="No Status" && props.status.name !=="Done") {
     editMode.value = !editMode.value;
     router.push({ name: "EditStatus", params: { statusId: statusId } });
+    }
   }
+  
 }
 
 const duplicateName = computed(() => {
@@ -134,12 +141,27 @@ const disabledSave = computed(() => {
                 <span>Status Name</span>
               </div>
               <div
+                  :class="
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-bottom tooltip-hover '
+                  "
+                  data-tip="You need to be board owner to perform this action."
+                >
+              <div
                 v-show="status.id !== 1"
                 @click="edit(status.id)"
-                class="cursor-pointer ml-1"
+                class="ml-1"
+                :class="
+                      userStore.isCanEdit
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
               >
                 <EditTaskIcon class="w-[1rem] h-[1rem]" />
               </div>
+            </div>
+
             </div>
             <textarea
               class="itbkk-status-name read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none"
