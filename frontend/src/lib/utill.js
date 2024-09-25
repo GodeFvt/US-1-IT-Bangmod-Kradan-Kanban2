@@ -79,17 +79,18 @@ async function isTokenValid(token) {
   return true; // Tokenยังใช้ได้
 }
 
-function isNotDisable(isPublic , user ,owner) {
+function isNotDisable(isPublic , user=null ,owner) {
   //isPublic ถ้า True จะเป็น public
   if (isPublic) {
-    // board เป็น public แก้ไขได้ 
-    if (user != owner) {
-    //ถ้า เป็น public แต้ไม่ใช่ owner ก็แก้ไข ไม่ได้
-      return false
-    }
-    return true
+  
+    if (user!==null && user == owner) {
+    //ถ้า เป็น public แต้ owner = user ก็แก้ไข 
+      return true
+    }  
+    // board เป็น public แก้ไขไม่ได้
+    return false
   } else {
-    //ถ้า เป็น private แต้เป็น owner ก็แก้ไขได้
+    //ถ้า เป็น private แต้เป็น owner ก็แก้ไขไม่ได้
     return false
   }
 }
