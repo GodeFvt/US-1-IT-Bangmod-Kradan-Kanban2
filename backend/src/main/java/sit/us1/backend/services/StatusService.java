@@ -61,7 +61,7 @@ public class StatusService {
     }
 
     public TaskLimit getStatusLimit(String boardId) {
-        return limitRepository.findByBoardId(boardId).orElseThrow(() -> new BadRequestException("Limit not found"));
+        return limitRepository.findByBoardId(boardId).orElseThrow(() -> new NotFoundException("Limit not found"));
     }
 
     @Transactional

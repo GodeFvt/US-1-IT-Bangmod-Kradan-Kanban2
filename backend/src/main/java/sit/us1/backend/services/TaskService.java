@@ -55,7 +55,7 @@ public class TaskService {
     }
 
     public TaskDetailDTO getTaskById(String boardId ,Integer id) {
-        TaskList task = taskRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+        TaskList task = taskRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         return mapper.map(task, TaskDetailDTO.class);
     }
 
@@ -93,7 +93,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponseDTO updateTask(String boardId, Integer taskId, TaskRequestDTO taskRequestDTO) {
-        TaskList taskList = taskRepository.findById(taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+        TaskList taskList = taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         TaskStatus status;
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         if (board.getIsCustomStatus()) {
