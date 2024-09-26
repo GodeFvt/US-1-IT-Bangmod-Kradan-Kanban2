@@ -40,11 +40,11 @@ public class JwtUserDetailsService implements UserDetailsService {
         return  new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole(), authorities);
     }
 
-    public CustomUserDetails loadUserByOid(String oid)  {
+    public CustomUserDetails loadUserByOid(String oid) throws UsernameNotFoundException {
         System.out.println("oid: " + oid);
         Optional<User> user = userRepository.findById(oid);
-        if (user.get() == null) {
-            throw new InternalAuthenticationServiceException("adwd");
+        if (!user.isPresent()) {
+            throw new InternalAuthenticationServiceException("Token is invalid.");
         }
         List<GrantedAuthority> authorities = new ArrayList<>();
         GrantedAuthority grantedAuthority = new GrantedAuthority() {
