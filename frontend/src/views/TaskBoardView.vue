@@ -83,13 +83,24 @@ const countStatus = computed(() => {
   );
 });
 
+function handleResponseError(responseCode) {
+  if (responseCode === 401) {
+    showPopUp.value = true;
+  } else if (responseCode === 404 || responseCode === 500 || responseCode === 400) {
+    router.push({ name: "TaskNotFound", params: { page: "Board" } });
+  } else if (responseCode === 403) {
+    router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+  }
+}
+
+
 async function fetchData() {
   console.log(userStore.visibilityPublic);
     if (userStore.authToken !== null) {
       if (userStore.boards.length === 0) {
         const resBoard = await getAllBoards();
-        if (resBoard === 401) {
-          showPopUp.value = true;
+        if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
+          handleResponseError(resBoard);
         } else {
           userStore.setAllBoard(resBoard);
         }
@@ -98,11 +109,10 @@ async function fetchData() {
     const resTask = await getFilteredTask(boardId.value);
     if (resTask === undefined) {
       showErrorMSG.value = true;
-    } else if (resTask === 401) {
-      showPopUp.value = true;
-    } else if (resTask === 404) {
-      router.push({ name: "TaskNotFound", params: { page: "Board" } });
-    } else {
+    } else if (resTask === 401 || resTask === 404 || resTask === 403) {
+      handleResponseError(resTask);
+    }
+    else {
       taskStore.setAllTask(resTask);
       allTask.value = taskStore.allTask;
       maximumTask.value = statusStore.maximumTask;
@@ -113,16 +123,16 @@ async function fetchData() {
         const resStatus = await getAllStatus(boardId.value);
         if (resStatus === undefined) {
           showErrorMSG.value = true;
-        } else if (resStatus === 401) {
-          showPopUp.value = true;
+        } else if (resStatus === 401 || resStatus === 404 || resStatus === 403) {
+          handleResponseError(resStatus);
         } else {
           statusStore.setAllStatus(resStatus);
         }
       }
       if (statusStore.maximumTask === undefined) {
         const resLimit = await getLimit(boardId.value);
-        if (resLimit === 401) {
-          showPopUp.value = true;
+        if (resLimit === 401 || resLimit === 404 || resLimit === 403) {
+          handleResponseError(resLimit);
         }
         statusStore.setMaximumTaskStatus(resLimit.maximumTask);
         statusStore.setLimitStatus(resLimit.isLimit);
@@ -136,18 +146,9 @@ async function fetchData() {
 }
 
 async function handleBoardDetail() {
-   console.log(boardId.value);
   const res = await getBoardsById(boardId.value);
-  if (res === 404 || res === 400 || res === 500) {
-    router.push({ name: "TaskNotFound", params: { page: "Board" } });
-  } else if (res === 401) {
-    console.log("dw");
-    showPopUp.value = true;
-  } else if (res === 403) {
-    console.log("handleBoardDetail");
-    //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
-    router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
-    // showPopUp.value = true;
+  if (typeof res !== 'object') {
+    handleResponseError(res);
   } else {
     userStore.updatevIsibilityPublic(
       res.visibility === "PUBLIC" ? true : false
@@ -205,6 +206,7 @@ watch(
   } 
 );
 
+
 // react to route changes
 watch(
   () => route.params.taskId,
@@ -215,13 +217,8 @@ watch(
         return;
       } else {
         const res = await getTaskById(boardId.value, newId);
-        console.log(res);
-        if (res === 404 || res === 400 || res === 500) {
-          console.log("404");
-          router.push({ name: "TaskNotFound", params: { page: "Task" } });
-        } else if (res === 401) {
-          // go login
-          showPopUp.value = true;
+        if (typeof res !== 'object') {
+          handleResponseError(res)
         } else {
           task.value = res;
           if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
@@ -256,12 +253,8 @@ async function confirmLimit(action) {
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
-      } else if (res === 403) {
-        // go login
-        router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res)
       }else {
         statusStore.setLimitStatus(true);
         statusStore.setMaximumTaskStatus(maximumTask.value);
@@ -286,13 +279,9 @@ async function confirmLimit(action) {
       if (res === 400 || res === 404) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred enable limit task`;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
-      }  else if (res === 403) {
-        // go login
-        router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
-      } else if (res === 500) {
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res)
+      }else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
       } else {
