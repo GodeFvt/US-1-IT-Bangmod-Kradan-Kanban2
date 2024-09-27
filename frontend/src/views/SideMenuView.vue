@@ -273,9 +273,9 @@ const open = ref(true);
       <transition name="text-fade">
         <div
           v-if="open"
-          class="w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full"
+          class="itbkk-sign-out w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full"
         >
-          <span @click="signOut" class="itbkk-sign-out cursor-pointer">
+          <span @click="signOut" class="cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"

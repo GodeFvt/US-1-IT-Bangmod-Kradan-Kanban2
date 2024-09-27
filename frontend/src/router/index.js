@@ -122,6 +122,7 @@ if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
 else if(board?.visibility === "PUBLIC"){
   console.log("PUBLIC");
   console.log(userStore.isCanEdit); // จะเป็น true เปิดจากเจ้าของ board มาตัวเอง
+  console.log(userStore.authToken?.oid)
   console.log(userStore.authToken?.oid === board.owner.id)
   if((userStore.authToken?.oid !== board.owner.id) && ( to.name === "EditTask" ||  to.name === "AddTask" || to.name === "EditStatus" || to.name === "AddStatus")){
     console.log("authorizAccess");

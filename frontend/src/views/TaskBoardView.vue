@@ -141,6 +141,7 @@ async function handleBoardDetail() {
   if (res === 404 || res === 400 || res === 500) {
     router.push({ name: "TaskNotFound", params: { page: "Board" } });
   } else if (res === 401) {
+    console.log("dw");
     showPopUp.value = true;
   } else if (res === 403) {
     console.log("handleBoardDetail");
@@ -209,8 +210,8 @@ watch(
   () => route.params.taskId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      if (!(await isTokenValid(userStore.encodeToken))) {
-        showPopUp.value = true;
+      if (!(await isTokenValid(userStore.encodeToken)) && userStore.visibilityPublic === false) {
+            showPopUp.value = true;
         return;
       } else {
         const res = await getTaskById(boardId.value, newId);
@@ -258,7 +259,10 @@ async function confirmLimit(action) {
       } else if (res === 401) {
         // go login
         showPopUp.value = true;
-      } else {
+      } else if (res === 403) {
+        // go login
+        router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+      }else {
         statusStore.setLimitStatus(true);
         statusStore.setMaximumTaskStatus(maximumTask.value);
         allTaskLimit.value = res.filter((e) => e.noOfTasks > maximumTask.value);
@@ -285,6 +289,9 @@ async function confirmLimit(action) {
       } else if (res === 401) {
         // go login
         showPopUp.value = true;
+      }  else if (res === 403) {
+        // go login
+        router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
@@ -542,7 +549,7 @@ async function removeTask(index, confirmDelete = false) {
                 "
                 data-tip="You need to be board owner to perform this action."
               >
-                <span class="font-bold">
+                <span class="font-bold visibility">
                   {{ userStore.visibilityPublic ? "Public" : "Private" }}</span
                 >
                 <Toggle
@@ -776,10 +783,9 @@ async function removeTask(index, confirmDelete = false) {
           <span class="itbkk-message">
             {{
               toggleVisibleActive
-                ? "In private, only board owner can access/control board. Do you want to change the visibility to Private"
-                : "In public, any one can view  the task list and task detail of tasks in the board. Do you want to change the visibility to Public"
+                ? "In private, only board owner can access/control board. Do you want to change the visibility to Private ?"
+                : "In public, any one can view  the task list and task detail of tasks in the board. Do you want to change the visibility to Public ?"
             }}
-            ?
           </span>
         </template>
       </ConfirmModal>
@@ -788,11 +794,11 @@ async function removeTask(index, confirmDelete = false) {
         v-if="showListStatus"
         @user-action="showListStatus = false"
         :allTaskLimit="allTaskLimit"
-        class="z-50"
+        class="z-40"
       >
       </limitModal>
 
-      <AuthzPopup v-if="showPopUp" />
+      <AuthzPopup v-if="showPopUp" class="z-50"/>
 
     </div>
     <div

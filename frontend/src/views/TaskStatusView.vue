@@ -196,7 +196,7 @@ watch(
   () => route.params.statusId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      if (!(await isTokenValid(userStore.encodeToken))) {
+      if (!(await isTokenValid(userStore.encodeToken)) && userStore.visibilityPublic === false) {
         showPopUp.value = true;
         return;
       } else {
@@ -356,6 +356,8 @@ async function confirmLimit(action) {
       } else if (res === 401) {
         // go login
         showPopUp.value = true;
+      } else if (res === 403) {
+        router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
@@ -386,6 +388,8 @@ async function confirmLimit(action) {
       } else if (res === 401) {
         // go login
         showPopUp.value = true;
+      } else if (res === 403) {
+        router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
@@ -704,10 +708,10 @@ async function clickRemove(index) {
       v-if="showListStatus"
       @user-action="showListStatus = false"
       :allTaskLimit="allTaskLimit"
-      class="z-50"
+      class="z-40"
     >
     </limitModal>
-    <AuthzPopup v-if="showPopUp" />
+    <AuthzPopup v-if="showPopUp"  class="z-50"/>
   </div>
 </template>
 <style scoped></style>
