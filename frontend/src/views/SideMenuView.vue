@@ -275,7 +275,7 @@ const open = ref(true);
           v-if="open"
           class="w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full"
         >
-          <span @click="signOut" class="cursor-pointer">
+          <span @click="signOut" class="itbkk-sign-out cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"

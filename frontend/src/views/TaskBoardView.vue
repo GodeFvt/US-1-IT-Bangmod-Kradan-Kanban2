@@ -63,7 +63,7 @@ const showListStatus = ref(false);
 const showPopUp = ref(false);
 const showVisibilityModal = ref(false);
 
-const authorizAccess = ref(false);
+// const authorizAccess = ref(false);
 
 const boardId = ref(route.params.boardId);
 const maximumTask = ref(statusStore.maximumTask);
@@ -84,10 +84,7 @@ const countStatus = computed(() => {
 });
 
 async function fetchData() {
-  if (!(await isTokenValid(userStore.encodeToken))) {
-    showPopUp.value = true;
-    return;
-  } else {
+  console.log(userStore.visibilityPublic);
     if (userStore.authToken !== null) {
       if (userStore.boards.length === 0) {
         const resBoard = await getAllBoards();
@@ -135,18 +132,20 @@ async function fetchData() {
 
       showLoading.value = false;
     }
-  }
+  
 }
 
 async function handleBoardDetail() {
+   console.log(boardId.value);
   const res = await getBoardsById(boardId.value);
   if (res === 404 || res === 400 || res === 500) {
     router.push({ name: "TaskNotFound", params: { page: "Board" } });
   } else if (res === 401) {
     showPopUp.value = true;
   } else if (res === 403) {
+    console.log("handleBoardDetail");
     //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
-    authorizAccess.value = true;
+    router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
     // showPopUp.value = true;
   } else {
     userStore.updatevIsibilityPublic(
@@ -156,11 +155,15 @@ async function handleBoardDetail() {
     boardName.value = res.name;
 
     // if(userStore.visibilityPublic === false){
+    
     const oidByGet = res.owner.id;
-    const oidByToken = userStore.authToken.oid;
+    const oidByToken = userStore.authToken?.oid;
+    console.log(oidByGet===oidByToken);
     userStore.updatevIsCanEdit(
       isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
     );
+    console.log(userStore.isCanEdit);
+
     // }
   }
 }
@@ -194,10 +197,11 @@ onMounted(async () => {
 watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
-    boardId.value = newBoardId;
+    boardId.value = newBoardId;  
+    handleBoardDetail();
     fetchData();
     countStatuses();
-  }
+  } 
 );
 
 // react to route changes
@@ -210,7 +214,9 @@ watch(
         return;
       } else {
         const res = await getTaskById(boardId.value, newId);
+        console.log(res);
         if (res === 404 || res === 400 || res === 500) {
+          console.log("404");
           router.push({ name: "TaskNotFound", params: { page: "Task" } });
         } else if (res === 401) {
           // go login
@@ -315,10 +321,15 @@ async function confirmVisibility(action) {
       if (res === 400 || res === 404) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred enable visibility`;
+        showToast.value = true; 
+      } else if (res === 403) {
+        typeToast.value = "warning";
+        messageToast.value = `You do not have permission to change board visibility mode.`;
         showToast.value = true;
-      } else if (res === 500) {
+      }
+       else if (res === 500) {
         typeToast.value = "denger";
-        messageToast.value = `An error occurred.please try again.`;
+        messageToast.value = `There is a problem.Please try again later.`;
         showToast.value = true;
       } else if (res === 401) {
         // go login
@@ -443,7 +454,7 @@ async function editTask(editedTask) {
 }
 
 async function removeTask(index, confirmDelete = false) {
-  if (!(await isTokenValid(userStore.encodeToken))) {
+  if (!(await isTokenValid(userStore.encodeToken)) && userStore.isCanEdit === true) {
     showPopUp.value = true;
     return;
   } else {
@@ -783,13 +794,6 @@ async function removeTask(index, confirmDelete = false) {
 
       <AuthzPopup v-if="showPopUp" />
 
-      <PopUp v-if="authorizAccess">
-        <template #message>
-          <p class="text-lg text-gray-700">
-            Access denied, you do not have permission to view this page
-          </p>
-        </template>
-      </PopUp>
     </div>
     <div
       class="fixed flex items-center w-full max-w-xs right-5 bottom-5"

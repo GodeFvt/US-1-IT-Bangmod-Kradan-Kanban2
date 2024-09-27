@@ -80,8 +80,7 @@ watch(
 
         showBoardModal.value = true;
         isEdit.value = true;
-      } else if (route.path === `/board/${newId}/edit`) {
-      } else {
+      }  else {
         isEdit.value = false;
       }
     }

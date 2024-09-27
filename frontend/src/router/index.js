@@ -103,32 +103,59 @@ const router = createRouter({
 //ยังไม่เสร็จ
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
-
-if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
-    const boardId = to.params.boardId;
+const boardId = to.params.boardId;
     console.log(userStore.encodeToken)
     const board = await getBoardsById(boardId);
+if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
     if (board === 404 || board === 400 || board === 500) {
-      router.push({ name: "TaskNotFound", params: { page: "Board" } });
+      next({ name: "TaskNotFound", params: { boardId,page: "Board" } });
       return;
+     //router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+
+     //  router.push({ name: "Login" });
+    } else {
+      console.log("next1");
+      next()
     }
-    if(board?.visibility === "PUBLIC"){
-    next();
-  }
-   else if(board?.visibility ==="PRIVATE" && userStore.authToken === null){
-    next({ name: "Login" });  
+   
+}
+else if(board?.visibility === "PUBLIC"){
+  console.log("PUBLIC");
+  console.log(userStore.isCanEdit); // จะเป็น true เปิดจากเจ้าของ board มาตัวเอง
+  console.log(userStore.authToken?.oid === board.owner.id)
+  if((userStore.authToken?.oid !== board.owner.id) && ( to.name === "EditTask" ||  to.name === "AddTask" || to.name === "EditStatus" || to.name === "AddStatus")){
+    console.log("authorizAccess");
+    next({ name: "TaskNotFound", params: {boardId, page: "authorizAccess" } });
+    } else {
+      console.log("next2");
+      next(); 
     }
-    else{
-    next();
-    }
+  
+ }
+else if(board?.visibility ==="PRIVATE"){
+console.log("PRIVATE");
+// ตรงนี้ต้องเช็คว่าเป็นเจ้าของ board ไหม
+    if(userStore.authToken?.oid === board.owner.id && userStore.authToken !== null){
+        console.log("private , เป็นเจ้าของ , login");
+        next();
+      } else {
+        console.log("private , ไม่ใช่เจ้าของ ");
+        next({ name: "TaskNotFound", params: {boardId, page: "authorizAccess" } });
+      }
+      // next({ name: "Login" });  
 }
 else{
-  if (userStore.authToken === null && to.name !== "Login") {
-    console.log(" not auth not task or status")
-    next({ name: "Login" });
-  } else if (to.name === "Login" && userStore.authToken !== null) {
-    next({ name: "board" });
-  } else {
+  // if (userStore.authToken === null && to.name !== "Login") {
+  //   console.log(" not auth not task or status")
+  //   next({ name: "Login" });
+  // } else 
+  
+  if (to.name === "Login" && userStore.authToken !== null) {
+    console.log("to.name ===  && userStore.authToken !== null");
+     next({ name: "board" });
+  } 
+  else {
+    console.log("next3");
     next();
   }
 }

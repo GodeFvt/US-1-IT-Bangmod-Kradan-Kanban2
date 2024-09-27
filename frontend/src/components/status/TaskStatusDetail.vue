@@ -62,6 +62,8 @@ function textShow(text) {
 }
 function edit(statusId) {
   console.log(props.status.name);
+  console.log(userStore.isCanEdit);
+
   if (userStore.isCanEdit) {
    // ***
     if (props.status.name !=="No Status" && props.status.name !=="Done") {
@@ -149,7 +151,7 @@ const disabledSave = computed(() => {
                   data-tip="You need to be board owner to perform this action."
                 >
               <div
-                v-show="status.id !== 1"
+                v-show="status.name !== 'No Status' && status.name !== 'Done'"
                 @click="edit(status.id)"
                 class="ml-1"
                 :class="

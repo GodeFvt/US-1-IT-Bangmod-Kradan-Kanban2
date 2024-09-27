@@ -51,7 +51,7 @@ const showAddModal = ref(false);
 const showDeleteModal = ref(false);
 const showPopUp = ref(false);
 const isEdit = ref(false);
-const authorizAccess = ref(false);
+// const authorizAccess = ref(false);
 
 const toggleActive = ref(statusStore.isLimit);
 const indexToRemove = ref(-1);
@@ -130,7 +130,8 @@ async function handleBoardDetail(){
     } 
     else if (res === 403) {
       //ถ้าคนที่ไม่ใช่ owner เข้ามาแล้ว board นั้น PRIVATE ไป
-      authorizAccess.value = true;
+      router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+
      // showPopUp.value = true;
     }
     else {
@@ -139,7 +140,7 @@ async function handleBoardDetail(){
       boardName.value = res.name;
       // if(userStore.visibilityPublic === false){
       const oidByGet = res.owner.id;
-      const oidByToken = userStore.authToken.oid;
+      const oidByToken = userStore.authToken?.oid;
       userStore.updatevIsCanEdit(isNotDisable(
         userStore.visibilityPublic,
         oidByToken,
@@ -449,7 +450,7 @@ async function removeStatus(index, confirmDelete = false) {
 }
 
 async function clickRemove(index) {
-  if (!(await isTokenValid(userStore.encodeToken))) {
+  if (!(await isTokenValid(userStore.encodeToken)) && userStore.isCanEdit) {
     showPopUp.value = true;
     return;
   } else {
@@ -706,13 +707,6 @@ async function clickRemove(index) {
       class="z-50"
     >
     </limitModal>
-    <PopUp v-if="authorizAccess">
-        <template #message>
-          <p class="text-lg text-gray-700">
-            Access denied, you do not have permission to view this page
-          </p>
-        </template>
-      </PopUp>
     <AuthzPopup v-if="showPopUp" />
   </div>
 </template>

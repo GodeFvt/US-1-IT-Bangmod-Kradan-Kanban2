@@ -6,7 +6,7 @@ export const useUserStore = defineStore("userStore", {
     authToken: null,
     encodeToken: localStorage.getItem("authToken") || null,
     boards: [],
-    visibilityPublic : false,
+    visibilityPublic : false, //true คือ public
     isCanEdit : true,
     // isAuthenticated: false,
   }),

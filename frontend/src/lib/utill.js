@@ -75,19 +75,27 @@ async function isTokenValid(token) {
   }
 }
 
-function isNotDisable(isPublic , user=null ,owner) {
+function isNotDisable(isPublic , user ,owner) {
+  console.log(user);
   //isPublic ถ้า True จะเป็น public
   if (isPublic) {
-  
-    if (user!==null && user == owner) {
+    if (user!==undefined && user === owner) {
     //ถ้า เป็น public แต้ owner = user ก็แก้ไข 
       return true
-    }  
-    // board เป็น public แก้ไขไม่ได้
+    }  else {
+      // board เป็น public แก้ไขไม่ได้
     return false
+    }
+    
   } else {
-    //ถ้า เป็น private แต้เป็น owner ก็แก้ไขไม่ได้
-    return false
+    if (user!==undefined && user === owner) {
+      //ถ้า เป็น private แต้ owner = user ก็แก้ไข 
+        return true
+      }  else {
+         //ถ้า เป็น private แต้เป็น owner ก็แก้ไขไม่ได้
+         return false
+      }
+   
   }
 }
 

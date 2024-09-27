@@ -2,6 +2,7 @@
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { useUserStore } from "../../stores/user.js";
+import { useRoute, useRouter } from "vue-router";
 
 import { ref, watch } from "vue";
 import EditIcon from "../icon/EditIcon.vue";
@@ -24,6 +25,7 @@ const props = defineProps({
 
 const statusStore = useStatusStore();
 const userStore = useUserStore();
+const router = useRouter();
 
 const isVisible = ref([]);
 watch(
@@ -39,11 +41,17 @@ watch(
 );
 
 function editStatus(id , name) {
+  console.log(userStore.isCanEdit);
   if (userStore.isCanEdit) {
    // ***
-    if (props.status.name !=="No Status" && props.status.name !=="Done") {
-    editMode.value = !editMode.value;
-    router.push({ name: "EditStatus", params: { statusId: id } });
+   console.log("e");
+   console.log(name);
+   console.log(name !=="No Status" && name !=="Done");
+    if (name !=="No Status" && name !=="Done") {
+      console.log("ewd");
+    // editMode.value = !editMode.value;
+     console.log(id);
+    router.push({ name: "EditStatus", params: {statusId: id } });
     }
   }
 }
@@ -152,7 +160,7 @@ function editStatus(id , name) {
                         ? 'cursor-pointer'
                         : 'cursor-not-allowed disabled'
                     "
-                    @click="editStatus"
+                    @click="editStatus(status.id ,status.name)"
                 >
                   <EditIcon 
                   class="fill-zinc-500"
