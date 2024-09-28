@@ -158,22 +158,23 @@ if (!(await isTokenValid(userStore.encodeToken))) {
   return
   }
   else {
-    fetchData();
+    await fetchData();
   }
 }
 else
 {
 
-  handleBoardDetail()
-  fetchData();
+  await handleBoardDetail()
+  await fetchData();
 }
 });
 
+//ไว้ทำไรวะ 2
 watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
     boardId.value = newBoardId;
-    fetchData();
+   fetchData();
   }
 );
 

@@ -8,7 +8,6 @@ export const useUserStore = defineStore("userStore", {
     boards: [],
     visibilityPublic : false, //true คือ public
     isCanEdit : true,
-    // isAuthenticated: false,
   }),
 
   actions: {
@@ -18,15 +17,13 @@ export const useUserStore = defineStore("userStore", {
       if (token || refresh_Token) {
         try {
           const decodedToken = VueJwtDecode.decode(token);
-          if(decodedToken === "{}"){
-          this.authToken = null;
-          this.encodeToken = null;
+          if(decodedToken === "{}" || decodedToken === null || decodedToken === undefined){
+          this.clearAuthToken();
         }
           else{
            this.authToken = decodedToken;
             this.encodeToken = token;
          }
-          // this.isAuthenticated = true;
         } catch (error) {
         }
       } else {
@@ -35,16 +32,27 @@ export const useUserStore = defineStore("userStore", {
     },
 
     setAuthToken(token) {
-      const decodedToken = VueJwtDecode.decode(token);
-      this.authToken = decodedToken
-      this.encodeToken = token;
-      localStorage.setItem("authToken", token);
-      // this.isAuthenticated = true;
+      if(token){
+        try{
+          const decodedToken = VueJwtDecode.decode(token);
+          if(decodedToken === "{}" || decodedToken === null || decodedToken === undefined){
+            this.clearAuthToken();
+          }
+            else{
+             this.authToken = decodedToken;
+              this.encodeToken = token;
+           }
+          localStorage.setItem("authToken", token);}
+          catch (error) {
+            }
+      }
+      else {
+        this.clearAuthToken();
+      }
     },
     clearAuthToken() {
       this.authToken = null;
       this.encodeToken = null;
-      // this.isAuthenticated = false;
       localStorage.removeItem("authToken");
       localStorage.removeItem("refresh_token");
     },

@@ -41,12 +41,14 @@ function validateSizeInput(...properties) {
 async function refreshTokenAndReturn() {
   const userStore = useUserStore();
   const refreshTokenSuccess = await refreshAccessToken();
-  if (refreshTokenSuccess) {
+  if(typeof refreshTokenSuccess !== 'object'){
+    userStore.setAuthToken(null);
+    return false
+  }
+  else{ 
     userStore.setAuthToken(refreshTokenSuccess.access_token);
-    console.log(refreshTokenSuccess.access_token)
     return true; 
   }
-  return false; 
 }
 
 async function isTokenValid(token) {
@@ -61,6 +63,7 @@ async function isTokenValid(token) {
     decodedToken = VueJwtDecode.decode(token);
   } catch (error) {
     return await refreshTokenAndReturn();
+
   }
 
   if (!decodedToken || !decodedToken.exp) {
@@ -70,7 +73,8 @@ async function isTokenValid(token) {
   const currentTime = Math.floor(Date.now() / 1000);
   if (decodedToken.exp < currentTime) {
     return await refreshTokenAndReturn()
-  } else {
+  }
+   else {
     return true
   }
 }

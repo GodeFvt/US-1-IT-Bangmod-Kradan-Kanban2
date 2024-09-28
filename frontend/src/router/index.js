@@ -104,8 +104,10 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
 const boardId = to.params.boardId;
-    console.log(userStore.encodeToken)
-    const board = await getBoardsById(boardId);
+let board = null;
+if(boardId){
+   board = await getBoardsById(boardId);
+}
 if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
     if (board === 404 || board === 400 || board === 500) {
       next({ name: "TaskNotFound", params: { boardId,page: "Board" } });

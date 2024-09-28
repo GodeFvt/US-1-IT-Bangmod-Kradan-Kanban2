@@ -95,7 +95,6 @@ function handleResponseError(responseCode) {
 
 
 async function fetchData() {
-  console.log(userStore.visibilityPublic);
     if (userStore.authToken !== null) {
       if (userStore.boards.length === 0) {
         const resBoard = await getAllBoards();
@@ -181,21 +180,23 @@ function countStatuses() {
 
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
+    
     await handleBoardDetail();
     if (userStore.visibilityPublic === false) {
       showPopUp.value = true;
       return;
     } else {
-      fetchData();
-      countStatuses();
+     await fetchData();
+     countStatuses();
     }
   } else {
-    handleBoardDetail();
-    fetchData();
+    await handleBoardDetail();
+    await fetchData();
     countStatuses();
   }
 });
 
+//ไว้ทำไรวะ
 watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
