@@ -98,6 +98,7 @@ async function fetchData() {
     if (userStore.authToken !== null) {
       if (userStore.boards.length === 0) {
         const resBoard = await getAllBoards();
+       
         if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
           handleResponseError(resBoard);
         } else {
@@ -105,6 +106,7 @@ async function fetchData() {
         }
       }
     }
+ //   const getLimit = await getLimit()
     const resTask = await getFilteredTask(boardId.value);
     if (resTask === undefined) {
       showErrorMSG.value = true;
@@ -128,7 +130,7 @@ async function fetchData() {
           statusStore.setAllStatus(resStatus);
         }
       }
-      if (statusStore.maximumTask === undefined) {
+      // if (statusStore.maximumTask === undefined) {
         const resLimit = await getLimit(boardId.value);
         if (resLimit === 401 || resLimit === 404 || resLimit === 403) {
           handleResponseError(resLimit);
@@ -137,7 +139,7 @@ async function fetchData() {
         statusStore.setLimitStatus(resLimit.isLimit);
         maximumTask.value = statusStore.maximumTask;
         toggleActive.value = statusStore.isLimit;
-      }
+     // }
 
       showLoading.value = false;
     }
@@ -180,7 +182,6 @@ function countStatuses() {
 
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
-    
     await handleBoardDetail();
     if (userStore.visibilityPublic === false) {
       showPopUp.value = true;

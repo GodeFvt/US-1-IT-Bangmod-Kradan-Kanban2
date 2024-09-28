@@ -101,7 +101,7 @@ async function fetchData() {
       toggleActive.value = statusStore.isLimit;
       statusStore.setNoOftask(countStatus.value);
 
-        if (statusStore.maximumTask === undefined) {
+        // if (statusStore.maximumTask === undefined) {
           const resLimit = await getLimit(boardId.value);
            if (resLimit === 401 || resLimit === 403 || resLimit === 404) {
         handleResponseError(resLimit)
@@ -110,7 +110,7 @@ async function fetchData() {
           statusStore.setLimitStatus(resLimit.isLimit);
           maximumTask.value = statusStore.maximumTask;
           toggleActive.value = statusStore.isLimit;
-        }
+        // }
         if (taskStore.allTask.length === 0) {
           const resTask = await getFilteredTask(boardId.value);
           if (resTask === undefined) {
