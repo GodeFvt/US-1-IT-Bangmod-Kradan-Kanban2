@@ -127,30 +127,30 @@ async function fetchData() {
   }
 
 
-async function handleBoardDetail(){
-  const res = await getBoardsById(boardId.value);
-   if (typeof res !== 'object') {
-        handleResponseError(res)
-      }
-    else {
-      userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
-      toggleVisibleActive.value = userStore.visibilityPublic
-      boardName.value = res.name;
-      const oidByGet = res.owner.id;
-      const oidByToken = userStore.authToken?.oid;
-      userStore.updatevIsCanEdit(isNotDisable(
-        userStore.visibilityPublic,
-        oidByToken,
-        oidByGet
-      ))
-    }
-}
+// async function handleBoardDetail(){
+//   const res = await getBoardsById(boardId.value);
+//    if (typeof res !== 'object') {
+//         handleResponseError(res)
+//       }
+//     else {
+//       userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
+//       toggleVisibleActive.value = userStore.visibilityPublic
+//       boardName.value = res.name;
+//       const oidByGet = res.owner.id;
+//       const oidByToken = userStore.authToken?.oid;
+//       userStore.updatevIsCanEdit(isNotDisable(
+//         userStore.visibilityPublic,
+//         oidByToken,
+//         oidByGet
+//       ))
+//     }
+// }
 
 
 onMounted(async () => {
 
 if (!(await isTokenValid(userStore.encodeToken))) {
-  await handleBoardDetail()
+  // await handleBoardDetail()
   if(userStore.visibilityPublic === false){
   showPopUp.value = true;
   return
@@ -161,7 +161,7 @@ if (!(await isTokenValid(userStore.encodeToken))) {
 }
 else
 {
-  await handleBoardDetail()
+  // await handleBoardDetail()
   await fetchData();
 }
 });

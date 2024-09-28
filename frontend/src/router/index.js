@@ -106,13 +106,24 @@ let board = userStore.findBoardById(boardId);
 if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
   let board = null;
   board = await getBoardsById(boardId);
+  if(board === 200){  
+    userStore.updatevIsibilityPublic(
+    board.visibility === "PUBLIC" ? true : false
+  );
+  boardName.value = board.name;
+  const oidByGet = board.owner.id;
+  const oidByToken = userStore.authToken?.oid;
+  userStore.updatevIsCanEdit(
+    isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
+  );}
     if (board === 404 || board === 400 || board === 500) {
       next({ name: "TaskNotFound", params: { boardId,page: "Board" } });
       return;
      //router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
 
      //  router.push({ name: "Login" });
-    } 
+    }
+     
     else if(board ===403){
       console.log("private , ไม่ใช่เจ้าของ ");
       next({ name: "TaskNotFound", params: {boardId, page: "authorizAccess" } });

@@ -106,6 +106,7 @@ async function fetchData() {
         }
       }
     }
+    toggleVisibleActive.value = userStore.visibilityPublic;
  //   const getLimit = await getLimit()
     const resTask = await getFilteredTask(boardId.value);
     if (resTask === undefined) {
@@ -146,30 +147,30 @@ async function fetchData() {
   
 }
 
-async function handleBoardDetail() {
-  const res = await getBoardsById(boardId.value);
-  if (typeof res !== 'object') {
-    handleResponseError(res);
-  } else {
-    userStore.updatevIsibilityPublic(
-      res.visibility === "PUBLIC" ? true : false
-    );
-    toggleVisibleActive.value = userStore.visibilityPublic;
-    boardName.value = res.name;
+// async function handleBoardDetail() {
+//   const res = await getBoardsById(boardId.value);
+//   if (typeof res !== 'object') {
+//     handleResponseError(res);
+//   } else {
+//     userStore.updatevIsibilityPublic(
+//       res.visibility === "PUBLIC" ? true : false
+//     );
+//     toggleVisibleActive.value = userStore.visibilityPublic;
+//     boardName.value = res.name;
 
-    // if(userStore.visibilityPublic === false){
+//     // if(userStore.visibilityPublic === false){
     
-    const oidByGet = res.owner.id;
-    const oidByToken = userStore.authToken?.oid;
-    console.log(oidByGet===oidByToken);
-    userStore.updatevIsCanEdit(
-      isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
-    );
-    console.log(userStore.isCanEdit);
+//     const oidByGet = res.owner.id;
+//     const oidByToken = userStore.authToken?.oid;
+//     console.log(oidByGet===oidByToken);
+//     userStore.updatevIsCanEdit(
+//       isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
+//     );
+//     console.log(userStore.isCanEdit);
 
-    // }
-  }
-}
+//     // }
+//   }
+// }
 
 function countStatuses() {
   const countStatusKeys = Object.keys(countStatus);
@@ -182,7 +183,8 @@ function countStatuses() {
 
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
-    await handleBoardDetail();
+    
+    // await handleBoardDetail();
     if (userStore.visibilityPublic === false) {
       showPopUp.value = true;
       return;
@@ -191,7 +193,7 @@ onMounted(async () => {
      countStatuses();
     }
   } else {
-    await handleBoardDetail();
+    // await handleBoardDetail();
     await fetchData();
     countStatuses();
   }
