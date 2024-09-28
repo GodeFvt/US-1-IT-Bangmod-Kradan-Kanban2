@@ -8,6 +8,7 @@ import { useUserStore } from "../stores/user.js";
 import {
   getBoardsById
 } from "../lib/fetchUtill.js";
+import { useStatusStore } from "../stores/statuses.js";
 
 const routes = [
   {
@@ -91,31 +92,32 @@ const router = createRouter({
   routes,
 });
 
-// router.beforeEach((to, from) => {
-//   if (to.name === "EditStatus" && to.params.statusId === "1") {
-//     return { name: "ManageStatus" };
-//   }
-// });
-
-
 
 
 //ยังไม่เสร็จ
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
 const boardId = to.params.boardId;
-let board = null;
-if(boardId){
-   board = await getBoardsById(boardId);
-}
+let board = userStore.findBoardById(boardId);
+
+// if(boardId){
+//    board = await getBoardsById(boardId);
+// }
 if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
+  let board = null;
+  board = await getBoardsById(boardId);
     if (board === 404 || board === 400 || board === 500) {
       next({ name: "TaskNotFound", params: { boardId,page: "Board" } });
       return;
      //router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
 
      //  router.push({ name: "Login" });
-    } else {
+    } 
+    else if(board ===403){
+      console.log("private , ไม่ใช่เจ้าของ ");
+      next({ name: "TaskNotFound", params: {boardId, page: "authorizAccess" } });
+    }
+    else {
       console.log("next1");
       next()
     }

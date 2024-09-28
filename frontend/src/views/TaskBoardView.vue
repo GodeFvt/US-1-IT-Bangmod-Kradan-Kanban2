@@ -86,7 +86,7 @@ const countStatus = computed(() => {
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
     showPopUp.value = true;
-  } else if (responseCode === 404 || responseCode === 500 || responseCode === 400) {
+  } else if (responseCode === 404) {
     router.push({ name: "TaskNotFound", params: { page: "Board" } });
   } else if (responseCode === 403) {
     router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
@@ -329,8 +329,7 @@ async function confirmVisibility(action) {
         messageToast.value = `There is a problem.Please try again later.`;
         showToast.value = true;
       } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
+        handleResponseError(res)
       } else {
         console.log(res.visibility);
         // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
@@ -410,9 +409,8 @@ async function addTask(newTask) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred adding the task`;
         showToast.value = true;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
+      }  else if (res === 401 || res === 403) {
+        handleResponseError(res);
       } else {
         typeToast.value = "success";
         taskStore.addTask(res);
@@ -434,10 +432,9 @@ async function editTask(editedTask) {
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred updating the task "${editedTask.title}"`;
-    } else if (res === 401) {
-      // go login
-      showPopUp.value = true;
-    } else {
+    } else if (res === 401 || res === 403) {
+        handleResponseError(res);
+      } else {
       typeToast.value = "success";
       const indexToUpdate = allTask.value.findIndex(
         (task) => task.id === editedTask.id
@@ -471,9 +468,8 @@ async function removeTask(index, confirmDelete = false) {
         taskStore.deleteTask(index);
         typeToast.value = "warning";
         messageToast.value = `An error has occurred, the task does not exist.`;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res);
       } else {
         typeToast.value = "danger";
         messageToast.value = `An error occurred deleting the task "${task.value.title}."`;

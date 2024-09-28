@@ -136,7 +136,6 @@ async function handleBoardDetail(){
       userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
       toggleVisibleActive.value = userStore.visibilityPublic
       boardName.value = res.name;
-      // if(userStore.visibilityPublic === false){
       const oidByGet = res.owner.id;
       const oidByToken = userStore.authToken?.oid;
       userStore.updatevIsCanEdit(isNotDisable(
@@ -144,7 +143,6 @@ async function handleBoardDetail(){
         oidByToken,
         oidByGet
       ))
-    // }
     }
 }
 
@@ -163,7 +161,6 @@ if (!(await isTokenValid(userStore.encodeToken))) {
 }
 else
 {
-
   await handleBoardDetail()
   await fetchData();
 }
@@ -201,11 +198,17 @@ watch(
       } else {
         showLoading.value = true;
         const res = await getStatusById(boardId.value, newId);
-         if (resTask === 401 || resTask === 403 || resTask === 404) {
-        handleResponseError(resTask)
+         if (res === 401 || res === 403 || res === 404) {
+        handleResponseError(res)
       } else {
           status.value = res;
           if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
+            if(status.value.name === "No Status" || status.value.name === "Done"){
+              showDetail.value = false;
+              isEdit.value = false;
+              router.push({ name: "ManageStatus" });
+              return
+            }
             isEdit.value = true;
           } else {
             isEdit.value = false;
@@ -274,12 +277,15 @@ async function addStatus(newStatus) {
         typeToast.value = "warning";
         messageToast.value = `An error has occurred, the status could not be added`;
         showToast.value = true;
-      } else if (resTask === 401 || resTask === 403) {
-        handleResponseError(resTask)
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res)
       }else {
         typeToast.value = "success";
         statusStore.addStatus(res);
-        console.log(allStatus.value);
+        if(userStore.findBoardById(boardId.value).isCustomStatus === false){
+       const resStatus = await getAllStatus(boardId.value);
+       statusStore.setAllStatus(resStatus)
+      }
         messageToast.value = `The status has been added`;
         showToast.value = true;
       }
@@ -296,14 +302,18 @@ async function editStatus(editedStatus) {
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the status does not exist`;
-    } else if (resTask === 401 || resTask === 403) {
-        handleResponseError(resTask)
+    } else if (res === 401 || res === 403) {
+        handleResponseError(res)
       }else {
       typeToast.value = "success";
       const indexToUpdate = allStatus.value.findIndex(
         (status) => status.id === editedStatus.id
       );
       statusStore.editStatus(indexToUpdate, res);
+      if(userStore.findBoardById(boardId.value).isCustomStatus === false){
+       const resStatus = await getAllStatus(boardId.value);
+       statusStore.setAllStatus(resStatus)
+      }
       messageToast.value = `The status has been updated`;
     }
     showToast.value = true;
@@ -424,12 +434,16 @@ async function removeStatus(index, confirmDelete = false) {
           messageToast.value = `The status has been deleted`;
         }
         statusStore.deleteStatus(index);
+        if(userStore.findBoardById(boardId.value).isCustomStatus === false){
+       const resStatus = await getAllStatus(boardId.value);
+       statusStore.setAllStatus(resStatus)
+      }
       } else if (res === 404 || res === 400) {
         typeToast.value = "warning";
         messageToast.value = `An error has occurred, the status does not exist.`;
         statusStore.deleteStatus(index);
-      } else if (resTask === 401 || resTask === 403) {
-        handleResponseError(resTask)
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res)
       }else {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
@@ -455,10 +469,9 @@ async function clickRemove(index) {
       if (res === 400 || res === 404 || res === 500) {
         typeToast.value = "danger";
         messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
-      } else {
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res);
+      }  else {
         if (res.count >= 1) {
           tranferStatus.value = "No Status";
           showTranfer.value = true;
@@ -563,7 +576,7 @@ async function clickRemove(index) {
       >
         <!-- Status Table -->
         <TaskStatusTable
-          :allStatus="allStatus"
+          :allStatus="statusStore.allStatus"
           :showErrorMSG="showErrorMSG"
           :showLoading="showLoading"
           @remove-status="clickRemove"

@@ -68,9 +68,9 @@ export const useUserStore = defineStore("userStore", {
     setAllBoard(newAllBoard) {
       this.boards = [...newAllBoard];
     },
-    // updateIsAuthen(Boolean) {
-    //   this.isAuthenticated = Boolean;
-    // },
+    findBoardById(id) {
+      return this.boards.find(board => board.id === id);
+    },
     updatevIsibilityPublic(Boolean) {
       this.visibilityPublic = Boolean;
     },

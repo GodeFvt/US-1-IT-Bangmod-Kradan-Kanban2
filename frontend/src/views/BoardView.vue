@@ -34,15 +34,29 @@ const showToast = ref(false);
 const showDeleteModal = ref(false);
 // console.log(userStore.authToken.name);
 
+function handleResponseError(responseCode) {
+  if (responseCode === 401) {
+    showPopUp.value = true;
+  } else if (
+    responseCode === 404 ||
+    responseCode === 500 ||
+    responseCode === 400
+  ) {
+    router.push({ name: "TaskNotFound", params: { page: "Board" } });
+  } else if (responseCode === 403) {
+    router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+  }
+}
+
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
-  if(userStore.boards.length === 0) {
+    if (userStore.boards.length === 0) {
       const resBoard = await getAllBoards();
-      if (resBoard === 401) {
-        showPopUp.value = true;
+      if (resBoard === 401 || resBoard === 404) {
+        handleResponseError(resBoard);
       } else {
         userStore.setAllBoard(resBoard);
       }
@@ -54,8 +68,8 @@ watch(
   () => route.path,
   (newPath, oldPath) => {
     // if (oldPath === "/login") {
-      
-    // } 
+
+    // }
     // else {fetchData();
     // }
     if (newPath === "/board/add") {
@@ -70,20 +84,20 @@ watch(
   async (newId, oldId) => {
     if (newId !== undefined) {
       if (!(await isTokenValid(userStore.encodeToken))) {
-    showPopUp.value = true;
-    return;
-  } else {
-      if (route.path === `/board/${newId}/edit`) {
-        console.log("edit eiei");
-        board.value = userStore.boards.find((board) => board.id === newId);
-        console.log(board.value);
+        showPopUp.value = true;
+        return;
+      } else {
+        if (route.path === `/board/${newId}/edit`) {
+          console.log("edit eiei");
+          board.value = userStore.boards.find((board) => board.id === newId);
+          console.log(board.value);
 
-        showBoardModal.value = true;
-        isEdit.value = true;
-      }  else {
-        isEdit.value = false;
+          showBoardModal.value = true;
+          isEdit.value = true;
+        } else {
+          isEdit.value = false;
+        }
       }
-    }
     }
     // showLoading.value = false;
   },
@@ -119,28 +133,28 @@ async function addBoard(newBoard) {
     showPopUp.value = true;
     return;
   } else {
-  if (newBoard.name === null || newBoard.name === "") {
-    typeToast.value = "warning";
-    messageToast.value = `The name is required`;
-    showToast.value = true;
-  } else {
-    newBoard.name = newBoard.name.trim();
-    newBoard.description = newBoard.description?.trim();
-    const res = await createBoard(newBoard);
-    if (res === 422 || res === 400 || res === 500 || res === 404) {
+    if (newBoard.name === null || newBoard.name === "") {
       typeToast.value = "warning";
-      messageToast.value = `There is problem.Please try again later.`;
-    } else if (res === 401) {
-      showPopUp.value = true;
+      messageToast.value = `The name is required`;
+      showToast.value = true;
     } else {
-      // if res.status = 200
-      typeToast.value = "success";
-      userStore.addBoard(res);
-      messageToast.value = `The board has been added`;
+      newBoard.name = newBoard.name.trim();
+      newBoard.description = newBoard.description?.trim();
+      const res = await createBoard(newBoard);
+      if (res === 422 || res === 400 || res === 500 || res === 404) {
+        typeToast.value = "warning";
+        messageToast.value = `There is problem.Please try again later.`;
+      } else if (res === 401) {
+        handleResponseError(res);
+      } else {
+        // if res.status = 200
+        typeToast.value = "success";
+        userStore.addBoard(res);
+        messageToast.value = `The board has been added`;
+      }
+      showToast.value = true;
     }
-    showToast.value = true;
   }
-}
 }
 
 async function editBoard(boardId, editedBoard) {
@@ -148,22 +162,22 @@ async function editBoard(boardId, editedBoard) {
     showPopUp.value = true;
     return;
   } else {
-  const res = await updateBoard(boardId, editedBoard);
-  if (res === 422 || res === 400 || res === 500 || res === 404) {
-    typeToast.value = "warning";
-    messageToast.value = `An error has occurred, the board does not exist`;
-  } else if (res === 401) {
-    showPopUp.value = true;
-  } else {
-    typeToast.value = "success";
-    const indexToUpdate = userStore.boards.findIndex(
-      (board) => board.id === editedBoard.id
-    );
-    userStore.editBoard(indexToUpdate, res);
-    messageToast.value = `The board has been updated`;
+    const res = await updateBoard(boardId, editedBoard);
+    if (res === 422 || res === 400 || res === 500 || res === 404) {
+      typeToast.value = "warning";
+      messageToast.value = `An error has occurred, the board does not exist`;
+    } else if (res === 401) {
+      handleResponseError(res);
+    } else {
+      typeToast.value = "success";
+      const indexToUpdate = userStore.boards.findIndex(
+        (board) => board.id === editedBoard.id
+      );
+      userStore.editBoard(indexToUpdate, res);
+      messageToast.value = `The board has been updated`;
+    }
+    showToast.value = true;
   }
-  showToast.value = true;
-}
 }
 
 function closeBoard(action) {
@@ -176,28 +190,28 @@ async function removeBoard(boardId, confirmDelete = false) {
     showPopUp.value = true;
     return;
   } else {
-  showDeleteModal.value = true;
-  console.log(typeof boardId);
-  if (typeof boardId === "string") {
-    boardIdForDelete.value = boardId;
-    board.value = userStore.boards.find((board) => board.id === boardId);
-  }
-  if (confirmDelete) {
-    const res = await deleteBoard(boardIdForDelete.value);
-    if (res === 422 || res === 400 || res === 500 || res === 404) {
-      typeToast.value = "warning";
-      messageToast.value = `An error has occurred, the board could not be added`;
-    } else if (res === 401) {
-      showPopUp.value = true;
-    } else {
-      // if res.status = 200
-      typeToast.value = "success";
-      userStore.deleteBoard(boardId);
-      messageToast.value = `The board has been deleted`;
+    showDeleteModal.value = true;
+    console.log(typeof boardId);
+    if (typeof boardId === "string") {
+      boardIdForDelete.value = boardId;
+      board.value = userStore.boards.find((board) => board.id === boardId);
     }
-    showDeleteModal.value = false;
+    if (confirmDelete) {
+      const res = await deleteBoard(boardIdForDelete.value);
+      if (res === 422 || res === 400 || res === 500 || res === 404) {
+        typeToast.value = "warning";
+        messageToast.value = `An error has occurred, the board could not be added`;
+      } else if (res === 401) {
+        handleResponseError(res);
+      } else {
+        // if res.status = 200
+        typeToast.value = "success";
+        userStore.deleteBoard(boardId);
+        messageToast.value = `The board has been deleted`;
+      }
+      showDeleteModal.value = false;
+    }
   }
-}
 }
 
 function openBoard(boardId) {
@@ -258,7 +272,9 @@ function openBoard(boardId) {
     v-if="showDeleteModal"
     @user-action="showDeleteModal = false"
     @confirm="removeBoard"
-    :index="userStore.boards.findIndex((board) => board.id === boardIdForDelete)"
+    :index="
+      userStore.boards.findIndex((board) => board.id === boardIdForDelete)
+    "
     class="z-50"
     width="w-[42vh]"
   >
