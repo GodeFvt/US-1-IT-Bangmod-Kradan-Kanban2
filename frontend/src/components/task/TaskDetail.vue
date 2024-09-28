@@ -110,8 +110,8 @@ function textShow(text) {
 }
 function edit(taskId) {
   if (userStore.isCanEdit) {
-  editMode.value = true;
-  router.push({ name: "EditTask", params: { taskId: taskId } }); 
+    editMode.value = true;
+    router.push({ name: "EditTask", params: { taskId: taskId } });
   }
 }
 const limitThisTask = computed(() => {
@@ -186,26 +186,26 @@ const limitThisTask = computed(() => {
             {{ duplicateTask.title }}
             </textarea>
             <div
-                  :class="
-                    userStore.isCanEdit
-                      ? ''
-                      : 'tooltip tooltip-bottom tooltip-hover '
-                  "
-                  data-tip="You need to be board owner to perform this action."
-                >
-            <div
-              v-show="$route.path !== '/task/add'"
-              class=" text-2xl hover:bg-gray-200 rounded-full"
               :class="
-                      userStore.isCanEdit
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
-                    "
-              @click="edit(task.id)"
+                userStore.isCanEdit
+                  ? ''
+                  : 'tooltip tooltip-bottom tooltip-hover '
+              "
+              data-tip="You need to be board owner to perform this action."
             >
-              <EditTaskIcon />
+              <div
+                v-show="$route.path !== '/task/add'"
+                class="text-2xl hover:bg-gray-200 rounded-full"
+                :class="
+                  userStore.isCanEdit
+                    ? 'cursor-pointer'
+                    : 'cursor-not-allowed disabled'
+                "
+                @click="edit(task.id)"
+              >
+                <EditTaskIcon />
+              </div>
             </div>
-          </div>
           </div>
           <div
             class="px-9 flex flex-col justify-end items-end w-[85%]"

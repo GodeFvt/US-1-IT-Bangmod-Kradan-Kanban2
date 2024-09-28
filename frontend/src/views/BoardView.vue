@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch, computed, onUnmounted, nextTick } from "vue";
 import {
+  getBoardsById,
   deleteBoard,
   createBoard,
   updateBoard,
@@ -53,14 +54,14 @@ onMounted(async () => {
     showPopUp.value = true;
     return;
   } else {
-    if (userStore.boards.length === 0) {
+    // if (userStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       if (resBoard === 401 || resBoard === 404) {
         handleResponseError(resBoard);
       } else {
         userStore.setAllBoard(resBoard);
       }
-    }
+    //}
   }
 });
 
@@ -87,15 +88,21 @@ watch(
         showPopUp.value = true;
         return;
       } else {
-        if (route.path === `/board/${newId}/edit`) {
-          console.log("edit eiei");
-          board.value = userStore.boards.find((board) => board.id === newId);
-          console.log(board.value);
-
-          showBoardModal.value = true;
-          isEdit.value = true;
+        const res = await getBoardsById(newId);
+        if (typeof res !== "object") {
+          handleResponseError(res);
         } else {
-          isEdit.value = false;
+          if (route.path === `/board/${newId}/edit`) {
+            console.log("edit eiei");
+            board.value = userStore.boards.find((board) => board.id === newId);
+            console.log(userStore.boards);
+            console.log(board.value);
+
+            showBoardModal.value = true;
+            isEdit.value = true;
+          } else {
+            isEdit.value = false;
+          }
         }
       }
     }
@@ -119,7 +126,7 @@ async function addEditBoard(newBoard) {
   const indexToCheck = userStore.boards.findIndex(
     (board) => board.id === newBoard.id
   );
-
+  console.log(newBoard);
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
     await editBoard(board.value.id, newBoard);
     console.log("edit");

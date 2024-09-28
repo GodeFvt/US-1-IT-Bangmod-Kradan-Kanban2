@@ -5,8 +5,8 @@ const BASE_URL = import.meta.env.VITE_API_ROOT;
 
 async function getFilteredTask(boardId, [...filter] = "", sortBy = "id") {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/tasks?sortBy=${sortBy}&filterStatuses=${filter}`,
@@ -31,8 +31,8 @@ const token = userStore.encodeToken;
 
 async function toggleLimitTask(boardId, maximum, isLimit) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/statuses/all/maximum-task?maximumTask=${maximum}&isLimit=${isLimit}`,
@@ -56,21 +56,19 @@ const token = userStore.encodeToken;
   }
 }
 
-async function toggleVisibility(boardId , visibility) {
+async function toggleVisibility(boardId, visibility) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
-    res = await fetch(
-      `${BASE_URL}/v3/boards/${boardId}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(visibility),
-      });
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(visibility),
+    });
     if (res.status === 200) {
       const data = await res.json();
       return data;
@@ -83,9 +81,9 @@ const token = userStore.encodeToken;
 }
 
 async function getTaskById(boardId, taskId) {
-let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}`, {
       method: "GET",
@@ -127,8 +125,8 @@ async function getTaskByStatus(boardId, statusId) {
 
 async function createTask(boardId, task) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks`, {
       method: "POST",
@@ -151,8 +149,8 @@ const token = userStore.encodeToken;
 
 async function updateTask(boardId, task) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${task.id}`, {
       method: "PUT",
@@ -175,8 +173,8 @@ const token = userStore.encodeToken;
 
 async function deleteTask(boardId, taskId) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}`, {
       method: "DELETE",
@@ -193,8 +191,8 @@ const token = userStore.encodeToken;
 
 async function getAllStatus(boardId) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses`, {
       method: "GET",
@@ -206,9 +204,7 @@ const token = userStore.encodeToken;
     }
     if (res.status === 401 || res.status === 404) {
       return res.status;
-    } 
-    
-    else {
+    } else {
       return undefined;
     }
   } catch (error) {
@@ -219,7 +215,7 @@ const token = userStore.encodeToken;
 async function getStatusById(boardId, statusId) {
   let res;
   const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/${statusId}`, {
       method: "GET",
@@ -238,8 +234,8 @@ const token = userStore.encodeToken;
 
 async function createStatus(boardId, Statuses) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses`, {
       method: "POST",
@@ -262,8 +258,8 @@ const token = userStore.encodeToken;
 
 async function updateStatus(boardId, Statuses) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/statuses/${Statuses.id}`,
@@ -289,8 +285,8 @@ const token = userStore.encodeToken;
 
 async function deleteStatus(boardId, statusId) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/${statusId}`, {
       method: "DELETE",
@@ -306,8 +302,8 @@ const token = userStore.encodeToken;
 }
 async function deleteStatusAndTranfer(boardId, OldStatusId, newStatusId) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(
       `${BASE_URL}/v3/boards/${boardId}/statuses/${OldStatusId}/${newStatusId}`,
@@ -328,7 +324,7 @@ const token = userStore.encodeToken;
 async function getLimit(boardId) {
   let res;
   const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}/statuses/limit`, {
       method: "GET",
@@ -368,8 +364,8 @@ async function loginAccount(user) {
 
 async function getAllBoards() {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards`, {
       method: "GET",
@@ -394,8 +390,8 @@ const token = userStore.encodeToken;
 
 async function createBoard(board) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
 
   try {
     res = await fetch(`${BASE_URL}/v3/boards`, {
@@ -420,13 +416,12 @@ const token = userStore.encodeToken;
 async function getBoardsById(boardId) {
   let res;
   const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
       method: "GET",
       headers: tokenIsNull(token), // Pass the dynamic headers object here
-    }
-  );
+    });
     if (res.status === 200) {
       const board = await res.json();
       return board;
@@ -440,8 +435,8 @@ const token = userStore.encodeToken;
 
 async function updateBoard(boardId, board) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
       method: "PUT",
@@ -464,8 +459,8 @@ const token = userStore.encodeToken;
 
 async function deleteBoard(boardId) {
   let res;
-const userStore = useUserStore();
-const token = userStore.encodeToken;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
   try {
     res = await fetch(`${BASE_URL}/v3/boards/${boardId}`, {
       method: "DELETE",
@@ -481,7 +476,7 @@ const token = userStore.encodeToken;
 }
 async function refreshAccessToken() {
   let res;
-  const refresh_Token = localStorage.getItem("refresh_token")
+  const refresh_Token = localStorage.getItem("refresh_token");
   try {
     res = await fetch(`${BASE_URL}/token`, {
       method: "POST",

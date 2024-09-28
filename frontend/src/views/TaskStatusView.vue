@@ -26,7 +26,7 @@ import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
-import { isTokenValid ,isNotDisable} from "../lib/utill.js";
+import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
 import PopUp from "../components/modal/PopUp.vue";
 
@@ -52,7 +52,7 @@ const showDeleteModal = ref(false);
 const showPopUp = ref(false);
 const isEdit = ref(false);
 // const authorizAccess = ref(false);
-
+const boardName = ref(userStore.currentBoard.name);
 const toggleActive = ref(statusStore.isLimit);
 const indexToRemove = ref(-1);
 const messageToast = ref("");
@@ -62,70 +62,70 @@ const maximumTask = ref(statusStore.maximumTask);
 const showSettingModal = ref(false);
 const boardId = ref(route.params.boardId);
 const tranferStatus = ref("No Status");
-const boardName = ref();
-const toggleVisibleActive = ref(false);
+// const toggleVisibleActive = ref(false);
 
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
     showPopUp.value = true;
-  } else if (responseCode === 404 || responseCode === 500 || responseCode === 400) {
+  } else if (
+    responseCode === 404 ||
+    responseCode === 500 ||
+    responseCode === 400
+  ) {
     router.push({ name: "TaskNotFound", params: { page: "Board" } });
   } else if (responseCode === 403) {
     router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
   }
 }
 
-
 async function fetchData() {
-  
-  if(userStore.authToken !== null){
-        if (userStore.boards.length === 0) {
-          const resBoard = await getAllBoards();
-           if (resBoard === 401 || resBoard === 403 || resBoard === 404) {
-        handleResponseError(resBoard)
+  if (userStore.authToken !== null) {
+    if (userStore.boards.length === 0) {
+      const resBoard = await getAllBoards();
+      if (resBoard === 401 || resBoard === 403 || resBoard === 404) {
+        handleResponseError(resBoard);
       } else {
-            userStore.setAllBoard(resBoard);
-          }
-        }
+        userStore.setAllBoard(resBoard);
       }
-
-    const resStatus = await getAllStatus(boardId.value);
-    if (resStatus === undefined) {
-      showErrorMSG.value = true;
-    } else if (resStatus === 401 || resStatus === 403 || resStatus === 404) {
-        handleResponseError(resStatus)
-      } else {
-      statusStore.setAllStatus(resStatus);
-      allStatus.value = statusStore.allStatus;
-      maximumTask.value = statusStore.maximumTask;
-      toggleActive.value = statusStore.isLimit;
-      statusStore.setNoOftask(countStatus.value);
-
-        // if (statusStore.maximumTask === undefined) {
-          const resLimit = await getLimit(boardId.value);
-           if (resLimit === 401 || resLimit === 403 || resLimit === 404) {
-        handleResponseError(resLimit)
-      }
-          statusStore.setMaximumTaskStatus(resLimit.maximumTask);
-          statusStore.setLimitStatus(resLimit.isLimit);
-          maximumTask.value = statusStore.maximumTask;
-          toggleActive.value = statusStore.isLimit;
-        // }
-        if (taskStore.allTask.length === 0) {
-          const resTask = await getFilteredTask(boardId.value);
-          if (resTask === undefined) {
-            showErrorMSG.value = true;
-          }  else if (resTask === 401 || resTask === 403 || resTask === 404) {
-        handleResponseError(resTask)
-      } else {
-            taskStore.setAllTask(resTask);
-          }
-        }
-
-        showLoading.value = false;
-      }
+    }
   }
 
+  const resStatus = await getAllStatus(boardId.value);
+  if (resStatus === undefined) {
+    showErrorMSG.value = true;
+  } else if (resStatus === 401 || resStatus === 403 || resStatus === 404) {
+    handleResponseError(resStatus);
+  } else {
+    statusStore.setAllStatus(resStatus);
+    allStatus.value = statusStore.allStatus;
+    maximumTask.value = statusStore.maximumTask;
+    toggleActive.value = statusStore.isLimit;
+    statusStore.setNoOftask(countStatus.value);
+
+    // if (statusStore.maximumTask === undefined) {
+    const resLimit = await getLimit(boardId.value);
+    if (resLimit === 401 || resLimit === 403 || resLimit === 404) {
+      handleResponseError(resLimit);
+    }
+    statusStore.setMaximumTaskStatus(resLimit.maximumTask);
+    statusStore.setLimitStatus(resLimit.isLimit);
+    maximumTask.value = statusStore.maximumTask;
+    toggleActive.value = statusStore.isLimit;
+    // }
+    if (taskStore.allTask.length === 0) {
+      const resTask = await getFilteredTask(boardId.value);
+      if (resTask === undefined) {
+        showErrorMSG.value = true;
+      } else if (resTask === 401 || resTask === 403 || resTask === 404) {
+        handleResponseError(resTask);
+      } else {
+        taskStore.setAllTask(resTask);
+      }
+    }
+
+    showLoading.value = false;
+  }
+}
 
 // async function handleBoardDetail(){
 //   const res = await getBoardsById(boardId.value);
@@ -146,32 +146,28 @@ async function fetchData() {
 //     }
 // }
 
-
 onMounted(async () => {
-
-if (!(await isTokenValid(userStore.encodeToken))) {
-  // await handleBoardDetail()
-  if(userStore.visibilityPublic === false){
-  showPopUp.value = true;
-  return
-  }
-  else {
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    // await handleBoardDetail()
+    if (userStore.visibilityPublic === false) {
+      showPopUp.value = true;
+      return;
+    } else {
+      await fetchData();
+    }
+  } else {
+    // await handleBoardDetail()
     await fetchData();
   }
-}
-else
-{
-  // await handleBoardDetail()
-  await fetchData();
-}
 });
 
-//ไว้ทำไรวะ 2
+//เวลาเปลี่ยน board จาก sidebar
 watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
     boardId.value = newBoardId;
-   fetchData();
+    boardName.value = userStore.currentBoard.name;
+    fetchData();
   }
 );
 
@@ -192,22 +188,28 @@ watch(
   () => route.params.statusId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      if (!(await isTokenValid(userStore.encodeToken)) && userStore.visibilityPublic === false) {
+      if (
+        !(await isTokenValid(userStore.encodeToken)) &&
+        userStore.visibilityPublic === false
+      ) {
         showPopUp.value = true;
         return;
       } else {
         showLoading.value = true;
         const res = await getStatusById(boardId.value, newId);
-         if (res === 401 || res === 403 || res === 404) {
-        handleResponseError(res)
-      } else {
+        if (res === 401 || res === 403 || res === 404) {
+          handleResponseError(res);
+        } else {
           status.value = res;
           if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
-            if(status.value.name === "No Status" || status.value.name === "Done"){
+            if (
+              status.value.name === "No Status" ||
+              status.value.name === "Done"
+            ) {
               showDetail.value = false;
               isEdit.value = false;
               router.push({ name: "ManageStatus" });
-              return
+              return;
             }
             isEdit.value = true;
           } else {
@@ -278,14 +280,14 @@ async function addStatus(newStatus) {
         messageToast.value = `An error has occurred, the status could not be added`;
         showToast.value = true;
       } else if (res === 401 || res === 403) {
-        handleResponseError(res)
-      }else {
+        handleResponseError(res);
+      } else {
         typeToast.value = "success";
         statusStore.addStatus(res);
-        if(userStore.findBoardById(boardId.value).isCustomStatus === false){
-       const resStatus = await getAllStatus(boardId.value);
-       statusStore.setAllStatus(resStatus)
-      }
+        if (userStore.findBoardById(boardId.value).isCustomStatus === false) {
+          const resStatus = await getAllStatus(boardId.value);
+          statusStore.setAllStatus(resStatus);
+        }
         messageToast.value = `The status has been added`;
         showToast.value = true;
       }
@@ -303,16 +305,16 @@ async function editStatus(editedStatus) {
       typeToast.value = "warning";
       messageToast.value = `An error has occurred, the status does not exist`;
     } else if (res === 401 || res === 403) {
-        handleResponseError(res)
-      }else {
+      handleResponseError(res);
+    } else {
       typeToast.value = "success";
       const indexToUpdate = allStatus.value.findIndex(
         (status) => status.id === editedStatus.id
       );
       statusStore.editStatus(indexToUpdate, res);
-      if(userStore.findBoardById(boardId.value).isCustomStatus === false){
-       const resStatus = await getAllStatus(boardId.value);
-       statusStore.setAllStatus(resStatus)
+      if (userStore.findBoardById(boardId.value).isCustomStatus === false) {
+        const resStatus = await getAllStatus(boardId.value);
+        statusStore.setAllStatus(resStatus);
       }
       messageToast.value = `The status has been updated`;
     }
@@ -358,7 +360,7 @@ async function confirmLimit(action) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred enable limit task`;
       } else if (res === 401 || res === 403) {
-        handleResponseError(res)
+        handleResponseError(res);
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
@@ -387,7 +389,7 @@ async function confirmLimit(action) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred disabled limit task`;
       } else if (res === 401 || res === 403) {
-        handleResponseError(res)
+        handleResponseError(res);
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
@@ -434,17 +436,17 @@ async function removeStatus(index, confirmDelete = false) {
           messageToast.value = `The status has been deleted`;
         }
         statusStore.deleteStatus(index);
-        if(userStore.findBoardById(boardId.value).isCustomStatus === false){
-       const resStatus = await getAllStatus(boardId.value);
-       statusStore.setAllStatus(resStatus)
-      }
+        if (userStore.findBoardById(boardId.value).isCustomStatus === false) {
+          const resStatus = await getAllStatus(boardId.value);
+          statusStore.setAllStatus(resStatus);
+        }
       } else if (res === 404 || res === 400) {
         typeToast.value = "warning";
         messageToast.value = `An error has occurred, the status does not exist.`;
         statusStore.deleteStatus(index);
       } else if (res === 401 || res === 403) {
-        handleResponseError(res)
-      }else {
+        handleResponseError(res);
+      } else {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
       }
@@ -471,7 +473,7 @@ async function clickRemove(index) {
         messageToast.value = `An error occurred deleting the status "${status.value.name}.`;
       } else if (res === 401 || res === 403) {
         handleResponseError(res);
-      }  else {
+      } else {
         if (res.count >= 1) {
           tranferStatus.value = "No Status";
           showTranfer.value = true;
@@ -540,22 +542,24 @@ async function clickRemove(index) {
               <router-link :to="{ name: 'AddStatus' }">
                 <div
                   :class="
-                    userStore.isCanEdit ? '' : 'tooltip tooltip-bottom tooltip-hover'
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-bottom tooltip-hover'
                   "
                   data-tip="You need to be board owner to perform this action."
                 >
-                <button
-                  class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                  :disabled="!userStore.isCanEdit"
+                  <button
+                    class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                    :disabled="!userStore.isCanEdit"
                     :class="
                       userStore.isCanEdit
                         ? 'cursor-pointer'
                         : 'cursor-not-allowed disabled'
                     "
-                >
-                  Add Status
-                </button>
-              </div>
+                  >
+                    Add Status
+                  </button>
+                </div>
               </router-link>
             </div>
             <!-- status setting -->
@@ -711,7 +715,7 @@ async function clickRemove(index) {
       class="z-40"
     >
     </limitModal>
-    <AuthzPopup v-if="showPopUp"  class="z-50"/>
+    <AuthzPopup v-if="showPopUp" class="z-50" />
   </div>
 </template>
 <style scoped></style>

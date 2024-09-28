@@ -6,47 +6,51 @@ export const useUserStore = defineStore("userStore", {
     authToken: null,
     encodeToken: localStorage.getItem("authToken") || null,
     boards: [],
-    visibilityPublic : false, //true คือ public
-    isCanEdit : true,
+    visibilityPublic: false, //true คือ public
+    isCanEdit: true,
+    currentBoard: {},
   }),
 
   actions: {
     initializeToken() {
       const token = localStorage.getItem("authToken");
-      const refresh_Token = localStorage.getItem("refresh_token")
+      const refresh_Token = localStorage.getItem("refresh_token");
       if (token || refresh_Token) {
         try {
           const decodedToken = VueJwtDecode.decode(token);
-          if(decodedToken === "{}" || decodedToken === null || decodedToken === undefined){
-          this.clearAuthToken();
-        }
-          else{
-           this.authToken = decodedToken;
+          if (
+            decodedToken === "{}" ||
+            decodedToken === null ||
+            decodedToken === undefined
+          ) {
+            this.clearAuthToken();
+          } else {
+            this.authToken = decodedToken;
             this.encodeToken = token;
-         }
-        } catch (error) {
-        }
+          }
+        } catch (error) {}
       } else {
         this.clearAuthToken();
       }
     },
 
     setAuthToken(token) {
-      if(token){
-        try{
+      if (token) {
+        try {
           const decodedToken = VueJwtDecode.decode(token);
-          if(decodedToken === "{}" || decodedToken === null || decodedToken === undefined){
+          if (
+            decodedToken === "{}" ||
+            decodedToken === null ||
+            decodedToken === undefined
+          ) {
             this.clearAuthToken();
+          } else {
+            this.authToken = decodedToken;
+            this.encodeToken = token;
           }
-            else{
-             this.authToken = decodedToken;
-              this.encodeToken = token;
-           }
-          localStorage.setItem("authToken", token);}
-          catch (error) {
-            }
-      }
-      else {
+          localStorage.setItem("authToken", token);
+        } catch (error) {}
+      } else {
         this.clearAuthToken();
       }
     },
@@ -69,13 +73,16 @@ export const useUserStore = defineStore("userStore", {
       this.boards = [...newAllBoard];
     },
     findBoardById(id) {
-      return this.boards.find(board => board.id === id);
+      return this.boards.find((board) => board.id === id);
     },
     updatevIsibilityPublic(Boolean) {
       this.visibilityPublic = Boolean;
     },
     updatevIsCanEdit(Boolean) {
       this.isCanEdit = Boolean;
+    },
+    setCurrentBoard(board) {
+      this.currentBoard = { ...board };
     },
   },
 });

@@ -40,23 +40,21 @@ watch(
   { deep: true }
 );
 
-function editStatus(id , name) {
+function editStatus(id, name) {
   console.log(userStore.isCanEdit);
   if (userStore.isCanEdit) {
-   // ***
-   console.log("e");
-   console.log(name);
-   console.log(name !=="No Status" && name !=="Done");
-    if (name !=="No Status" && name !=="Done") {
+    // ***
+    console.log("e");
+    console.log(name);
+    console.log(name !== "No Status" && name !== "Done");
+    if (name !== "No Status" && name !== "Done") {
       console.log("ewd");
-    // editMode.value = !editMode.value;
-     console.log(id);
-    router.push({ name: "EditStatus", params: {statusId: id } });
+      // editMode.value = !editMode.value;
+      console.log(id);
+      router.push({ name: "EditStatus", params: { statusId: id } });
     }
   }
 }
-
-
 </script>
 
 <template>
@@ -108,7 +106,6 @@ function editStatus(id , name) {
           <td
             class="h-full w-[25%] px-6 py-4 max-lg:w-[30%] max-lg:px-2 max-lg:py-3 hover:bg-neutral-100"
           >
-          
             <router-link
               :to="{
                 name: 'StatusDetail',
@@ -146,60 +143,55 @@ function editStatus(id , name) {
               v-if="status.name !== 'No Status' && status.name !== 'Done'"
               class="flex flex-row gap-4 max-sm:flex-col"
             >
-             <div
+              <div
+                :class="
+                  userStore.isCanEdit ? '' : 'tooltip tooltip-top tooltip-hover'
+                "
+                data-tip="You need to be board owner to perform this action."
+              >
+                <div
+                  class="itbkk-button-edit"
                   :class="
                     userStore.isCanEdit
-                      ? ''
-                      : 'tooltip tooltip-top tooltip-hover'
+                      ? 'cursor-pointer'
+                      : 'cursor-not-allowed disabled'
                   "
-                  data-tip="You need to be board owner to perform this action."
+                  @click="editStatus(status.id, status.name)"
                 >
-                <div class="itbkk-button-edit"
-                :class="
-                      userStore.isCanEdit
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
-                    "
-                    @click="editStatus(status.id ,status.name)"
-                >
-                  <EditIcon 
-                  class="fill-zinc-500"
-                  :class="
+                  <EditIcon
+                    class="fill-zinc-500"
+                    :class="
                       userStore.isCanEdit
                         ? ' hover:fill-zinc-700'
                         : ' hover:fill-zinc-500'
                     "
                   />
                 </div>
-           
               </div>
               <div
+                :class="
+                  userStore.isCanEdit ? '' : 'tooltip tooltip-top tooltip-hover'
+                "
+                data-tip="You need to be board owner to perform this action."
+              >
+                <div
+                  class="itbkk-button-delete text-white fill-rose-300"
+                  @click="$emit('removeStatus', index)"
                   :class="
                     userStore.isCanEdit
-                      ? ''
-                      : 'tooltip tooltip-top tooltip-hover'
-                  "
-                  data-tip="You need to be board owner to perform this action."
-                >
-              <div
-              class="itbkk-button-delete  text-white fill-rose-300"
-       
-                @click="$emit('removeStatus', index)"
-                :class="
-                      userStore.isCanEdit
                       ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
-                    "
-              >
-                <DeleteIcon 
-                :class="
+                      : 'cursor-not-allowed disabled'
+                  "
+                >
+                  <DeleteIcon
+                    :class="
                       userStore.isCanEdit
                         ? ' hover:fill-rose-400'
                         : ' hover:fill-rose-300'
                     "
-                />
+                  />
+                </div>
               </div>
-            </div>
             </div>
           </td>
         </tr>
