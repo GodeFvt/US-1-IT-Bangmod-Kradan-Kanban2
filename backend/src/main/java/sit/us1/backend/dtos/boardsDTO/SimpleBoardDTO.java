@@ -8,6 +8,7 @@ public class SimpleBoardDTO {
     private String id;
     private String name;
     private String visibility = "PRIVATE";
+    private Boolean isCustomStatus;
     private BoardUser owner;
 
     public void setVisibility(String visibility) {
