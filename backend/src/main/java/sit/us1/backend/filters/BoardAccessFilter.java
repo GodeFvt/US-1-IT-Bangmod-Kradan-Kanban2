@@ -28,7 +28,16 @@ public class BoardAccessFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+        if (request.getRequestURI().equals("/login") || request.getRequestURI().equals("/token")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         try {
+
+            boolean isTokenValid = (boolean) request.getAttribute("isTokenValid");
+            String tokenError = (String) request.getAttribute("tokenError");
+
             if (request.getRequestURI().startsWith("/v3/boards/")) {
                 boolean isGetMethod = request.getMethod().equals("GET");
 
@@ -37,9 +46,9 @@ public class BoardAccessFilter extends OncePerRequestFilter {
                 boolean boardExists = boardService.boardExists(boardId);
 
                 if (!boardExists) {
-                    if (user == null){
+                    if (user == null && !isTokenValid && !isGetMethod) {
                         throw new UnauthorizedException("JWT Token is required");
-                    }else{
+                    } else {
                         throw new NotFoundException("Board not found");
                     }
                 }
@@ -48,17 +57,25 @@ public class BoardAccessFilter extends OncePerRequestFilter {
                 boolean isOwner = user != null && boardService.isOwnerOfBoard(boardId, user.getOid());
 
                 if (user != null) {
-                    if (!isOwner && !isPublicBoard) {
+                    if (!isOwner && !isTokenValid && !isGetMethod) {
+                        throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
+                    } else if (!isOwner && !isPublicBoard) {
                         throw new AccessDeniedException("You are not the owner of this board");
                     } else if (!isOwner && isPublicBoard && !isGetMethod) {
                         throw new AccessDeniedException("You are not the owner of this board");
+                    } else if (!isTokenValid) {
+                        throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
                     }
                 } else if (user == null && boardExists && !isPublicBoard && isGetMethod) {
                     throw new AccessDeniedException("Board is not public");
                 } else if (user == null && boardExists && isPublicBoard && !isGetMethod) {
-                    throw new UnauthorizedException("JWT Token is required");
+                    throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
                 } else if (user == null && !isPublicBoard) {
-                    throw new UnauthorizedException("JWT Token is required");
+                    throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
+                }
+            } else {
+                if (!isTokenValid) {
+                    throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
                 }
             }
 
@@ -71,7 +88,7 @@ public class BoardAccessFilter extends OncePerRequestFilter {
         } catch (AccessDeniedException e) {
             handleException(response, HttpStatus.FORBIDDEN, e.getMessage(), request.getRequestURI());
         } catch (Exception e) {
-            handleException(response, HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request.getRequestURI());
+            handleException(response, HttpStatus.UNAUTHORIZED, "An unexpected error occurred", request.getRequestURI());
         }
     }
 

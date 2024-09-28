@@ -35,32 +35,39 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-
-        final String requestTokenHeader = request.getHeader("Authorization");
-        String username = null;
-        String jwtToken = null;
-
         try {
+
+            final String requestTokenHeader = request.getHeader("Authorization");
+            String username = null;
+            String jwtToken = null;
+            boolean isTokenValid = false;
+            String tokenError = null;
+
             if (request.getRequestURI().equals("/login") || request.getRequestURI().equals("/token")) {
                 chain.doFilter(request, response);
                 return;
             }
+
             if (requestTokenHeader != null) {
                 if (requestTokenHeader.startsWith("Bearer ")) {
                     jwtToken = requestTokenHeader.substring(7);
                     try {
                         username = jwtTokenUtil.getSubjectFromToken(jwtToken, false);
+                        isTokenValid = true;
                     } catch (IllegalArgumentException e) {
-                        throw new UnauthorizedException("Unable to get JWT Token");
+                        tokenError = "Unable to get JWT Token";
                     } catch (ExpiredJwtException e) {
-                        throw new UnauthorizedException("JWT Token has expired");
+                        tokenError = "JWT Token has expired";
                     } catch (JwtException e) {
-                        throw new UnauthorizedException("JWT Token is invalid");
+                        tokenError = "JWT Token is invalid";
                     }
                 } else {
-                    throw new UnauthorizedException("JWT Token does not begin with Bearer String");
+                    tokenError = "JWT Token does not begin with Bearer String";
                 }
             }
+
+            request.setAttribute("isTokenValid", isTokenValid);
+            request.setAttribute("tokenError", tokenError);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
@@ -84,7 +91,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         } catch (AccessDeniedException e) {
             handleException(response, HttpStatus.FORBIDDEN, e.getMessage(), request.getRequestURI());
         } catch (Exception e) {
-            handleException(response, HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request.getRequestURI());
+            handleException(response, HttpStatus.UNAUTHORIZED, "An unexpected error occurred", request.getRequestURI());
         }
     }
 
