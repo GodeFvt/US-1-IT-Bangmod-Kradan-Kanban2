@@ -805,8 +805,8 @@ async function removeTask(index, confirmDelete = false) {
           <span class="itbkk-message">
             {{
               toggleVisibleActive
-                ? "In private, only board owner can access/control board.Do you want to change the visibility to private?"
-                : "In public, any one can view the board, task list and task detail of tasks in the board.Do you want to change the visibility to public?"
+                ? "In private, only board owner can access/control board. Do you want to change board visibility to private?"
+                : "In public, any one can view the board, task list and task detail of tasks in the board. Do you want to change board visibility to public?"
             }}
           </span>
         </template>
