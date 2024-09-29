@@ -91,129 +91,116 @@ const router = createRouter({
   routes,
 });
 
-const boardCache = new Map();
 const cachedGetBoardsById = async (boardId) => {
   const userStore = useUserStore();
-  if (boardId === undefined) {
-    return;
-  }
-  if (userStore.currentBoard.id === boardId) {
+  if (!boardId) return null;
+
+  if (userStore.currentBoard?.id === boardId) {
     return userStore.currentBoard;
   }
-  // if (boardCache.has(boardId)) {
-  //   return boardCache.get(boardId);
-  // }
-  console.log("getBo by id");
+
+  console.log("Fetching board by id:", boardId);
   const board = await getBoardsById(boardId);
-  userStore.setCurrentBoard(board)
-  // boardCache.set(boardId, board);
-  return board;
+
+  if (board === 401 || board === 403 || board === 404) {
+    console.log(`Error: ${board}`);
+    return board;
+  } else {
+    userStore.setCurrentBoard(board);
+    return board;
+  }
 };
 
-//ยังไม่เสร็จดี
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
   const boardId = to.params.boardId;
-  let board = await cachedGetBoardsById(boardId);
-  
-  if (!board) {
-    board = 404;
-  }
-  
-  console.log("board", board);
-  console.log("to.name", to.name);
 
-  if ((to.name === "task" || to.name === "ManageStatus") && to.params.boardId) {
+  // ถ้าไปที่หน้า Login และมี token อยู่แล้ว ให้ไปที่หน้า board
+  if (to.name === "Login" && userStore.authToken !== null) {
+    return next({ name: "board" });
+  }
+
+  // ถ้าไม่มี boardId หรือกำลังไปที่หน้า NotFound อยู่แล้ว ให้ผ่านไปได้เลย
+  if (!boardId || to.name === "TaskNotFound") {
+    return next();
+  }
+
+  // ถ้ากำลังจะไปที่หน้าที่ต้องการ board
+  if (
+    [
+      "task",
+      "ManageStatus",
+      "EditTask",
+      "AddTask",
+      "EditStatus",
+      "AddStatus",
+      "TaskDetail",
+      "StatusDetail",
+    ].includes(to.name)
+  ) {
+    const board = await cachedGetBoardsById(boardId);
+
+    // if (
+    //   userStore.authToken == null &&
+    //   board === 404 &&
+    //   !["task", "ManageStatus", "TaskDetail", "StatusDetail"].includes(to.name)
+    // ) {
+    //   next();
+    // }
+
+    if (board === 404 || board === 400 || board === 500) {
+      return next({ name: "TaskNotFound", params: { boardId, page: "Board" } });
+    }
+
+    if (board === 401) {
+      next();
+    }
+
+    if (board === 403) {
+      return next({
+        name: "TaskNotFound",
+        params: { boardId, page: "authorizAccess" },
+      });
+    }
+
     if (typeof board === "object") {
-      userStore.updatevIsibilityPublic(
-        board.visibility === "PUBLIC" ? true : false
-      );
+      userStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
       const oidByGet = board.owner.id;
       const oidByToken = userStore.authToken?.oid;
       userStore.setCurrentBoard(board);
       userStore.updatevIsCanEdit(
         isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
       );
-    }
-    if (board === 404 || board === 400 || board === 500) {
-      next({ name: "TaskNotFound", params: { boardId, page: "Board" } });
-    } else if (board === 403) {
-      console.log("private , ไม่ใช่เจ้าของ ");
-      next({
-        name: "TaskNotFound",
-        params: { boardId, page: "authorizAccess" },
-      });
-    } else {
-      console.log("next1");
-      next();
-    }
-  } else if (board?.visibility === "PUBLIC") {
-    console.log("PUBLIC");
-    console.log(userStore.isCanEdit); // จะเป็น true เปิดจากเจ้าของ board มาตัวเอง
-    console.log(userStore.authToken?.oid);
-    console.log(userStore.authToken?.oid === board.owner.id);
-    if (
-      userStore.authToken?.oid !== board.owner.id &&
-      (to.name === "EditTask" ||
-        to.name === "AddTask" ||
-        to.name === "EditStatus" ||
-        to.name === "AddStatus")
-    ) {
-      console.log("authorizAccess");
-      next({
-        name: "TaskNotFound",
-        params: { boardId, page: "authorizAccess" },
-      });
-    } else {
-      console.log("next2");
-      next();
-    }
-  } else if (board?.visibility === "PRIVATE") {
-    console.log("PRIVATE");
-    // ตรงนี้ต้องเช็คว่าเป็นเจ้าของ board ไหม
-    if (
-      userStore.authToken?.oid === board.owner.id &&
-      userStore.authToken !== null
-    ) {
-      console.log("private , เป็นเจ้าของ , login");
-      next();
-    } else {
-      console.log("private , ไม่ใช่เจ้าของ ");
-      next({
-        name: "TaskNotFound",
-        params: { boardId, page: "authorizAccess" },
-      });
-    }
-  } else if (
-    to.name === "EditTask" ||
-    to.name === "AddTask" ||
-    to.name === "EditStatus" ||
-    to.name === "AddStatus"
-  ) {
-    console.log("authorizAccess");
-    if (board === 404 || board === 400 || board === 500) {
-      next({ name: "TaskNotFound", params: { boardId, page: "Board" } });
-      return;
-    } else if (board === 403) {
-      console.log("private , ไม่ใช่เจ้าของdddd ");
-      next({
-        name: "TaskNotFound",
-        params: { boardId, page: "authorizAccess" },
-      });
-      return;
-    } else {
-      console.log("next1");
-      next();
-    }
-  } else {
-    if (to.name === "Login" && userStore.authToken !== null) {
-      console.log("to.name ===  && userStore.authToken !== null");
-      next({ name: "board" });
-    } else {
-      console.log("next3");
-      next();
+
+      const isOwner = userStore.authToken?.oid === board.owner.id;
+      const isEditAction = [
+        "EditTask",
+        "AddTask",
+        "EditStatus",
+        "AddStatus",
+      ].includes(to.name);
+
+      if (board.visibility === "PUBLIC" && !isOwner && isEditAction) {
+        return next({
+          name: "TaskNotFound",
+          params: { boardId, page: "authorizAccess" },
+        });
+      }
+
+      if (
+        board.visibility === "PRIVATE" &&
+        (!isOwner || !userStore.authToken)
+      ) {
+        return next({
+          name: "TaskNotFound",
+          params: { boardId, page: "authorizAccess" },
+        });
+      }
     }
   }
+
+  // ถ้าผ่านการตรวจสอบทั้งหมดแล้ว
+  next();
 });
 
 export default router;
