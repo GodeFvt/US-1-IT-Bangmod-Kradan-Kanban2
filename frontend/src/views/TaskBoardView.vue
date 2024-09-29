@@ -201,6 +201,7 @@ function countStatuses() {
 }
 
 onMounted(async () => {
+  console.log("onMounted" ,toggleVisibleActive.value ,userStore.visibilityPublic);
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail();
     if (userStore.visibilityPublic === false) {
@@ -226,6 +227,7 @@ watch(
     boardName.value = userStore.currentBoard.name;
     fetchData();
     countStatuses();
+    console.log("wacth" ,toggleVisibleActive.value ,userStore.visibilityPublic);
   }
 );
 
@@ -322,7 +324,7 @@ async function confirmLimit(action) {
 }
 
 async function confirmVisibility(action) {
-  console.log("bafore fetch", toggleVisibleActive.value);
+  console.log("bafore fetch", toggleVisibleActive.value ,userStore.visibilityPublic);
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
@@ -363,6 +365,7 @@ async function confirmVisibility(action) {
         if (res.visibility === "PUBLIC") {
           navigator.clipboard.writeText(window.location.href)
         } 
+        userStore.setIsVisibilityCurrentBoard(res.visibility)
         // console.log("200 fetch", toggleVisibleActive.value);
 
         // typeToast.value = "success";

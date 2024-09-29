@@ -97,15 +97,15 @@ const cachedGetBoardsById = async (boardId) => {
   if (boardId === undefined) {
     return;
   }
-  if (userStore.findBoardById(boardId)) {
-    return userStore.findBoardById(boardId);
+  if (userStore.currentBoard.id === boardId) {
+    return userStore.currentBoard;
   }
   // if (boardCache.has(boardId)) {
   //   return boardCache.get(boardId);
   // }
   console.log("getBo by id");
   const board = await getBoardsById(boardId);
-  userStore.addBoard(board);
+  userStore.setCurrentBoard(board)
   // boardCache.set(boardId, board);
   return board;
 };

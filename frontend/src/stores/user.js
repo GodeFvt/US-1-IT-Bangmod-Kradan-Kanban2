@@ -84,6 +84,9 @@ export const useUserStore = defineStore("userStore", {
     setCurrentBoard(board) {
       this.currentBoard = { ...board };
     },
+    setIsVisibilityCurrentBoard(visibility) {
+      this.currentBoard.visibility = visibility
+    } ,
   },
 });
 if (import.meta.hot) {
