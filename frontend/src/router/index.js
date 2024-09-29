@@ -7,7 +7,7 @@ import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import { useStatusStore } from "../stores/statuses.js";
-import { isNotDisable } from "../lib/utill.js";
+import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
 
 const routes = [
   {
@@ -100,7 +100,19 @@ const cachedGetBoardsById = async (boardId) => {
   }
 
   console.log("Fetching board by id:", boardId);
-  const board = await getBoardsById(boardId);
+  const authToken = localStorage.getItem("authToken")
+  const refresh_token = localStorage.getItem("refresh_token")
+  let board;
+  try{
+    if(!authToken && refresh_token){
+      await refreshTokenAndReturn()
+    }
+  }catch(error){
+    console.log("error");
+  }finally{
+    board = await getBoardsById(boardId);
+  }
+  
 
   if (board === 401 || board === 403 || board === 404) {
     console.log(`Error: ${board}`);
@@ -139,7 +151,7 @@ router.beforeEach(async (to, from, next) => {
     ].includes(to.name)
   ) {
     const board = await cachedGetBoardsById(boardId);
-
+    
     // if (
     //   userStore.authToken == null &&
     //   board === 404 &&
@@ -191,11 +203,12 @@ router.beforeEach(async (to, from, next) => {
         board.visibility === "PRIVATE" &&
         (!isOwner || !userStore.authToken)
       ) {
-        return next({
+        return next({ 
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
         });
       }
+
     }
   }
 

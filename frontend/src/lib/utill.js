@@ -110,4 +110,5 @@ export {
   isTokenValid,
   tokenIsNull,
   isNotDisable,
+  refreshTokenAndReturn,
 };
