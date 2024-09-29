@@ -551,7 +551,7 @@ async function removeTask(index, confirmDelete = false) {
         <div class="flex items-end w-full justify-end sm:mt-0 mt-5 mb-2">
           <div class="flex flex-row items-center gap-1">
             <div
-              class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2"
+              class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2 disabled"
               @click="
                 userStore.isCanEdit
                   ? (showVisibilityModal = true)
@@ -574,7 +574,7 @@ async function removeTask(index, confirmDelete = false) {
                   :class="
                     userStore.isCanEdit
                       ? 'cursor-pointer'
-                      : 'cursor-not-allowed disabled'
+                      : 'cursor-not-allowed'
                   "
                 />
               </div>
@@ -805,8 +805,8 @@ async function removeTask(index, confirmDelete = false) {
           <span class="itbkk-message">
             {{
               toggleVisibleActive
-                ? "In private, only board owner can access/control board. Do you want to change the visibility to Private ?"
-                : "In public, any one can view  the task list and task detail of tasks in the board. Do you want to change the visibility to Public ?"
+                ? "In private, only board owner can access/control board.Do you want to change the visibility to private?"
+                : "In public, any one can view the board, task list and task detail of tasks in the board.Do you want to change the visibility to public?"
             }}
           </span>
         </template>
