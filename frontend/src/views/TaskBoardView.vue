@@ -32,7 +32,6 @@ import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
 import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
-import PopUp from "../components/modal/PopUp.vue";
 
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
@@ -743,11 +742,16 @@ async function removeTask(index, confirmDelete = false) {
         v-if="showSettingModal"
         @user-action="confirmLimit"
         :width="'w-[60vh]'"
+        :canEdit="userStore.isCanEdit"
         :disabled="maximumTask > 30 || maximumTask <= 0"
         class="itbkk-modal-setting z-50"
       >
         <template #header>
+          <div class="cursor-pointer absolute top-50 ml-[480px]" @click="showSettingModal=false">
+             <CloseIcon />
+            </div>
           <div class="flex justify-center">
+            
             <span class="text-gray-800 font-bold text-[1.5rem]">
               Status Settings
             </span>

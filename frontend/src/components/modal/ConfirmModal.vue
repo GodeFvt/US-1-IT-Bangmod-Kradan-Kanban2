@@ -13,6 +13,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  canEdit:{
+    type: Boolean,
+    default:true,
+  }
 });
 </script>
 
@@ -28,7 +32,7 @@ const props = defineProps({
       <div class="mb-6">
         <slot name="body"></slot>
       </div>
-      <div class="mt-6 flex justify-center gap-2">
+      <div class="mt-6 flex justify-center gap-2" v-if="canEdit">
         <button
           type="submit"
           class="itbkk-button-confirm text-white inline-flex items-center focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center"
