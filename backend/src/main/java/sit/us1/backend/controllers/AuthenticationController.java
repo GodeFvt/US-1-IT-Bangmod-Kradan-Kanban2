@@ -12,7 +12,7 @@ import sit.us1.backend.services.AuthenticationService;
 
 import java.io.IOException;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://ip23us1.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"http://localhost:5173", "https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
 @RestController
 public class AuthenticationController {
     @Autowired
