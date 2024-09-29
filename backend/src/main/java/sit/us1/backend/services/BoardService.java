@@ -4,12 +4,14 @@ import com.soundicly.jnanoidenhanced.jnanoid.NanoIdUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.dtos.tasksDTO.SimpleTaskDTO;
 import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.*;
 import sit.us1.backend.exceptions.BadRequestException;
+import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.repositories.taskboard.*;
 
 import java.util.ArrayList;
@@ -37,6 +39,23 @@ public class BoardService {
         return listMapper.mapList(boardRepository.findAll(), SimpleBoardDTO.class, mapper);
     }
 
+    public boolean isBoardPublic(String boardId) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
+        return "PUBLIC".equalsIgnoreCase(board.getVisibility());
+    }
+
+    public boolean isOwnerOfBoard(String boardId, String oid) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
+        return board.getOwner().getId().equals(oid);
+    }
+
+    public boolean boardExists(String boardId) {
+        if (boardId == null) {
+            throw new BadRequestException("the specified board does not exist");
+        }
+        return boardRepository.existsById(boardId);
+    }
+
     public List<SimpleBoardDTO> getAllBoardByOid() {
         try {
             String Oid = SecurityUtil.getCurrentUserDetails().getOid();
@@ -46,6 +65,7 @@ public class BoardService {
         }
     }
 
+    @Transactional
     public SimpleBoardDTO createBoard(BoardRequestDTO newBoard) {
         String Oid = SecurityUtil.getCurrentUserDetails().getOid();
         CustomUserDetails userDetails = SecurityUtil.getCurrentUserDetails();
@@ -75,6 +95,7 @@ public class BoardService {
             owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
             board.setOwner(owner);
             board.setIsCustomStatus(false);
+            board.setVisibility("PRIVATE");
             TaskLimit taskLimit = new TaskLimit();
             taskLimit.setIsLimit(false);
             taskLimit.setMaximumTask(10);
@@ -90,6 +111,7 @@ public class BoardService {
         return mapper.map(boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist")), SimpleBoardDTO.class);
     }
 
+    @Transactional
     public SimpleBoardDTO deleteBoardById(String id) {
         List<TaskList> allTask = taskListRepository.findAllByBoard_Id(id);
         TaskLimit taskLimits = taskLimitRepository.findByBoardId(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
@@ -110,6 +132,7 @@ public class BoardService {
 
     }
 
+    @Transactional
     public SimpleBoardDTO updateBoardById(String id, BoardRequestDTO newBoard) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
         board.setName(newBoard.getName());
@@ -120,4 +143,23 @@ public class BoardService {
         }
         return mapper.map(board, SimpleBoardDTO.class);
     }
+
+    @Transactional
+    public SimpleBoardDTO updateVisibilityById(String id, String visibility) {
+        Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
+        if(visibility.equalsIgnoreCase("PUBLIC") || visibility.equalsIgnoreCase("PRIVATE")) {
+            board.setVisibility(visibility);
+        } else {
+            throw new BadRequestException("Invalid visibility");
+        }
+        board.setVisibility(visibility);
+        try {
+            boardRepository.save(board);
+        } catch (Exception e) {
+            throw new BadRequestException("Cannot update board");
+        }
+        return mapper.map(board, SimpleBoardDTO.class);
+    }
+
+
 }

@@ -42,12 +42,12 @@ public class TaskService {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {
             Sort sort = Sort.by(sortBy == null || sortBy.isEmpty() ? "createdOn" : sortBy);
-            String oid = SecurityUtil.getCurrentUserDetails().getOid();
+//            String oid = SecurityUtil.getCurrentUserDetails().getOid();
             if (filterStatuses.length > 0) {
-                return listMapper.mapList(taskRepository.findByStatusNamesSorted(filterStatuses,boardId,oid, sort), SimpleTaskDTO.class, mapper);
+                return listMapper.mapList(taskRepository.findByStatusNamesSorted(filterStatuses,boardId, sort), SimpleTaskDTO.class, mapper);
             } else {
                 System.out.println(sort);
-                return listMapper.mapList(taskRepository.findAllByBoardIdAndOid(boardId,oid,sort), SimpleTaskDTO.class, mapper);
+                return listMapper.mapList(taskRepository.findAllByBoardId(boardId,sort), SimpleTaskDTO.class, mapper);
             }
         } catch (Exception e) {
             throw new BadRequestException("Invalid sortBy property: " + sortBy);
@@ -55,7 +55,7 @@ public class TaskService {
     }
 
     public TaskDetailDTO getTaskById(String boardId ,Integer id) {
-        TaskList task = taskRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+        TaskList task = taskRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         return mapper.map(task, TaskDetailDTO.class);
     }
 
@@ -93,7 +93,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponseDTO updateTask(String boardId, Integer taskId, TaskRequestDTO taskRequestDTO) {
-        TaskList taskList = taskRepository.findById(taskId).orElseThrow(() -> new BadRequestException("the specified task does not exist"));
+        TaskList taskList = taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         TaskStatus status;
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         if (board.getIsCustomStatus()) {

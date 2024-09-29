@@ -1,4 +1,6 @@
 import VueJwtDecode from "vue-jwt-decode";
+import { refreshAccessToken } from "./fetchUtill.js";
+import { useUserStore } from "../stores/user.js";
 
 function convertString(string) {
   return string
@@ -33,40 +35,79 @@ function validateSizeInput(...properties) {
   });
 }
 
-function isTokenValid(token) {
-  if (!token) {
-    return false; // No token found
-  }
-
-  let decodeToken;
-
-  if (typeof token === "string") {
-    const parts = token.split(".");
-    if (parts.length !== 3) {
-      return false; // Token is not well-formed (JWT must have three parts)
-    }
-
-    try {
-      decodeToken = VueJwtDecode.decode(token);
-    } catch (error) {
-      return false; // Error in decoding token or invalid JSON
-    }
-  } else if (typeof token === "object") {
-    decodeToken = token;
+async function refreshTokenAndReturn() {
+  const userStore = useUserStore();
+  const refreshTokenSuccess = await refreshAccessToken();
+  if (typeof refreshTokenSuccess !== "object") {
+    userStore.setAuthToken(null);
+    return false;
   } else {
-    return false; // Token is not a valid format
+    userStore.setAuthToken(refreshTokenSuccess.access_token);
+    return true;
+  }
+}
+
+async function isTokenValid(token) {
+  let decodedToken;
+  const refresh_token = localStorage.getItem("refresh_token");
+
+  // Validate the token format
+  if (!token && !refresh_token) {
+    return false;
+  }
+  try {
+    decodedToken = VueJwtDecode.decode(token);
+  } catch (error) {
+    return await refreshTokenAndReturn();
   }
 
-  if (!decodeToken.exp) {
-    return false; // No expiration field found
+  if (!decodedToken || !decodedToken.exp) {
+    return await refreshTokenAndReturn();
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
-  if (decodeToken.exp < currentTime) {
-    return false; // Token is expired
+  if (decodedToken.exp < currentTime) {
+    return await refreshTokenAndReturn();
+  } else {
+    return true;
   }
-
-  return true; // Token is valid
 }
 
-export { convertString, toFormatDate, validateSizeInput, isTokenValid };
+function isNotDisable(isPublic, user, owner) {
+  console.log(user);
+  //isPublic ถ้า True จะเป็น public
+  if (isPublic) {
+    if (user !== undefined && user === owner) {
+      //ถ้า เป็น public แต้ owner = user ก็แก้ไข
+      return true;
+    } else {
+      // board เป็น public แก้ไขไม่ได้
+      return false;
+    }
+  } else {
+    if (user !== undefined && user === owner) {
+      //ถ้า เป็น private แต้ owner = user ก็แก้ไข
+      return true;
+    } else {
+      //ถ้า เป็น private แต้เป็น owner ก็แก้ไขไม่ได้
+      return false;
+    }
+  }
+}
+
+//ไม่ส่ง header ถ้า Token is null
+function tokenIsNull(token) {
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+export {
+  convertString,
+  toFormatDate,
+  validateSizeInput,
+  isTokenValid,
+  tokenIsNull,
+  isNotDisable,
+};

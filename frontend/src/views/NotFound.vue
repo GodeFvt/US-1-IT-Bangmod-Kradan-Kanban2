@@ -12,18 +12,21 @@ onMounted(() => {
   intervals.push(
     setTimeout(() => {
       if (TaskNotFound.value === "Status") {
+        console.log("Status");
         router.push({ name: "ManageStatus" });
-      }
-      if (TaskNotFound.value === "Board") {
-        router.push({ name: "board" });
-      }
-      if (TaskNotFound.value === "Task"){
+      } else if (TaskNotFound.value === "Board") {
+        router.push({ name: "Login" });
+      } else if (TaskNotFound.value === "authorizAccess") {
+        console.log("authorizAccess");
+        router.push({ name: "Login" });
+      } else if (TaskNotFound.value === "Task") {
+        console.log("Task");
         router.push({
           name: "task",
-          params: { boardId: route.params.boardId } ,
+          params: { boardId: route.params.boardId },
         });
-      }
-      else {
+      } else {
+        console.log("ff");
         router.push({
           name: "board",
         });
@@ -48,7 +51,13 @@ function clearAllInterval() {
 
 <template>
   <div class="flex flex-col justify-center items-center mt-20">
-    <h1 class="text-7xl text-red-700">404 Not Found</h1>
+    <h1 class="text-7xl text-red-700">
+      {{
+        TaskNotFound === "authorizAccess"
+          ? "403 Access denied"
+          : "404 Not Found"
+      }}
+    </h1>
     <br />
     <p
       v-if="TaskNotFound === 'Task'"
@@ -67,6 +76,12 @@ function clearAllInterval() {
       class="itbkk-message text-5xl text-red-700"
     >
       An error has occurred, the board does not exist
+    </p>
+    <p
+      v-else-if="TaskNotFound === 'authorizAccess'"
+      class="itbkk-message text-5xl text-red-700"
+    >
+      Access denied, you do not have permission to view this page
     </p>
     <p v-else class="itbkk-message text-5xl text-red-700">
       The page you are looking for does not exist.

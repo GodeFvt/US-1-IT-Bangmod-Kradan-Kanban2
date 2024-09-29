@@ -41,14 +41,16 @@ const allTaskLimit = computed(() => props.allTaskLimit);
       <div class="mb-6">
         <div>
           <table>
-            <tr class="border-y border-slate-800">
-              <th class="pr-3">Status Name</th>
-              <th class="pr-3">number of tasks</th>
-            </tr>
-            <tr v-for="status in allTaskLimit">
-              <td>{{ status.name }}</td>
-              <td class="text-center">{{ status.noOfTasks }}</td>
-            </tr>
+            <thead>
+              <tr class="border-y border-slate-800">
+                <th class="pr-3">Status Name</th>
+                <th class="pr-3">number of tasks</th>
+              </tr>
+              <tr v-for="status in allTaskLimit">
+                <td>{{ status.name }}</td>
+                <td class="text-center">{{ status.noOfTasks }}</td>
+              </tr>
+            </thead>
           </table>
         </div>
       </div>

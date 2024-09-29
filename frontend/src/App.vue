@@ -1,11 +1,17 @@
 <script setup>
-import { ref, onMounted, watch, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import HeaderView from "./views/HeaderView.vue";
+import { ref, watch, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { useUserStore } from "./stores/user.js"; 
 import SideMenuView from "./views/SideMenuView.vue";
-const route = useRoute();
 
+const route = useRoute();
+const userStore = useUserStore();
 const disabledSideMenu = ref(false);
+
+onMounted(() => {
+  userStore.initializeToken();
+});
+
 watch(
   () => route.path,
   (newPath, oldPath) => {

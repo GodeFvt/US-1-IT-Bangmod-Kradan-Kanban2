@@ -1,43 +1,64 @@
 import { defineStore, acceptHMRUpdate } from "pinia";
 import VueJwtDecode from "vue-jwt-decode";
-import { isTokenValid } from "../lib/utill.js";
 
 export const useUserStore = defineStore("userStore", {
   state: () => ({
-    authToken: (() => {
-      const token = localStorage.getItem("authToken") || null;
-      if (token) {
-        const decodeToken = VueJwtDecode.decode(token);
-        return decodeToken;
-      }
-    })(),
+    authToken: null,
+    encodeToken: localStorage.getItem("authToken") || null,
     boards: [],
-    isAuthenticated: !!localStorage.getItem("authToken"),
+    visibilityPublic: false, //true คือ public
+    isCanEdit: true,
+    currentBoard: {},
   }),
 
   actions: {
-    initializeAuthToken() {
+    initializeToken() {
       const token = localStorage.getItem("authToken");
-      if (token && isTokenValid(token)) {
-        const decodeToken = VueJwtDecode.decode(token);
-        this.authToken = decodeToken;
-        this.isAuthenticated = true;
+      const refresh_Token = localStorage.getItem("refresh_token");
+      if (token || refresh_Token) {
+        try {
+          const decodedToken = VueJwtDecode.decode(token);
+          if (
+            decodedToken === "{}" ||
+            decodedToken === null ||
+            decodedToken === undefined
+          ) {
+            this.clearAuthToken();
+          } else {
+            this.authToken = decodedToken;
+            this.encodeToken = token;
+          }
+        } catch (error) {}
       } else {
-        localStorage.removeItem("authToken");
-        this.authToken = null;
-        this.isAuthenticated = false;
+        this.clearAuthToken();
       }
     },
+
     setAuthToken(token) {
-      const decodeToken = VueJwtDecode.decode(token);
-      this.authToken = { ...decodeToken };
-      localStorage.setItem("authToken", token);
-      this.isAuthenticated = true;
+      if (token) {
+        try {
+          const decodedToken = VueJwtDecode.decode(token);
+          if (
+            decodedToken === "{}" ||
+            decodedToken === null ||
+            decodedToken === undefined
+          ) {
+            this.clearAuthToken();
+          } else {
+            this.authToken = decodedToken;
+            this.encodeToken = token;
+          }
+          localStorage.setItem("authToken", token);
+        } catch (error) {}
+      } else {
+        this.clearAuthToken();
+      }
     },
     clearAuthToken() {
       this.authToken = null;
-      this.isAuthenticated = false;
+      this.encodeToken = null;
       localStorage.removeItem("authToken");
+      localStorage.removeItem("refresh_token");
     },
     addBoard(board) {
       this.boards.push(board);
@@ -51,9 +72,21 @@ export const useUserStore = defineStore("userStore", {
     setAllBoard(newAllBoard) {
       this.boards = [...newAllBoard];
     },
-    updateIsAuthen(Boolean) {
-      this.isAuthenticated = Boolean;
+    findBoardById(id) {
+      return this.boards.find((board) => board.id === id);
     },
+    updatevIsibilityPublic(Boolean) {
+      this.visibilityPublic = Boolean;
+    },
+    updatevIsCanEdit(Boolean) {
+      this.isCanEdit = Boolean;
+    },
+    setCurrentBoard(board) {
+      this.currentBoard = { ...board };
+    },
+    setIsVisibilityCurrentBoard(visibility) {
+      this.currentBoard.visibility = visibility
+    } ,
   },
 });
 if (import.meta.hot) {

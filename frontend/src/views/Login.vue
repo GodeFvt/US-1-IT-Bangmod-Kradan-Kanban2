@@ -77,6 +77,7 @@ async function signInOnClick(userLogin) {
     res = await loginAccount(userLogin);
     if (typeof res === "object") {
       inert.value = true;
+      localStorage.setItem("refresh_token", res.refresh_token);
       userStore.setAuthToken(res.access_token);
       const resBoard = await getAllBoards();
       userStore.setAllBoard(resBoard);
@@ -85,10 +86,9 @@ async function signInOnClick(userLogin) {
           name: "task",
           params: { boardId: userStore.boards[0].id },
         });
-      } else{
+      } else {
         router.push({ name: "board" });
       }
-
     } else if (res === 400 || res === 401) {
       showMessage.value = true;
       messageShow.value = "Username or Password is incorrect.";

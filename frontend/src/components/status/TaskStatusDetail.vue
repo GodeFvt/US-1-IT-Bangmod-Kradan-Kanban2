@@ -5,6 +5,7 @@ import CloseIcon from "../icon/CloseIcon.vue";
 import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useStatusStore } from "../../stores/statuses.js";
+import { useUserStore } from "../../stores/user.js";
 
 const statusStore = useStatusStore();
 defineEmits(["userAction", "addEdit"]);
@@ -26,6 +27,7 @@ const duplicateStatus = ref({});
 const editMode = ref(props.isEdit);
 const validate = ref({ name: {}, description: {} });
 const alltask = ref([]);
+const userStore = useUserStore();
 
 watch(
   () => props.status,
@@ -59,9 +61,15 @@ function textShow(text) {
   }
 }
 function edit(statusId) {
-  if (statusId !== 1) {
-    editMode.value = !editMode.value;
-    router.push({ name: "EditStatus", params: { statusId: statusId } });
+  console.log(props.status.name);
+  console.log(userStore.isCanEdit);
+
+  if (userStore.isCanEdit) {
+    // ***
+    if (props.status.name !== "No Status" && props.status.name !== "Done") {
+      editMode.value = !editMode.value;
+      router.push({ name: "EditStatus", params: { statusId: statusId } });
+    }
   }
 }
 
@@ -134,11 +142,25 @@ const disabledSave = computed(() => {
                 <span>Status Name</span>
               </div>
               <div
-                v-show="status.id !== 1"
-                @click="edit(status.id)"
-                class="cursor-pointer ml-1"
+                :class="
+                  userStore.isCanEdit
+                    ? ''
+                    : 'tooltip tooltip-bottom tooltip-hover '
+                "
+                data-tip="You need to be board owner to perform this action."
               >
-                <EditTaskIcon class="w-[1rem] h-[1rem]" />
+                <div
+                  v-show="status.name !== 'No Status' && status.name !== 'Done'"
+                  @click="edit(status.id)"
+                  class="ml-1"
+                  :class="
+                    userStore.isCanEdit
+                      ? 'cursor-pointer'
+                      : 'cursor-not-allowed disabled'
+                  "
+                >
+                  <EditTaskIcon class="w-[1rem] h-[1rem]" />
+                </div>
               </div>
             </div>
             <textarea

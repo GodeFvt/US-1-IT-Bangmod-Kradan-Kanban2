@@ -7,6 +7,10 @@ services:
         target: /etc/nginx/conf.d/public.conf
       - source: proxyPrivate_config
         target: /etc/nginx/conf.d/private.conf
+      - source: cerssl
+        target: /etc/ssl/fullchain.pem
+      - source: keyssl
+        target: /etc/ssl/privkey.pem
     depends_on:
       - fe
       - api
@@ -14,6 +18,7 @@ services:
       - taskproj-net
     ports:
       - "80:80"
+      - "443:443"
     restart: unless-stopped
 
   fe:
@@ -38,6 +43,7 @@ services:
       - ACCOUNT_DB_PASSWORD=${AC_DB_PASSWORD}
       - ACCOUNT_DB_URL=${AC_DB_URL}
       - JWT_SECRET=${SECRET}
+      - JWT_SECRET_REFRESH=${SECRET_REFRESH}
       - JWT_ISSUER=${ISSUER}
     build:
       context: backend
@@ -70,7 +76,10 @@ configs:
     file: proxy/private.conf
   proxyPublic_config:
     file: proxy/public.conf
-
+  cerssl: 
+    file: ../ssl/fullchain.pem
+  keyssl: 
+    file: ../ssl/privkey.pem
 volumes:
   db-vol:
 

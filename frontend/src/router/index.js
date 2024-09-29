@@ -5,6 +5,9 @@ import TaskStatusView from "../views/TaskStatusView.vue";
 import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
+import { getBoardsById } from "../lib/fetchUtill.js";
+import { useStatusStore } from "../stores/statuses.js";
+import { isNotDisable } from "../lib/utill.js";
 
 const routes = [
   {
@@ -88,22 +91,116 @@ const router = createRouter({
   routes,
 });
 
-// router.beforeEach((to, from) => {
-//   if (to.name === "EditStatus" && to.params.statusId === "1") {
-//     return { name: "ManageStatus" };
-//   }
-// });
-
-router.beforeEach((to, from, next) => {
+const cachedGetBoardsById = async (boardId) => {
   const userStore = useUserStore();
+  if (!boardId) return null;
 
-  if (userStore.isAuthenticated === false && to.name !== "Login") {
-    next({ name: "Login" });
-  } else if (to.name === "Login" && userStore.isAuthenticated === true) {
-    next({ name: "board" });
-  } else {
-    next();
+  if (userStore.currentBoard?.id === boardId) {
+    return userStore.currentBoard;
   }
+
+  console.log("Fetching board by id:", boardId);
+  const board = await getBoardsById(boardId);
+
+  if (board === 401 || board === 403 || board === 404) {
+    console.log(`Error: ${board}`);
+    return board;
+  } else {
+    userStore.setCurrentBoard(board);
+    return board;
+  }
+};
+
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore();
+  const boardId = to.params.boardId;
+
+  // ถ้าไปที่หน้า Login และมี token อยู่แล้ว ให้ไปที่หน้า board
+  if (to.name === "Login" && userStore.authToken !== null) {
+    return next({ name: "board" });
+  }
+
+  // ถ้าไม่มี boardId หรือกำลังไปที่หน้า NotFound อยู่แล้ว ให้ผ่านไปได้เลย
+  if (!boardId || to.name === "TaskNotFound") {
+    return next();
+  }
+
+  // ถ้ากำลังจะไปที่หน้าที่ต้องการ board
+  if (
+    [
+      "task",
+      "ManageStatus",
+      "EditTask",
+      "AddTask",
+      "EditStatus",
+      "AddStatus",
+      "TaskDetail",
+      "StatusDetail",
+    ].includes(to.name)
+  ) {
+    const board = await cachedGetBoardsById(boardId);
+
+    // if (
+    //   userStore.authToken == null &&
+    //   board === 404 &&
+    //   !["task", "ManageStatus", "TaskDetail", "StatusDetail"].includes(to.name)
+    // ) {
+    //   next();
+    // }
+
+    if (board === 404 || board === 400 || board === 500) {
+      return next({ name: "TaskNotFound", params: { boardId, page: "Board" } });
+    }
+
+    if (board === 401) {
+      next();
+    }
+
+    if (board === 403) {
+      return next({
+        name: "TaskNotFound",
+        params: { boardId, page: "authorizAccess" },
+      });
+    }
+
+    if (typeof board === "object") {
+      userStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
+      const oidByGet = board.owner.id;
+      const oidByToken = userStore.authToken?.oid;
+      userStore.setCurrentBoard(board);
+      userStore.updatevIsCanEdit(
+        isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
+      );
+
+      const isOwner = userStore.authToken?.oid === board.owner.id;
+      const isEditAction = [
+        "EditTask",
+        "AddTask",
+        "EditStatus",
+        "AddStatus",
+      ].includes(to.name);
+
+      if (board.visibility === "PUBLIC" && !isOwner && isEditAction) {
+        return next({
+          name: "TaskNotFound",
+          params: { boardId, page: "authorizAccess" },
+        });
+      }
+
+      if (
+        board.visibility === "PRIVATE" &&
+        (!isOwner || !userStore.authToken)
+      ) {
+        return next({
+          name: "TaskNotFound",
+          params: { boardId, page: "authorizAccess" },
+        });
+      }
+    }
+  }
+
+  // ถ้าผ่านการตรวจสอบทั้งหมดแล้ว
+  next();
 });
 
 export default router;

@@ -11,6 +11,7 @@ import {
   toggleLimitTask,
   getLimit,
   getBoardsById,
+  toggleVisibility,
   getAllBoards,
 } from "../lib/fetchUtill.js";
 // import router
@@ -29,7 +30,8 @@ import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
-import { isTokenValid } from "../lib/utill.js";
+import { isTokenValid, isNotDisable } from "../lib/utill.js";
+import Toggle from "../components/icon/Toggle.vue";
 
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
@@ -40,27 +42,33 @@ const router = useRouter();
 const route = useRoute();
 const allTask = ref([]);
 const statusFilter = ref([]);
+const messageToast = ref("");
+const typeToast = ref("");
+const isEdit = ref(false);
+const indexToRemove = ref(-1);
+
+const task = ref({});
+const isVisible = ref([]);
+
+// show component
 const showErrorMSG = ref(false);
 const showLoading = ref(true);
 const showDetail = ref(false);
 const showToast = ref(false);
 const showAddModal = ref(false);
-const messageToast = ref("");
-const typeToast = ref("");
-const isEdit = ref(false);
-const indexToRemove = ref(-1);
-const boardName = ref();
-const task = ref({});
-const isVisible = ref([]);
-
-// show component
 const showDeleteModal = ref(false);
 const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
+const showVisibilityModal = ref(false);
+// const authorizAccess = ref(false);
+
 const boardId = ref(route.params.boardId);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
+const toggleVisibleActive = ref(false);
+const boardName = ref(userStore.currentBoard.name);
+
 const allTaskLimit = ref([]); // allTask อันที่เกิน
 const countStatus = computed(() => {
   return allTask.value.reduce(
@@ -74,71 +82,113 @@ const countStatus = computed(() => {
   );
 });
 
-async function fetchData() {
-  if (!isTokenValid(userStore.authToken)) {
+function handleResponseError(responseCode) {
+  if (responseCode === 401) {
     showPopUp.value = true;
-    return;
-  } else {
-    const oidByToken = userStore.authToken.oid;
-    const res = await getBoardsById(boardId.value);
-    if (res === 404 || res === 400 || res === 500) {
-      router.push({ name: "TaskNotFound", params: { page: "Board" } });
-    } else if (res === 401) {
-      showPopUp.value = true;
-    } else {
-      boardName.value = res.name;
-      const oidByGet = res.owner.id;
-      if (oidByGet !== oidByToken) {
-        router.push({ name: "TaskNotFound", params: { page: "Board" } });
-      }
-      if (userStore.boards.length === 0) {
-        const resBoard = await getAllBoards();
-        if (resBoard === 401) {
-          showPopUp.value = true;
-        } else {
-          userStore.setAllBoard(resBoard);
-        }
-      }
-      const resTask = await getFilteredTask(boardId.value);
-      if (resTask === undefined) {
-        showErrorMSG.value = true;
-      } else if (resTask === 401) {
-        showPopUp.value = true;
-      } else if (resTask === 404) {
-        router.push({ name: "TaskNotFound", params: { page: "Board" } });
+  } else if (responseCode === 404) {
+    router.push({ name: "TaskNotFound", params: { page: "Board" } });
+  } else if (responseCode === 403) {
+    router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+  }
+}
+
+async function fetchData() {
+  if (userStore.authToken !== null) {
+    if (userStore.boards.length === 0) {
+      const resBoard = await getAllBoards();
+
+      if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
+        handleResponseError(resBoard);
       } else {
-        taskStore.setAllTask(resTask);
-        allTask.value = taskStore.allTask;
-        maximumTask.value = statusStore.maximumTask;
-        toggleActive.value = statusStore.isLimit;
-        statusStore.setNoOftask(countStatus.value);
-
-        if (statusStore.allStatus.length === 0) {
-          const resStatus = await getAllStatus(boardId.value);
-          if (resStatus === undefined) {
-            showErrorMSG.value = true;
-          } else if (resStatus === 401) {
-            showPopUp.value = true;
-          } else {
-            statusStore.setAllStatus(resStatus);
-          }
-        }
-        if (statusStore.maximumTask === undefined) {
-          const resLimit = await getLimit(boardId.value);
-          if (resLimit === 401) {
-            showPopUp.value = true;
-          }
-          statusStore.setMaximumTaskStatus(resLimit.maximumTask);
-          statusStore.setLimitStatus(resLimit.isLimit);
-          maximumTask.value = statusStore.maximumTask;
-          toggleActive.value = statusStore.isLimit;
-        }
-
-        showLoading.value = false;
+        userStore.setAllBoard(resBoard);
       }
     }
   }
+  toggleVisibleActive.value = userStore.visibilityPublic;
+
+  // boardName.value = userStore.findBoardById(boardId).name;
+  // watch(
+  //   () => userStore.boards,
+  //   (newBoards, oldBoards) => {
+  //     console.log(userStore.boards);
+  //     updateBoardName();
+  //   },
+  //   { immediate: true }
+  // );
+
+  // function updateBoardName() {
+  //   const board = userStore.findBoardById(boardId.value);
+  //   console.log(board);
+  //   if (board) {
+  //     boardName.value = board.name;
+  //   } else {
+  //     console.warn(`Board with id ${boardId.value} not found`);
+  //     boardName.value = "Loading...";
+  //   }
+  // }
+
+  //   const getLimit = await getLimit()
+  const resTask = await getFilteredTask(boardId.value);
+  if (resTask === undefined) {
+    showErrorMSG.value = true;
+  } else if (resTask === 401 || resTask === 404 || resTask === 403) {
+    handleResponseError(resTask);
+  } else {
+    taskStore.setAllTask(resTask);
+    allTask.value = taskStore.allTask;
+    maximumTask.value = statusStore.maximumTask;
+    toggleActive.value = statusStore.isLimit;
+    statusStore.setNoOftask(countStatus.value);
+
+    if (statusStore.allStatus.length === 0) {
+      const resStatus = await getAllStatus(boardId.value);
+      if (resStatus === undefined) {
+        showErrorMSG.value = true;
+      } else if (resStatus === 401 || resStatus === 404 || resStatus === 403) {
+        handleResponseError(resStatus);
+      } else {
+        statusStore.setAllStatus(resStatus);
+      }
+    }
+    // if (statusStore.maximumTask === undefined) {
+    const resLimit = await getLimit(boardId.value);
+    if (resLimit === 401 || resLimit === 404 || resLimit === 403) {
+      handleResponseError(resLimit);
+    }
+    statusStore.setMaximumTaskStatus(resLimit.maximumTask);
+    statusStore.setLimitStatus(resLimit.isLimit);
+    maximumTask.value = statusStore.maximumTask;
+    toggleActive.value = statusStore.isLimit;
+    // }
+
+    showLoading.value = false;
+  }
 }
+
+// async function handleBoardDetail() {
+//   const res = await getBoardsById(boardId.value);
+//   if (typeof res !== 'object') {
+//     handleResponseError(res);
+//   } else {
+//     userStore.updatevIsibilityPublic(
+//       res.visibility === "PUBLIC" ? true : false
+//     );
+//     toggleVisibleActive.value = userStore.visibilityPublic;
+//     boardName.value = res.name;
+
+//     // if(userStore.visibilityPublic === false){
+
+//     const oidByGet = res.owner.id;
+//     const oidByToken = userStore.authToken?.oid;
+//     console.log(oidByGet===oidByToken);
+//     userStore.updatevIsCanEdit(
+//       isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
+//     );
+//     console.log(userStore.isCanEdit);
+
+//     // }
+//   }
+// }
 
 function countStatuses() {
   const countStatusKeys = Object.keys(countStatus);
@@ -149,17 +199,34 @@ function countStatuses() {
   });
 }
 
-onMounted(() => {
-  fetchData();
-  countStatuses();
+onMounted(async () => {
+  console.log("onMounted" ,toggleVisibleActive.value ,userStore.visibilityPublic);
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    // await handleBoardDetail();
+    if (userStore.visibilityPublic === false) {
+      showPopUp.value = true;
+      return;
+    } else {
+      await fetchData();
+      countStatuses();
+    }
+  } else {
+    // await handleBoardDetail();
+    await fetchData();
+    countStatuses();
+  }
 });
 
+//เวลาเปลี่ยน board จาก sidebar
 watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
     boardId.value = newBoardId;
+    // handleBoardDetail();
+    boardName.value = userStore.currentBoard.name;
     fetchData();
     countStatuses();
+    console.log("wacth" ,toggleVisibleActive.value ,userStore.visibilityPublic);
   }
 );
 
@@ -168,16 +235,16 @@ watch(
   () => route.params.taskId,
   async (newId, oldId) => {
     if (newId !== undefined) {
-      if (!isTokenValid(userStore.authToken)) {
+      if (
+        !(await isTokenValid(userStore.encodeToken)) &&
+        userStore.visibilityPublic === false
+      ) {
         showPopUp.value = true;
         return;
       } else {
         const res = await getTaskById(boardId.value, newId);
-        if (res === 404 || res === 400 || res === 500) {
-          router.push({ name: "TaskNotFound", params: { page: "Task" } });
-        } else if (res === 401) {
-          // go login
-          showPopUp.value = true;
+        if (typeof res !== "object") {
+          handleResponseError(res);
         } else {
           task.value = res;
           if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
@@ -196,7 +263,7 @@ watch(
 );
 
 async function confirmLimit(action) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -212,9 +279,8 @@ async function confirmLimit(action) {
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res);
       } else {
         statusStore.setLimitStatus(true);
         statusStore.setMaximumTaskStatus(maximumTask.value);
@@ -239,9 +305,8 @@ async function confirmLimit(action) {
       if (res === 400 || res === 404) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred enable limit task`;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res);
       } else if (res === 500) {
         typeToast.value = "denger";
         messageToast.value = `An error occurred.please try again.`;
@@ -256,6 +321,60 @@ async function confirmLimit(action) {
     showSettingModal.value = false;
   }
 }
+
+async function confirmVisibility(action) {
+  console.log("bafore fetch", toggleVisibleActive.value ,userStore.visibilityPublic);
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showPopUp.value = true;
+    return;
+  } else {
+    toggleVisibleActive.value = !toggleVisibleActive.value;
+    if (action === false) {
+      showVisibilityModal.value = false;
+      toggleVisibleActive.value = userStore.visibilityPublic;
+    } else if (action) {
+      let visibility = toggleVisibleActive.value
+        ? { visibility: "PUBLIC" }
+        : { visibility: "PRIVATE" };
+      const res = await toggleVisibility(boardId.value, visibility);
+      console.log(res);
+      // console.log( "after fetch",toggleVisibleActive.value);
+
+      if (res === 400 || res === 404) {
+        typeToast.value = "warning";
+        messageToast.value = `An error occurred enable visibility`;
+        showToast.value = true;
+      } else if (res === 403) {
+        typeToast.value = "warning";
+        messageToast.value = `You do not have permission to change board visibility mode.`;
+        showToast.value = true;
+      } else if (res === 500) {
+        typeToast.value = "denger";
+        messageToast.value = `There is a problem.Please try again later.`;
+        showToast.value = true;
+      } else if (res === 401) {
+        handleResponseError(res);
+      } else {
+        console.log(res.visibility);
+        // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
+        userStore.updatevIsibilityPublic(
+          res.visibility === "PUBLIC" ? true : false
+        );
+        toggleVisibleActive.value = userStore.visibilityPublic;
+        if (res.visibility === "PUBLIC") {
+          navigator.clipboard.writeText(window.location.href)
+        } 
+        userStore.setIsVisibilityCurrentBoard(res.visibility)
+        // console.log("200 fetch", toggleVisibleActive.value);
+
+        // typeToast.value = "success";
+        // messageToast.value = `The Kanban board now limits ${maximumTask.value} tasks in each status`;
+      }
+      showVisibilityModal.value = false;
+    }
+  }
+}
+
 // react to route changes path add task
 watch(
   () => route.path,
@@ -300,7 +419,7 @@ async function addEditTask(newTask) {
 }
 
 async function addTask(newTask) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -318,9 +437,8 @@ async function addTask(newTask) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred adding the task`;
         showToast.value = true;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res);
       } else {
         typeToast.value = "success";
         taskStore.addTask(res);
@@ -333,7 +451,7 @@ async function addTask(newTask) {
 }
 
 async function editTask(editedTask) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
@@ -342,9 +460,8 @@ async function editTask(editedTask) {
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred updating the task "${editedTask.title}"`;
-    } else if (res === 401) {
-      // go login
-      showPopUp.value = true;
+    } else if (res === 401 || res === 403) {
+      handleResponseError(res);
     } else {
       typeToast.value = "success";
       const indexToUpdate = allTask.value.findIndex(
@@ -359,11 +476,16 @@ async function editTask(editedTask) {
 }
 
 async function removeTask(index, confirmDelete = false) {
-  if (!isTokenValid(userStore.authToken)) {
+  if (
+    !(await isTokenValid(userStore.encodeToken)) &&
+    userStore.isCanEdit === true
+  ) {
     showPopUp.value = true;
     return;
   } else {
-    showDeleteModal.value = true;
+    userStore.isCanEdit
+      ? (showDeleteModal.value = true)
+      : (showDeleteModal.value = false);
     task.value = allTask.value[index];
     indexToRemove.value = index;
     if (confirmDelete) {
@@ -377,9 +499,8 @@ async function removeTask(index, confirmDelete = false) {
         taskStore.deleteTask(index);
         typeToast.value = "warning";
         messageToast.value = `An error has occurred, the task does not exist.`;
-      } else if (res === 401) {
-        // go login
-        showPopUp.value = true;
+      } else if (res === 401 || res === 403) {
+        handleResponseError(res);
       } else {
         typeToast.value = "danger";
         messageToast.value = `An error occurred deleting the task "${task.value.title}."`;
@@ -429,13 +550,57 @@ async function removeTask(index, confirmDelete = false) {
         <!-- Filter -->
         <div class="flex items-end w-full justify-end sm:mt-0 mt-5 mb-2">
           <div class="flex flex-row items-center gap-1">
+            <div
+              class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2"
+              @click="
+                userStore.isCanEdit
+                  ? (showVisibilityModal = true)
+                  : (showVisibilityModal = false)
+              "
+            >
+              <div
+                :class="
+                  userStore.isCanEdit
+                    ? ''
+                    : 'tooltip tooltip-bottom tooltip-hover'
+                "
+                data-tip="You need to be board owner to perform this action."
+              >
+                <span class="font-bold visibility">
+                  {{ userStore.visibilityPublic ? "Public" : "Private" }}</span
+                >
+                <Toggle
+                  :toggleActive="toggleVisibleActive"
+                  :class="
+                    userStore.isCanEdit
+                      ? 'cursor-pointer'
+                      : 'cursor-not-allowed disabled'
+                  "
+                />
+              </div>
+            </div>
             <div class="">
               <router-link :to="{ name: 'AddTask' }">
-                <button
-                  class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                <div
+                  :class="
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-bottom tooltip-hover'
+                  "
+                  data-tip="You need to be board owner to perform this action."
                 >
-                  Add Task
-                </button>
+                  <button
+                    class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                    :disabled="!userStore.isCanEdit"
+                    :class="
+                      userStore.isCanEdit
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
+                  >
+                    Add Task
+                  </button>
+                </div>
               </router-link>
             </div>
 
@@ -577,11 +742,16 @@ async function removeTask(index, confirmDelete = false) {
         v-if="showSettingModal"
         @user-action="confirmLimit"
         :width="'w-[60vh]'"
+        :canEdit="userStore.isCanEdit"
         :disabled="maximumTask > 30 || maximumTask <= 0"
         class="itbkk-modal-setting z-50"
       >
         <template #header>
+          <div class="cursor-pointer absolute top-50 ml-[480px]" @click="showSettingModal=false">
+             <CloseIcon />
+            </div>
           <div class="flex justify-center">
+            
             <span class="text-gray-800 font-bold text-[1.5rem]">
               Status Settings
             </span>
@@ -597,18 +767,7 @@ async function removeTask(index, confirmDelete = false) {
             @click="toggleActive = !toggleActive"
           >
             <span>Limit task in this status</span>
-            <!-- Switch Container -->
-            <div
-              class="w-12 h-[1.2rem] flex items-center bg-gray-300 rounded-full p-1"
-              :class="toggleActive ? 'bg-gray-500' : 'bg-gray-300'"
-            >
-              <!-- Switch -->
-              <div
-                class="w-6 h-6 rounded-full shadow-md transform ease-out duration-300"
-                :class="toggleActive ? 'translate-x-6 bg-black' : 'bg-gray-500'"
-              ></div>
-            </div>
-            <!-- Switch Container End -->
+            <Toggle :toggleActive="toggleActive" />
           </div>
           <div class="flex flex-col items-center mt-2 gap-2">
             <span>Maximum tasks</span>
@@ -629,15 +788,39 @@ async function removeTask(index, confirmDelete = false) {
         </template>
       </ConfirmModal>
 
+      <ConfirmModal
+        v-if="showVisibilityModal"
+        @user-action="confirmVisibility"
+        :width="'w-[60vh]'"
+        class="itbkk-modal-alert z-50"
+      >
+        <template #header>
+          <div class="flex justify-center">
+            <span class="text-gray-800 font-bold text-[1.5rem]">
+              Board Visibility Changed ?
+            </span>
+          </div>
+        </template>
+        <template #body>
+          <span class="itbkk-message">
+            {{
+              toggleVisibleActive
+                ? "In private, only board owner can access/control board. Do you want to change the visibility to Private ?"
+                : "In public, any one can view  the task list and task detail of tasks in the board. Do you want to change the visibility to Public ?"
+            }}
+          </span>
+        </template>
+      </ConfirmModal>
+
       <limitModal
         v-if="showListStatus"
         @user-action="showListStatus = false"
         :allTaskLimit="allTaskLimit"
-        class="z-50"
+        class="z-40"
       >
       </limitModal>
 
-      <AuthzPopup v-if="showPopUp" />
+      <AuthzPopup v-if="showPopUp" class="z-50" />
     </div>
     <div
       class="fixed flex items-center w-full max-w-xs right-5 bottom-5"

@@ -41,7 +41,8 @@ watch(
       }
     }
     duplicateBoard.value = { ...newBoard };
-    duplicateBoard.value.name = `${props.username} personal board` 
+    // duplicateBoard.value.name = `${props.username} personal board` 
+    duplicateBoard.value.name === ''  ? duplicateBoard.value.name =`${props.username} personal board` :  duplicateBoard.value.name
   },
   { immediate: true }
 );
@@ -233,7 +234,7 @@ const disabledSave = computed(() => {
                 $emit('userAction', false), $emit('addEdit', duplicateBoard)
               "
             >
-             {{ !board.id? "CREATE" : "SAVE"   }} 
+             {{ !board?.id? "CREATE" : "SAVE"   }} 
             </button>
             <button
               class="itbkk-button-cancel text-white inline-flex items-center bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"

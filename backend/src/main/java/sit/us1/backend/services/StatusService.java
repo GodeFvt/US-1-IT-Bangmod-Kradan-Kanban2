@@ -61,7 +61,7 @@ public class StatusService {
     }
 
     public TaskLimit getStatusLimit(String boardId) {
-        return limitRepository.findByBoardId(boardId).orElseThrow(() -> new BadRequestException("Limit not found"));
+        return limitRepository.findByBoardId(boardId).orElseThrow(() -> new NotFoundException("Limit not found"));
     }
 
     @Transactional
@@ -138,7 +138,7 @@ public class StatusService {
                     statusLimit.setTasks(taskInLimitDTOS);
                 }
             });
-                System.out.println(statusLimits);
+            System.out.println(statusLimits);
             return statusLimits;
         } catch (Exception e) {
             throw new BadRequestException("Failed to update This status");
@@ -149,17 +149,33 @@ public class StatusService {
     public SimpleStatusDTO deleteStatus(String boardId, Integer id) {
 //        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
 //        TaskStatus status = statusRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new NotFoundException("the specified status does not exist"));
-        TaskStatus status = getStatus(boardId, id);
+        TaskStatus oldStatus = getStatus(boardId, id);
         StatusCountDTO statusCount = taskRepository.countByStatusIdAndReturnName(boardId, id);
-        if (Arrays.asList(nonEditableStatuses).contains(status.getName())) {
-            throw new BadRequestException("This status " + status.getName() + " cannot be deleted");
+        if (Arrays.asList(nonEditableStatuses).contains(oldStatus.getName())) {
+            throw new BadRequestException("This status " + oldStatus.getName() + " cannot be deleted");
         }
         if (statusCount != null && statusCount.getCount() >= 0) {
-            throw new BadRequestException("This status " + status.getName() + " cannot be deleted because it has tasks");
+            throw new BadRequestException("This status " + oldStatus.getName() + " cannot be deleted because it has tasks");
         }
+
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {
-            statusRepository.delete(status);
-            return mapper.map(status, SimpleStatusDTO.class);
+            if (!board.getIsCustomStatus()) {
+                List<TaskStatus> statusList = copyDefaultStatusesToBoard(boardId, board);
+                System.out.println(statusList);
+                for (TaskStatus status : statusList) {
+                    if (status.getName().equals(oldStatus.getName())) {
+                        statusRepository.delete(status);
+                        return mapper.map(status, SimpleStatusDTO.class);
+                    }
+                }
+            }
+            if (oldStatus.getBoardId().equals(boardId)) {
+                statusRepository.delete(oldStatus);
+                return mapper.map(oldStatus, SimpleStatusDTO.class);
+            } else {
+                throw new BadRequestException("This status " + oldStatus.getName() + " cannot be deleted");
+            }
         } catch (Exception e) {
             throw new BadRequestException("Failed to delete This status");
         }
@@ -184,11 +200,25 @@ public class StatusService {
         if (statusCountNewId != null && (statusCountNewId.getCount() + statusCount.getCount()) > taskLimit.getMaximumTask() && taskLimit.getIsLimit() && !Arrays.asList(nonEditableStatuses).contains(newStatus.getName())) {
             throw new BadRequestException("This task cannot be updated because the status " + statusCountNewId.getName() + " has reached the maximum limit of " + taskLimit.getMaximumTask());
         }
-
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {
-            taskRepository.updateStatusIdAllTaskList(boardId, id, newId);
-            statusRepository.delete(status);
-            return mapper.map(status, SimpleStatusDTO.class);
+            if (!board.getIsCustomStatus()) {
+                List<TaskStatus> statusList = copyDefaultStatusesToBoard(boardId, board);
+                for (TaskStatus status1 : statusList) {
+                    if (status1.getName().equals(status.getName())) {
+                        statusRepository.updateStatusIdAllTaskList(boardId, status1.getId(), newStatus.getId());
+                        statusRepository.delete(status1);
+                        return mapper.map(status1, SimpleStatusDTO.class);
+                    }
+                }
+            }
+            if (status.getBoardId().equals(boardId)) {
+                statusRepository.updateStatusIdAllTaskList(boardId, id, newId);
+                statusRepository.delete(status);
+                return mapper.map(status, SimpleStatusDTO.class);
+            } else {
+                throw new BadRequestException("This status " + status.getName() + " cannot be deleted");
+            }
         } catch (Exception e) {
             throw new BadRequestException("Failed to delete This status");
         }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -20,6 +21,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.filters.JwtAuthFilter;
+import sit.us1.backend.filters.BoardAccessFilter;
 import sit.us1.backend.services.JwtUserDetailsService;
 
 
@@ -32,6 +34,8 @@ public class WebSecurityConfig {
     JwtAuthFilter jwtAuthFilter;
     @Autowired
     JwtUserDetailsService jwtUserDetailsService;
+    @Autowired
+    BoardAccessFilter boardAccessFilter;
 
 
     @Bean
@@ -39,8 +43,11 @@ public class WebSecurityConfig {
         httpSecurity.csrf(csrf -> csrf.disable())
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/token").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v3/boards/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(boardAccessFilter, JwtAuthFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler()))
@@ -82,8 +89,7 @@ public class WebSecurityConfig {
         return (request, response, authException) -> {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
-            String message = authException.getMessage();
-            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), message, request.getRequestURI());
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "JWT Token is required", request.getRequestURI());
             response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
         };
     }

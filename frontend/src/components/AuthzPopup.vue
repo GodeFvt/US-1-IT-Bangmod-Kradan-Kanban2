@@ -3,18 +3,15 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 import PopUp from "../components/modal/PopUp.vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
-import { isTokenValid } from "../lib/utill.js";
 
 const showPopUp = ref(false);
 const timeCount = ref(3);
 const intervals = [];
 const router = useRouter();
 const userStore = useUserStore();
-let token = localStorage.getItem("authToken") || null;
 
 function tokenNotPass() {
-  localStorage.removeItem("authToken");
-  userStore.updateIsAuthen(false);
+  userStore.clearAuthToken();
   showPopUp.value = true;
   intervals.push(
     setTimeout(() => {
@@ -30,9 +27,6 @@ function tokenNotPass() {
   );
 }
 onMounted(() => {
-  if (!isTokenValid(token)) {
-    userStore.clearAuthToken();
-  }
   tokenNotPass();
 });
 onBeforeUnmount(() => {

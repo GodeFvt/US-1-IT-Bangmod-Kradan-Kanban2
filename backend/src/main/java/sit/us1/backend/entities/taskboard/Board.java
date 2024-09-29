@@ -20,7 +20,8 @@ public class Board {
     private String name;
     @Column(name = "isCustomStatus",nullable = false, columnDefinition = "TINYINT", length = 1)
     private Boolean isCustomStatus;
-
+    @Column(name = "visibility")
+    private String visibility;
     @OneToOne
     @JoinColumn(name = "oid")
     private BoardUser owner;

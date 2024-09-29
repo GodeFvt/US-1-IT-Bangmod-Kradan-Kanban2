@@ -22,10 +22,4 @@
 </template>
 
 <style scoped>
-.icon {
-  fill: #F5A6A7;
-}
-.icon:hover {
-  fill: #fc6e72;
-}
 </style>
