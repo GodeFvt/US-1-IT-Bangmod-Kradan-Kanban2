@@ -19,9 +19,9 @@ export const useUserStore = defineStore("userStore", {
         try {
           const decodedToken = VueJwtDecode.decode(token);
           if (
-            decodedToken === "{}" ||
+            (decodedToken === "{}" ||
             decodedToken === null ||
-            decodedToken === undefined
+            decodedToken === undefined)&& !refresh_Token
           ) {
             this.clearAuthToken();
           } else {
