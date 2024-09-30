@@ -86,8 +86,9 @@ public class BoardsController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<SimpleBoardDTO> updateVisibilityById(@PathVariable String id, @RequestBody SimpleBoardDTO board) {
+    public ResponseEntity<SimpleBoardDTO> updateVisibilityById(@PathVariable String id,@Valid @RequestBody SimpleBoardDTO board) {
 //        checkBoardAndOwnership(id);
+        System.out.println(board.getVisibility());
         return ResponseEntity.ok(boardService.updateVisibilityById(id, board.getVisibility()));
     }
 
