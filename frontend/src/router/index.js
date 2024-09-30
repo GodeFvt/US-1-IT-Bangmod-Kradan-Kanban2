@@ -6,7 +6,6 @@ import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
-import { useStatusStore } from "../stores/statuses.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
 
 const routes = [
@@ -106,6 +105,9 @@ const cachedGetBoardsById = async (boardId) => {
   try{
     if(!authToken && refresh_token){
       await refreshTokenAndReturn()
+    }
+    else {
+      await isTokenValid(authToken);
     }
   }catch(error){
     console.log("error");
