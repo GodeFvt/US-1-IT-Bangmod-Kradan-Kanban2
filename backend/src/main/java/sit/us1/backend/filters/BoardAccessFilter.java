@@ -32,9 +32,7 @@ public class BoardAccessFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
             return;
         }
-
         try {
-
             boolean isTokenValid = (boolean) request.getAttribute("isTokenValid");
             String tokenError = (String) request.getAttribute("tokenError");
 
@@ -61,16 +59,16 @@ public class BoardAccessFilter extends OncePerRequestFilter {
                         throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
                     } else if (!isOwner && !isPublicBoard) {
                         throw new AccessDeniedException("You are not the owner of this board");
-                    } else if (!isOwner && isPublicBoard && !isGetMethod) {
+                    } else if (!isOwner && !isGetMethod) {
                         throw new AccessDeniedException("You are not the owner of this board");
                     } else if (!isTokenValid) {
                         throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
                     }
-                } else if (user == null && boardExists && !isPublicBoard && isGetMethod) {
+                } else if (!isPublicBoard && isGetMethod) {
                     throw new AccessDeniedException("Board is not public");
-                } else if (user == null && boardExists && isPublicBoard && !isGetMethod) {
+                } else if (isPublicBoard && !isGetMethod) {
                     throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
-                } else if (user == null && !isPublicBoard) {
+                } else if (!isPublicBoard) {
                     throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
                 }
             } else {
