@@ -106,7 +106,7 @@ const cachedGetBoardsById = async (boardId) => {
     if(!authToken && refresh_token){
       await refreshTokenAndReturn()
     }
-    else {
+    else if(refresh_token){
       await isTokenValid(authToken);
     }
   }catch(error){
