@@ -47,6 +47,7 @@ public class AuthenticationService {
             if (boardUserRepository.findById(userDetails.getOid()).isEmpty()) {
                 BoardUser user = new BoardUser();
                 user.setId(userDetails.getOid());
+                user.setUsername(userDetails.getUsername());
                 boardUserRepository.save(user);
             }
         } catch (Exception e) {

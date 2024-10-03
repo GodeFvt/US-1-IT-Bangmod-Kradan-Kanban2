@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import sit.us1.backend.entities.account.CustomUserDetails;
+import sit.us1.backend.entities.taskboard.Collaboration;
 import sit.us1.backend.exceptions.AccessDeniedException;
 import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.exceptions.NotFoundException;
@@ -28,72 +29,70 @@ public class BoardAccessFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        if (request.getRequestURI().equals("/login") || request.getRequestURI().equals("/token")) {
+        String uri = request.getRequestURI();
+        if (uri.equals("/login") || uri.equals("/token")) {
             chain.doFilter(request, response);
             return;
         }
         try {
             boolean isTokenValid = (boolean) request.getAttribute("isTokenValid");
-            String tokenError = (String) request.getAttribute("tokenError");
+            String tokenError = request.getAttribute("tokenError") != null ? (String) request.getAttribute("tokenError") : "JWT Token is required";
 
-            if (request.getRequestURI().startsWith("/v3/boards/")) {
-                boolean isGetMethod = request.getMethod().equals("GET");
-
-                CustomUserDetails user = SecurityUtil.getCurrentUserDetails();
-                String boardId = request.getRequestURI().split("/")[3];
-                boolean boardExists = boardService.boardExists(boardId);
-
-                if (!boardExists) {
-                    if (user == null && !isTokenValid && !isGetMethod) {
-                        throw new UnauthorizedException("JWT Token is required");
-                    } else {
-                        throw new NotFoundException("Board not found");
-                    }
-                }
-
-                boolean isPublicBoard = boardService.isBoardPublic(boardId);
-                boolean isOwner = user != null && boardService.isOwnerOfBoard(boardId, user.getOid());
-
-                if (user != null) {
-                    if (!isOwner && !isTokenValid && !isGetMethod) {
-                        throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
-                    } else if (!isOwner && !isPublicBoard) {
-                        throw new AccessDeniedException("You are not the owner of this board");
-                    } else if (!isOwner && !isGetMethod) {
-                        throw new AccessDeniedException("You are not the owner of this board");
-                    } else if (!isTokenValid) {
-                        throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
-                    }
-                } else if (!isPublicBoard && isGetMethod) {
-                    throw new AccessDeniedException("Board is not public");
-                } else if (isPublicBoard && !isGetMethod) {
-                    throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
-                } else if (!isPublicBoard) {
-                    throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
-                }
-            } else {
-                if (!isTokenValid) {
-                    throw new UnauthorizedException(tokenError != null ? tokenError : "JWT Token is required");
-                }
+            if (uri.startsWith("/v3/boards/")) {
+                handleBoardRequest(request, isTokenValid, tokenError);
+            } else if (!isTokenValid) {
+                throw new UnauthorizedException(tokenError);
             }
 
             chain.doFilter(request, response);
 
-        } catch (UnauthorizedException e) {
-            handleException(response, HttpStatus.UNAUTHORIZED, e.getMessage(), request.getRequestURI());
-        } catch (NotFoundException e) {
-            handleException(response, HttpStatus.NOT_FOUND, e.getMessage(), request.getRequestURI());
-        } catch (AccessDeniedException e) {
-            handleException(response, HttpStatus.FORBIDDEN, e.getMessage(), request.getRequestURI());
-        } catch (Exception e) {
-            handleException(response, HttpStatus.UNAUTHORIZED, "An unexpected error occurred", request.getRequestURI());
+        }  catch (Exception e) {
+            JwtAuthFilter.handleException(response, e, request.getRequestURI());
         }
     }
 
-    private void handleException(HttpServletResponse response, HttpStatus status, String message, String uri) throws IOException {
-        response.setStatus(status.value());
-        response.setContentType("application/json");
-        ErrorResponse errorResponse = new ErrorResponse(status.value(), message, uri);
-        response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+    private void handleBoardRequest(HttpServletRequest request, boolean isTokenValid, String tokenError) throws UnauthorizedException, NotFoundException, AccessDeniedException {
+        boolean isGetMethod = request.getMethod().equals("GET");
+        String uri = request.getRequestURI();
+        CustomUserDetails user = SecurityUtil.getCurrentUserDetails();
+        String boardId = uri.split("/")[3];
+        boolean boardExists = boardService.boardExists(boardId);
+
+        if (!boardExists) {
+            if (user == null && !isTokenValid && !isGetMethod) {
+                throw new UnauthorizedException("JWT Token is required");
+            } else {
+                throw new NotFoundException("Board not found");
+            }
+        }
+
+        boolean isPublicBoard = boardService.isBoardPublic(boardId);
+        boolean isOwner = user != null && boardService.isOwnerOfBoard(boardId, user.getOid());
+
+        if (user != null) {
+            boolean isCollab = boardService.isCollaborator(boardId,user.getOid());
+            if (!isOwner && !isTokenValid && !isGetMethod) {
+                throw new UnauthorizedException(tokenError);
+            } else if ((!isOwner && !isCollab) && (!isPublicBoard || !isGetMethod )) {
+                throw new AccessDeniedException("You are not the owner of this board");
+            } else if (isCollab && !isGetMethod) {
+                Collaboration collab = boardService.getCollaboration(boardId, user.getOid());
+                int uriLength = uri.split("/").length;
+                if (collab.getAccess().equals(Collaboration.Access.READ) || uriLength <= 4) {
+                    throw new AccessDeniedException("You do not have permission to modify this board");
+                }else if (uri.split("/")[4].equals("collabs") && !request.getMethod().equals("DELETE")) {
+                    throw new AccessDeniedException("You do not have permission to modify collaborators");
+                }
+            }
+            else if (!isTokenValid) {
+                throw new UnauthorizedException(tokenError);
+            }
+        } else if (!isPublicBoard && isGetMethod) {
+            throw new AccessDeniedException("Board is not public");
+        } else if (!isPublicBoard || !isGetMethod) {
+            throw new UnauthorizedException(tokenError);
+        }
     }
+
+
 }

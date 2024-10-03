@@ -84,18 +84,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             chain.doFilter(request, response);
 
-        } catch (UnauthorizedException e) {
-            handleException(response, HttpStatus.UNAUTHORIZED, e.getMessage(), request.getRequestURI());
-        } catch (NotFoundException e) {
-            handleException(response, HttpStatus.NOT_FOUND, e.getMessage(), request.getRequestURI());
-        } catch (AccessDeniedException e) {
-            handleException(response, HttpStatus.FORBIDDEN, e.getMessage(), request.getRequestURI());
-        } catch (Exception e) {
-            handleException(response, HttpStatus.UNAUTHORIZED, "An unexpected error occurred", request.getRequestURI());
+        }  catch (Exception e) {
+            handleException(response, e, request.getRequestURI());
         }
     }
 
-    private void handleException(HttpServletResponse response, HttpStatus status, String message, String uri) throws  IOException {
+    public static void handleException(HttpServletResponse response, Exception e, String uri) throws IOException {
+        HttpStatus status;
+        String message;
+
+        if (e instanceof UnauthorizedException) {
+            status = HttpStatus.UNAUTHORIZED;
+            message = e.getMessage();
+        } else if (e instanceof NotFoundException) {
+            status = HttpStatus.NOT_FOUND;
+            message = e.getMessage();
+        } else if (e instanceof AccessDeniedException) {
+            status = HttpStatus.FORBIDDEN;
+            message = e.getMessage();
+        } else {
+            status = HttpStatus.UNAUTHORIZED;
+            message = "An unexpected error occurred";
+        }
+
         response.setStatus(status.value());
         response.setContentType("application/json");
         ErrorResponse errorResponse = new ErrorResponse(status.value(), message, uri);
