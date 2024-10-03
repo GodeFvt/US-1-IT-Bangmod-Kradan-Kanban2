@@ -14,15 +14,15 @@
 
 - Back-End
 
-## Diagram
+## Diagram V1.0.0
 ### Front-End
-![US1-Diagram-Frontend](https://github.com/GodeFvt/US-1-IT-Bangmod-Kradan-Kanban/assets/110713045/762b6242-8ec0-410e-b842-f6fe8edab10d)
+![Front-End](https://github.com/user-attachments/assets/bb140c8b-1a72-4999-9976-1c298a32032a)
 
 ### Back-End
-![US1-Diagram-Backend](https://github.com/GodeFvt/US-1-IT-Bangmod-Kradan-Kanban/assets/110713045/a12f0c4d-3e4c-43fd-8a27-cc46b8bf5e7c)
+![Back-End](https://github.com/user-attachments/assets/038bbd6d-7275-442a-926f-fe2b4db6cf9d)
 
 ### Database
-![US1-ER-Diagram-Database](https://github.com/GodeFvt/US-1-IT-Bangmod-Kradan-Kanban/assets/110713045/eecc98f8-7e94-4bbc-bd53-65aab3bc95c1)
+![Database](https://github.com/user-attachments/assets/c020da45-c638-484b-aeba-c445cbf90a17)
 
 ### Integration
-![US1-Diagram-Integration](https://github.com/GodeFvt/US-1-IT-Bangmod-Kradan-Kanban/assets/110713045/15aa0269-88cc-4e38-bf10-0a2d0e951293)
+![Integration](https://github.com/user-attachments/assets/8cce56f7-347f-4367-96d7-a60e373ad500)
