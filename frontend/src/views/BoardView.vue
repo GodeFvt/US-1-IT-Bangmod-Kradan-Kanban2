@@ -221,6 +221,9 @@ async function removeBoard(boardId, confirmDelete = false) {
   }
 }
 
+function leaveBoard() {
+  console.log("leaveBoard");
+}
 function openBoard(boardId) {
   router.push({ name: "task", params: { boardId: boardId } });
 }
@@ -231,6 +234,7 @@ function openBoard(boardId) {
       <div class="container px-4 mx-auto">
         <h2 class="slide-right mb-6 text-2xl font-bold">Your Boards</h2>
         <div class="border-b border-gray-300 mb-12"></div>
+        <h2 class="itbkk-personal-board font-bold	text-2xl mb-6">Personal Board</h2>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <router-link :to="{ name: 'AddBoard' }">
             <div
@@ -246,6 +250,30 @@ function openBoard(boardId) {
           <boardCardList
             :allBoard="userStore.boards"
             @removeBoard="removeBoard"
+            @openBoard="openBoard"
+          >
+          </boardCardList>
+        </div>
+
+        <!-- Collab Board -->
+        <div class=" mb-12"></div>
+        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6">Collab Board</h2>
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <!-- <router-link :to="{ name: 'AddBoard' }">
+            <div
+              class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
+            >
+              <AddButton />
+              <h3 class="text-lg font-semibold mb-2 text-gray-400">
+                Add Collab Board
+              </h3>
+            </div>
+          </router-link> -->
+          <!-- board card list -->
+          <boardCardList
+            :allBoard="userStore.boards"
+            boardType="collab"
+            @leaveBoard="leaveBoard"
             @openBoard="openBoard"
           >
           </boardCardList>

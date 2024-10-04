@@ -7,7 +7,7 @@ import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
-
+import ManageCollab from "../views/ManageCollab.vue"
 const routes = [
   {
     path: "/",
@@ -82,6 +82,11 @@ const routes = [
     path: "/login",
     name: "Login",
     component: Login,
+  },
+  {
+    path: "/board/:boardId/collab",
+    name: "ManageCollab",
+    component: ManageCollab,
   },
 ];
 

@@ -24,7 +24,7 @@ import CloseIcon from "../components/icon/CloseIcon.vue";
 import ConfirmModal from "../components/modal/ConfirmModal.vue";
 import limitModal from "../components/modal/limitModal.vue";
 import Toast from "../components/modal/Toasts.vue";
-import TaskTable from "../components/task/TaskTable.vue";
+import TaskBoard from "../components/task/TaskBoard.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
@@ -602,6 +602,32 @@ async function removeTask(index, confirmDelete = false) {
                   </button>
                 </div>
               </router-link>
+              
+            </div>
+            <div class="">
+              <router-link :to="{ name: 'ManageCollab' }">
+                <div
+                  :class="
+                    userStore.isCanEdit
+                      ? ''
+                      : 'tooltip tooltip-bottom tooltip-hover'
+                  "
+                  data-tip="You need to be board owner to perform this action."
+                >
+                  <button
+                    class="itbkk-manage-collaborater bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                    :disabled="!userStore.isCanEdit"
+                    :class="
+                      userStore.isCanEdit
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed disabled'
+                    "
+                  >
+                    Manage Collabotater
+                  </button>
+                </div>
+              </router-link>
+              
             </div>
 
             <!--DropDown-->
@@ -689,7 +715,7 @@ async function removeTask(index, confirmDelete = false) {
           </div>
         </div>
 
-        <TaskTable
+        <TaskBoard
           :statusFilter="statusFilter"
           :allTask="taskStore.allTask"
           :showErrorMSG="showErrorMSG"
@@ -697,7 +723,7 @@ async function removeTask(index, confirmDelete = false) {
           :allTaskLimit="allTaskLimit"
           @remove-task="removeTask"
         >
-        </TaskTable>
+        </TaskBoard>
       </div>
 
       <TaskDetail
@@ -747,7 +773,7 @@ async function removeTask(index, confirmDelete = false) {
         class="itbkk-modal-setting z-50"
       >
         <template #header>
-          <div class="cursor-pointer absolute top-50 ml-[480px]" @click="showSettingModal=false">
+          <div class="flex flex-col justify-items-end	place-items-end cursor-pointer" @click="showSettingModal=false">
              <CloseIcon />
             </div>
           <div class="flex justify-center">

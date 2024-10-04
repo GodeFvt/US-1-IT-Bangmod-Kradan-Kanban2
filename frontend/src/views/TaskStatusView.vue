@@ -29,6 +29,7 @@ import { useUserStore } from "../stores/user.js";
 import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
 import PopUp from "../components/modal/PopUp.vue";
+import CloseIcon from "../components/icon/CloseIcon.vue";
 
 const userStore = useUserStore();
 const statusStore = useStatusStore();
@@ -669,12 +670,16 @@ async function clickRemove(index) {
     <ConfirmModal
       v-if="showSettingModal"
       @user-action="confirmLimit"
+      :canEdit="userStore.isCanEdit"
       :width="'w-[60vh]'"
       :disabled="maximumTask > 30 || maximumTask <= 0"
       class="itbkk-modal-setting z-50"
     >
       <template #header>
-        <div class="flex justify-center">
+        <div class="flex flex-col justify-items-end	place-items-end cursor-pointer" @click="showSettingModal=false">
+             <CloseIcon />
+            </div>
+        <div class="flex justify-center">   
           <span class="text-gray-800 font-bold text-[1.5rem]">
             Status Settings
           </span>

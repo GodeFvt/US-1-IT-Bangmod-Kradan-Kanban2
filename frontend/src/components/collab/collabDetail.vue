@@ -1,0 +1,192 @@
+<script setup>
+import { computed, ref, watch } from "vue";
+import EditTaskIcon from "../icon/EditTaskIcon.vue";
+import CloseIcon from "../icon/CloseIcon.vue";
+import { useRouter } from "vue-router";
+import { validateSizeInput } from "../../lib/utill.js";
+import { useUserStore } from "../../stores/user.js";
+
+const boardStore = useUserStore();
+defineEmits(["userAction", "addEdit"]);
+const props = defineProps({
+  board: {
+    type: Object,
+    required: false,
+  },
+  showLoading: {
+    type: Boolean,
+  },
+  username: {
+    type: String,
+  },
+});
+const router = useRouter();
+const duplicateBoard = ref({});
+const validate = ref({ name: {}, description: {} });
+const allBoard = ref([]);
+const accessSelect = ref("Read")
+const email = ref("");
+
+let accessRight = ref(["Read" , "Write"]);
+
+// watch(
+//   () => props.board,
+//   (newBoard) => {
+//     allBoard.value = boardStore.boards;
+//     for (const key in newBoard) {
+//       if (newBoard[key] === null) {
+//         newBoard[key] = "";
+//       }
+//     }
+//     duplicateBoard.value = { ...newBoard };
+//     // duplicateBoard.value.name = `${props.username} personal board`
+//   },
+//   { immediate: true }
+// );
+
+// const isStatusChanged = computed(() => {
+//   // FALSE คือเปลี่ยน , true ไม่เปลี่ยน
+//   return JSON.stringify(props.board) === JSON.stringify(duplicateBoard.value);
+// });
+
+// const countBoardName = computed(() => {
+//   return duplicateBoard.value.name?.trim()?.length;
+// });
+
+function textShow(text) {
+  if (text === null) {
+    return "italic text-gray-600";
+  }
+}
+function edit(boardId) {
+  console.log(boardId);
+  //   if (boardId !== null) {
+  //     editMode.value = !editMode.value;
+  //     router.push({ name: "EditStatus", params: { statusId: statusId  , boardId : "1"} });
+  //   }
+}
+
+// const duplicateName = computed(() => {
+//   return false;
+  // if (isStatusChanged.value === false) {
+  //   return allBoard.value
+  //     .filter((e) => e.name !== props.board.name)
+  //     .some(
+  //       (e) => e.name.toLowerCase() === duplicateBoard.value.name.toLowerCase()
+  //     );
+  // } else {
+  //   return false;
+  // }
+// });
+
+// const disabledSave = computed(() => {
+//   const arrStyle = validateSizeInput({
+//     propName: "Board name",
+//     propLenght: countBoardName.value,
+//     size: 120,
+//   });
+
+//   validate.value.name = arrStyle[0];
+
+//   if (
+//     isStatusChanged.value ||
+//     duplicateBoard.value.name === null ||
+//     countBoardName.value <= 0
+//   ) {
+//     return true;
+//   } else if (validate.value.name.boolean) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// });
+</script>
+
+<template>
+  <div
+    class="absolute left-0 right-0 m-auto top-0 bg-black h-screen w-screen bg-opacity-50 z-50"
+  >
+    <div class="flex h-full items-center justify-center">
+      <div
+        class="itbkk-modal-board flex flex-col justify-start rounded-md bg-white h-[22%]  w-[45rem] max-lg:w-[35rem] max-lg:h-[29%] max-md:w-[30rem] max-md:h-[29%] max-sm:w-[25rem] max-sm:h-[30%] shadow-md relative overflow-auto"
+      >
+        <!-- Close Button -->
+        <div class="w-full flex justify-end">
+          <div
+            class="cursor-pointer text-error text-2xl text-wrap pt-5 pr-5"
+            @click="$emit('userAction', false)"
+          >
+            <CloseIcon />
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex flex-col w-full pl-9 mt-1 	">
+          <!-- Status Name -->
+          <div class="flex flex-col w-fit">
+            <span class="font-bold text-xl"> Add Collaborater</span>
+            <div class="flex flex-row items-center gap-2 w-fit flex-wrap">
+              <div class="flex flex-col">
+                <label  class="font-medium">Collaborater e-mail</label>
+                <input
+                  class="itbkk-collaborater-email 
+                  read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all 
+                  mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none w-[30rem] max-sm:w-[20rem] max-md:w-[25rem]"
+                  type="text"
+                  name="statusName"
+                  id="statusName"
+                  v-model="email"
+                  maxlength="50"
+                />
+              </div>
+              <div class="flex flex-col items-start">
+                <label class="font-medium">Access Right</label>
+                  <div class="itbkk-acess-right">
+                      <select
+                        class="itbkk-status border-2 border-gray-500 w-[10rem] h-[40px] mt-2  rounded-lg"
+                        v-model="accessSelect"
+                      >
+                        <option
+                          v-for="access in accessRight"
+                        >
+                          {{ access }}
+                        </option>
+                      </select>
+                    </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save Buttons, Close Buttons -->
+        <div class="w-full flex justify-end mb-5 mt-4">
+          <div class="flex mr-10 gap-2">
+            <button
+              class="itbkk-button-ok text-white inline-flex items-center focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-gray-300"
+            
+              @click="
+                $emit('userAction', false)
+              "
+            >
+              ADD
+            </button>
+            <button
+              class="itbkk-button-cancel text-white inline-flex items-center bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              @click="$emit('userAction', false)"
+            >
+              CANCEL
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+@media not all and (max-height: 850px) {
+  .max-h-800px {
+    height: 50%;
+  }
+}
+</style>

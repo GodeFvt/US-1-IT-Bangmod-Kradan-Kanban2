@@ -9,16 +9,25 @@ const props = defineProps({
 </script>
 <template>
     <div class="rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col justify-between" :class="customClass">
-      <div v-if="$slots.header || $slots.title" class="flex flex-col space-y-1.5 p-6">
+      <div v-if="$slots.header || $slots.title" class="flex flex-col space-y-1.5 pl-3 pt-3 pr-3">
         <div v-if="$slots.header">
           <slot name="header"></slot>
         </div>
-        <h3 v-if="$slots.title" class="text-lg font-semibold leading-none tracking-tight">
+        <h3 v-if="$slots.title" class="text-lg font-semibold leading-none tracking-tight ">
           <slot name="title"></slot>
         </h3>
       </div>
       <div v-if="$slots.content" class="p-6 pt-0">
         <slot name="content"></slot>
+      </div>
+      <div>
+        <slot name="collab"></slot>
+      </div>
+      <div>
+        <slot name="action"></slot>
+      </div>
+      <div class="flex flex-col justify-items-end	place-items-end">
+        <slot name="visibility"></slot>
       </div>
       <div v-if="$slots.default">
         <slot></slot>
