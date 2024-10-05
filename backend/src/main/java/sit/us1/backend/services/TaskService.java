@@ -42,11 +42,9 @@ public class TaskService {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {
             Sort sort = Sort.by(sortBy == null || sortBy.isEmpty() ? "createdOn" : sortBy);
-//            String oid = SecurityUtil.getCurrentUserDetails().getOid();
             if (filterStatuses.length > 0) {
                 return listMapper.mapList(taskRepository.findByStatusNamesSorted(filterStatuses,boardId, sort), SimpleTaskDTO.class, mapper);
             } else {
-                System.out.println(sort);
                 return listMapper.mapList(taskRepository.findAllByBoardId(boardId,sort), SimpleTaskDTO.class, mapper);
             }
         } catch (Exception e) {

@@ -98,12 +98,6 @@ public class BoardService {
         } catch (Exception e) {
             throw new BadRequestException("Cannot create user");
         }
-//        try {
-//            taskLimit.setBoardId(boardRepository.save(board).getId());
-//        } catch (Exception e) {
-//            board.setId(NanoIdUtils.randomNanoId(10));
-//            taskLimit.setBoardId(boardRepository.save(board).getId());
-//        }
         Board board = mapper.map(newBoard, Board.class);
         try {
             String boardId;
@@ -167,11 +161,6 @@ public class BoardService {
     @Transactional
     public SimpleBoardDTO updateVisibilityById(String id, Board.Visibility visibility) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
-//        if(visibility.equalsIgnoreCase("PUBLIC") || visibility.equalsIgnoreCase("PRIVATE")) {
-//            board.setVisibility(visibility);
-//        } else {
-//            throw new BadRequestException("Invalid visibility");
-//        }
         board.setVisibility(visibility);
         try {
             boardRepository.save(board);
@@ -212,7 +201,6 @@ public class BoardService {
         if (user == null) {
             throw new NotFoundException("the specified user does not exist");
         }
-
         if (user.getOid().equals(SecurityUtil.getCurrentUserDetails().getOid())) {
             throw new ConflictException("Cannot add yourself as collaborator");
         }
