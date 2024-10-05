@@ -1,7 +1,9 @@
 <script setup>
+import {computed } from "vue";
 import boardCard from "./boardCard.vue";
 import MoreActionIcon from "../icon/MoreActionIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
+import { useUserStore } from "../../stores/user.js";
 defineEmits(["removeBoard", "openBoard", "leaveBoard"]);
 
 const props = defineProps({
@@ -22,8 +24,13 @@ const props = defineProps({
     default: "personal",
   },
 });
+const userStore = useUserStore();
+const indexCo = computed(() => {
+  return props.allBoard.findIndex((board) =>
+    board.collaborators.some((collaborator) => collaborator.oid === userStore.authToken.oid)
+  );
+});
 
-console.log(props.allBoard);
 </script>
 
 <template>
@@ -89,9 +96,9 @@ console.log(props.allBoard);
       <div
         class="flex flex-col w-[75%] text-center mt-1 place-items-start ml-3 mb-2"
       >
-        <p class="itbkk-owner-name text-sm font-medium">board owner :: owner</p>
+        <p class="itbkk-owner-name text-sm font-medium">Board Owner :: {{ board.owner.username }}</p>
         <p class="itbkk-access-right text-sm font-medium">
-          Access Rignt :: Read
+          Access Rignt :: {{ board.collaborators[indexCo].access}}
         </p>
       </div>
     </template>

@@ -496,6 +496,99 @@ async function refreshAccessToken() {
   }
 }
 
+async function getCollabs(boardId) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/collabs`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (res.status === 200) {
+      const board = await res.json();
+      return board;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function addCollabs(boardId, collabs) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/collabs`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(collabs),
+    });
+    if (res.status === 201) {
+      const collab = await res.json();
+      return collab;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function updateCollabs(boardId, collabs) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  try {
+    res = await fetch(
+      `${BASE_URL}/v3/boards/${boardId}/collabs/${collabs.oid}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(collabs),
+      }
+    );
+    if (res.status === 200) {
+      const collab = await res.json();
+      return collab;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function deleteCollabs(boardId, collabId) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/collabs/${collabId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+
 export {
   getTaskByStatus,
   getTaskById,
@@ -519,4 +612,8 @@ export {
   deleteBoard,
   refreshAccessToken,
   toggleVisibility,
+  getCollabs,
+  addCollabs,
+  updateCollabs,
+  deleteCollabs,
 };
