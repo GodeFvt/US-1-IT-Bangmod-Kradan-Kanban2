@@ -7,8 +7,8 @@ import collabDetail from "./collabDetail.vue"
 import { ref, watch } from "vue";
 import EditIcon from "../icon/EditIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
-
-defineEmits(["removeStatus"]);
+import ConfirmModal from "../modal/ConfirmModal.vue"
+import CloseIcon from "../icon/CloseIcon.vue"
 const props = defineProps({
   showErrorMSG: {
     type: Boolean,
@@ -30,6 +30,11 @@ const router = useRouter();
 const isVisible = ref([]);
 
 const isShowAddCollab = ref(false);
+const showAccessModal= ref(false);
+const isChangeAccess= ref(false);
+let username ="เอาใส่ด้วย"
+let usernameId = ref(50)
+console.log(usernameId.value);
 // watch(
 //   () => props.allStatus,
 //   () => {
@@ -57,10 +62,58 @@ const isShowAddCollab = ref(false);
 //     }
 //   }
 // }
+watch(
+  () => accessSelect.value,
+  (newSelect, oldSelect) => {
+    console.log("wdw",newSelect);
+    console.log("wdw2",oldSelect);
+   if (newSelect !== oldSelect) {
+    showAccessModal.value= true
+    isChangeAccess.value=true
+   } else {
+       showAccessModal.value= false
+   }
+  //  console.log("wdw2efe",accessSelect.value);
+   // newSelect === oldSelect
+  }
+  // ,
+  // { immediate: true }
+)
 
 function close(e) {
   isShowAddCollab.value=e
 }
+function confirmChange(e) {
+  if (isChangeAccess.value) {
+    //แก้ไข access right ของ user
+     if (e) {
+    console.log("เปลี่ยน access ได้");
+    showAccessModal.value=false
+
+  } else {
+    console.log("ไม่เปลี่ยน access เพราะกด cancle");
+    showAccessModal.value=false
+    console.log(accessSelect.value);
+    //ถ้ากด cancle ให้ทำให้  accessSelect เป็นค่าเดิมของ user นั้นๆ 
+    accessSelect.value = "Read"
+    console.log(accessSelect.value);
+
+ 
+  }
+  } else {
+    //ลบ user ออกจาก board
+    console.log(usernameId.value);
+    if (e) {
+    console.log("user ออกจาก board");
+  } else {
+    console.log("ไม่user ออกจาก board");
+    showAccessModal.value=false
+  }
+  }
+ 
+
+}
+
 </script>
 
 <template>
@@ -232,7 +285,7 @@ function close(e) {
                   >
                     <div class="itbkk-acess-right">
                       <select
-                        class="itbkk-status border-2 border-gray-500 w-[10rem] h-[40px] mt-2  rounded-lg"
+                        class="itbkk-status border-2 border-gray-500 w-[10rem] h-[30px] rounded-lg"
                         v-model="accessSelect"
                       >
                         <option
@@ -257,7 +310,7 @@ function close(e) {
                       >
                         <div
                           class="itbkk-collab-remove text-white fill-rose-300"
-                          @click="$emit('removeStatus', index)"
+                          @click="isChangeAccess=false , usernameId = index , showAccessModal= true"
                           :class="
                             userStore.isCanEdit
                               ? 'cursor-pointer'
@@ -308,6 +361,30 @@ function close(e) {
       v-if="isShowAddCollab"
       @user-action="close"
       />
+
+      <ConfirmModal
+      v-if="showAccessModal"
+      @user-action="confirmChange"
+      :width="'w-[60vh]'"
+      class="itbkk-modal-alert z-50"
+    >
+      <template #header>
+        <div class="flex flex-col justify-items-end	place-items-end cursor-pointer" @click="showSettingModal=false">
+             <CloseIcon @click=" showAccessModal= false" />
+            </div>
+        <div class="flex justify-center">   
+          <span class="text-gray-800 font-bold text-[1.5rem]">
+           {{ isChangeAccess ? 'Change Access Right' : 'Remove Collaborater' }} 
+          </span>
+        </div>
+      </template>
+      <template #body>
+        <span class="itbkk-message">
+          {{ isChangeAccess ? `Do you want to change access right of "${ username }" to "${ accessSelect }"` : `Do you want to remove "${  username }" from the board?` }}  
+        </span>
+      </template>
+    </ConfirmModal>
+
     </div>
   </div>
 </template>

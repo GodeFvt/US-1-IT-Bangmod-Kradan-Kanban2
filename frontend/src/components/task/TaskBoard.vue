@@ -157,12 +157,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-
   <TaskTableLoading v-if="showLoading" class="w-full" />
-    <div v-else class="w-full rounded-md shadow-xl">
-
+  <div v-else class="w-full rounded-md shadow-xl">
     <!-- Table -->
-   <TaskTable :taskFiltered="taskFiltered">
+    <TaskTable :taskFiltered="taskFiltered">
       <template #sortStatus>
         <div class="itbkk-status-sort flex gap-1">
           <span>Status</span>
@@ -320,92 +318,107 @@ onUnmounted(() => {
       </template>
     </TaskTable>   
 
-     <!-- <TaskCard>
+    <!-- <TaskCard>
       <template #eachStatus>
-        <div class="w-[80rem] flex flex-col gap-5" v-for="(status) in statusStore.allStatus" >
+        <div
+          class="w-[319px] h-[38rem] flex flex-col  overflow-y-auto overflow-x-hidden gap-5 border border-orange-700 p-3"
+          v-for="status in statusStore.allStatus"
+        >
           {{ status.name }}
-            <div v-for="(task, index) in taskFiltered.filter(e=>e.status.name===status.name)" class="border-8 rounded-lg p-0" 
-            :style="[{'border-color': statusStore.getColorStatus(status.name)}, {'background-color': statusStore.getColorStatus(status.name)}]"    
-            >
-              <div class="bg-slate-50 rounded-lg p-4">{{ task.title }}
-                <div><span class="itbkk-assignees"  :class="
-              task.assignees === null || task.assignees?.length === 0
-                ? 'italic text-gray-600'
-                : ''
-            "> {{
-                task.assignees === null || task.assignees?.length === 0
-                  ? "Unassigned"
-                  : task.assignees
-              }}</span></div>
-                <div class="action">
+          <div
+            v-for="(task, index) in taskFiltered.filter(
+              (e) => e.status.name === status.name
+            )"
+            class="border-8 rounded-lg p-0"
+            :style="[
+              { 'border-color': statusStore.getColorStatus(status.name) },
+              { 'background-color': statusStore.getColorStatus(status.name) },
+            ]"
+          >
+            <div class="bg-slate-50 rounded-lg p-4">
+              {{ task.title }}
+              <div>
+                <span
+                  class="itbkk-assignees"
+                  :class="
+                    task.assignees === null || task.assignees?.length === 0
+                      ? 'italic text-gray-600'
+                      : ''
+                  "
+                >
+                  {{
+                    task.assignees === null || task.assignees?.length === 0
+                      ? "Unassigned"
+                      : task.assignees
+                  }}</span
+                >
+              </div>
+              <div class="action">
+                <div
+                  class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
+                >
                   <div
-              class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
-            >
-              <div
-                :class="
-                  userStore.isCanEdit
-                    ? ''
-                    : 'tooltip tooltip-bottom tooltip-hover'
-                "
-                data-tip="You need to be board owner to perform this action."
-              >
-                <div
-                  class="itbkk-button-edit"
-                  :class="
-                    userStore.isCanEdit
-                      ? 'cursor-pointer'
-                      : 'cursor-not-allowed disabled'
-                  "
-                  @click="editTask(task.id)"
-                >
-                  <EditIcon
-                    class="fill-zinc-500"
                     :class="
                       userStore.isCanEdit
-                        ? ' hover:fill-zinc-700'
-                        : ' hover:fill-zinc-500'
+                        ? ''
+                        : 'tooltip tooltip-bottom tooltip-hover'
                     "
-                  />
-                </div>
-              </div>
-              <div
-                :class="
-                  userStore.isCanEdit
-                    ? ''
-                    : 'tooltip tooltip-bottom tooltip-hover'
-                "
-                data-tip="You need to be board owner to perform this action."
-              >
-                <div
-                  class="itbkk-button-delete"
-                  @click="$emit('removeTask', index)"
-                  :class="
-                    userStore.isCanEdit
-                      ? 'cursor-pointer'
-                      : 'cursor-not-allowed disabled'
-                  "
-                >
-                  <DeleteIcon
-                    class="fill-rose-300"
+                    data-tip="You need to be board owner to perform this action."
+                  >
+                    <div
+                      class="itbkk-button-edit"
+                      :class="
+                        userStore.isCanEdit
+                          ? 'cursor-pointer'
+                          : 'cursor-not-allowed disabled'
+                      "
+                      @click="editTask(task.id)"
+                    >
+                      <EditIcon
+                        class="fill-zinc-500"
+                        :class="
+                          userStore.isCanEdit
+                            ? ' hover:fill-zinc-700'
+                            : ' hover:fill-zinc-500'
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div
                     :class="
                       userStore.isCanEdit
-                        ? ' hover:fill-rose-400'
-                        : ' hover:fill-rose-300'
+                        ? ''
+                        : 'tooltip tooltip-bottom tooltip-hover'
                     "
-                  />
+                    data-tip="You need to be board owner to perform this action."
+                  >
+                    <div
+                      class="itbkk-button-delete"
+                      @click="$emit('removeTask', index)"
+                      :class="
+                        userStore.isCanEdit
+                          ? 'cursor-pointer'
+                          : 'cursor-not-allowed disabled'
+                      "
+                    >
+                      <DeleteIcon
+                        class="fill-rose-300"
+                        :class="
+                          userStore.isCanEdit
+                            ? ' hover:fill-rose-400'
+                            : ' hover:fill-rose-300'
+                        "
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-                </div>
-              </div>
-            </div>
+          </div>
         </div>
-      
       </template>
-
     </TaskCard> -->
-
-  </div> 
+  </div>
   <AuthzPopup v-if="showPopUp" />
 </template>
 

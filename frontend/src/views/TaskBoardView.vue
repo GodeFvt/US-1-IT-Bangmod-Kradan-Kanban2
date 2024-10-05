@@ -32,7 +32,7 @@ import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
 import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
-
+import Themes from "../components/icon/Themes.vue";
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
 const userStore = useUserStore();
@@ -61,6 +61,7 @@ const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
 const showVisibilityModal = ref(false);
+const showChangeThemes = ref(false);
 // const authorizAccess = ref(false);
 
 const boardId = ref(route.params.boardId);
@@ -200,7 +201,11 @@ function countStatuses() {
 }
 
 onMounted(async () => {
-  console.log("onMounted" ,toggleVisibleActive.value ,userStore.visibilityPublic);
+  console.log(
+    "onMounted",
+    toggleVisibleActive.value,
+    userStore.visibilityPublic
+  );
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail();
     if (userStore.visibilityPublic === false) {
@@ -226,7 +231,7 @@ watch(
     boardName.value = userStore.currentBoard.name;
     fetchData();
     countStatuses();
-    console.log("wacth" ,toggleVisibleActive.value ,userStore.visibilityPublic);
+    console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
   }
 );
 
@@ -323,7 +328,11 @@ async function confirmLimit(action) {
 }
 
 async function confirmVisibility(action) {
-  console.log("bafore fetch", toggleVisibleActive.value ,userStore.visibilityPublic);
+  console.log(
+    "bafore fetch",
+    toggleVisibleActive.value,
+    userStore.visibilityPublic
+  );
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
@@ -362,9 +371,9 @@ async function confirmVisibility(action) {
         );
         toggleVisibleActive.value = userStore.visibilityPublic;
         if (res.visibility === "PUBLIC") {
-          navigator.clipboard.writeText(window.location.href)
-        } 
-        userStore.setIsVisibilityCurrentBoard(res.visibility)
+          navigator.clipboard.writeText(window.location.href);
+        }
+        userStore.setIsVisibilityCurrentBoard(res.visibility);
         // console.log("200 fetch", toggleVisibleActive.value);
 
         // typeToast.value = "success";
@@ -402,6 +411,11 @@ function ClickAdd() {
     assignees: "",
     status: { name: "No Status" },
   };
+}
+
+function openChageThemes() {
+  console.log("openChageThemes");
+  showChangeThemes.value = true;
 }
 
 async function addEditTask(newTask) {
@@ -544,7 +558,11 @@ async function removeTask(index, confirmDelete = false) {
             </button>
           </router-link>
           <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold">
-            {{ userStore.currentBoard.owner.id === userStore.authToken.oid ? userStore.currentBoard.name + " Personal's Board" : userStore.currentBoard.name + "Collaborate's Board" }}
+            {{
+              userStore.currentBoard.owner.id === userStore.authToken.oid
+                ? userStore.currentBoard.name + " Personal's Board"
+                : userStore.currentBoard.name + "Collaborate's Board"
+            }}
           </div>
         </div>
         <!-- Filter -->
@@ -602,7 +620,6 @@ async function removeTask(index, confirmDelete = false) {
                   </button>
                 </div>
               </router-link>
-              
             </div>
             <div class="">
               <router-link :to="{ name: 'ManageCollab' }">
@@ -627,7 +644,6 @@ async function removeTask(index, confirmDelete = false) {
                   </button>
                 </div>
               </router-link>
-              
             </div>
 
             <!--DropDown-->
@@ -690,12 +706,12 @@ async function removeTask(index, confirmDelete = false) {
         class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
       >
         <!-- Task Status Count -->
-        <div class="flex">
+        <div class="flex flex-row justify-between">
           <div class="flex flex-row gap-[0.2rem] pr-1 drop-shadow-md">
             <div class="">
               <router-link :to="{ name: 'ManageStatus' }">
                 <button
-                  class="h-full itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                  class="h-full cursor-pointer itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
                 >
                   Manage Status
                 </button>
@@ -705,13 +721,16 @@ async function removeTask(index, confirmDelete = false) {
               v-for="(status, index) in Object.keys(countStatus)"
               :key="status"
               :class="{ 'slide-in': isVisible[index] }"
-              class="task-status-wrapper z-0"
+              class="task-status-wrapper z-0 overflow-x-auto"
             >
               <TaskStatusCard :colorStatus="statusStore.getColorStatus(status)">
                 <template #count>{{ countStatus[status] }}</template>
                 <template #status>{{ status }}</template>
               </TaskStatusCard>
             </div>
+          </div>
+          <div class="cursor-pointer">
+            <Themes @click="openChageThemes" />
           </div>
         </div>
 
@@ -765,6 +784,60 @@ async function removeTask(index, confirmDelete = false) {
       </ConfirmModal>
 
       <ConfirmModal
+        v-if="showChangeThemes"
+        @user-action="showChangeThemes = false"
+      >
+        <template #header>
+          <div class="flex justify-center">
+            <h2 class="font-bold">Select your themes</h2>
+          </div>
+        </template>
+        <template #body>
+          <div
+            class="flex justify-center items-center bg-gray-100"
+          >
+            <div class="w-full max-w-4xl p-4 bg-white shadow-md rounded-md">
+              <!-- Grid Section -->
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Left Grid -->
+                <div class="bg-gray-100 p-4">
+                <img src="../../public/table.png" alt="table">
+             </div>
+
+                <!-- Right Grid -->
+                <div class="grid grid-rows-2 gap-2">
+                  <img src="../../public/card.png" alt="card">
+                </div>
+              </div>
+
+              <!-- Score Line -->
+              <!-- <div class="mt-4">
+            <div class="border-b-2 border-black"></div>
+        </div> -->
+
+              <!-- Radio buttons -->
+              <div class="flex justify-center space-x-4 mt-4">
+                <label class="flex items-center">
+                  <input
+                    type="radio"
+                    name="option"
+                    class="h-6 w-6 form-radio text-blue-600"
+                  />
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="radio"
+                    name="option"
+                    class="h-6 w-6 form-radio text-gray-300"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        </template>
+      </ConfirmModal>
+
+      <ConfirmModal
         v-if="showSettingModal"
         @user-action="confirmLimit"
         :width="'w-[60vh]'"
@@ -773,11 +846,13 @@ async function removeTask(index, confirmDelete = false) {
         class="itbkk-modal-setting z-50"
       >
         <template #header>
-          <div class="flex flex-col justify-items-end	place-items-end cursor-pointer" @click="showSettingModal=false">
-             <CloseIcon />
-            </div>
+          <div
+            class="flex flex-col justify-items-end place-items-end cursor-pointer"
+            @click="showSettingModal = false"
+          >
+            <CloseIcon />
+          </div>
           <div class="flex justify-center">
-            
             <span class="text-gray-800 font-bold text-[1.5rem]">
               Status Settings
             </span>

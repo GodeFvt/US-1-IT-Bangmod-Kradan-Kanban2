@@ -50,7 +50,6 @@ const collabBoard = computed(() => {
         (board) => board.owner.id === userStore.authToken.oid
       );
     });
-
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
     showPopUp.value = true;
@@ -306,7 +305,7 @@ function openBoard(boardId) {
 
         <!-- Collab Board -->
         <div class=" mb-12"></div>
-        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6">Collab Board</h2>
+        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6" v-if="collabBoard.length>1">Collab Board</h2>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <!-- <router-link :to="{ name: 'AddBoard' }">
             <div
