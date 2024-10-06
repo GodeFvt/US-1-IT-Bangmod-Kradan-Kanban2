@@ -39,15 +39,18 @@ export const useBoardStore = defineStore("useBoard", {
       setIsVisibilityCurrentBoard(visibility) {
         this.currentBoard.visibility = visibility
       } ,
-      setCollabs(collabs){
-        this.collabs = collabs;
+      setCollabs(collab){
+        this.collabs = collab;
       },
-      addCollab(board){
-        this.collabs.push(board);
+      addCollab(collab){
+        this.collabs.push(collab);
       },
       removeCollab(index){
         this.collabs.splice(index,1);
       },
+      updateAccessCollab(index,access){
+        this.collabs[index].access = access;
+      }
     },
   });
   if (import.meta.hot) {

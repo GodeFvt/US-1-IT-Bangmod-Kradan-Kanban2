@@ -8,7 +8,7 @@ import EditIcon from "../icon/EditIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue"
 import CloseIcon from "../icon/CloseIcon.vue"
-import { addCollabs, getCollabs,deleteCollabs } from "../../lib/fetchUtill";
+import { addCollabs, getCollabs,deleteCollabs, updateCollabs } from "../../lib/fetchUtill";
 import { isTokenValid } from "../../lib/utill";
 import Toast from "../modal/Toasts.vue";
 import { useBoardStore } from "../../stores/boards.js";
@@ -28,8 +28,8 @@ const props = defineProps({
 const userStore = useUserStore();
 const boardStore = useBoardStore();
 let accessRight = ref(["READ" , "WRITE"]);
-const accessSelect = ref("");
-
+const accessSelect = ref("READ");
+const oldAccess = ref("");
 const showToast = ref(false);
 const typeToast = ref("");
 const messageToast = ref("");
@@ -65,8 +65,8 @@ watch(
     console.log("wdw",newSelect);
     console.log("wdw2",oldSelect);
    if (newSelect !== oldSelect) {
-    showConfirmModal.value= true
     isChangeAccess.value=true
+    oldAccess.value = oldSelect
    } else {
        showConfirmModal.value= false
    }
@@ -97,7 +97,7 @@ async function addCollaborator(collab) {
   }
   if (collab.email === null || collab.email === "") {
       typeToast.value = "warning";
-      messageToast.value = `Must enter the email`;
+      messageToast.value = `Must enter the email.`;
     } else {
       collab.email = collab.email.trim();
       collab.access = collab.access.toUpperCase();
@@ -105,23 +105,23 @@ async function addCollaborator(collab) {
   if(typeof res === "object"){
     typeToast.value = "success";
         // taskStore.addTask(res);
-        messageToast.value = `Collaborator "${res.email}" added successfully`;
+        messageToast.value = `Collaborator "${res.email}" added successfully.`;
         boardStore.addCollab(res);
 }
 else if(res ===404){
   typeToast.value = "warning";
-  messageToast.value = `The user "${collab.email}" does not exists`;
+  messageToast.value = `The user "${collab.email}" does not exists.`;
 }
 else if (res === 401 || res === 403) {
   handleResponseError(res);
 }
 else if (res===409){
   typeToast.value = "warning";
-  messageToast.value = `The user "${collab.email}" is already the collaborator of this board`;
+  messageToast.value = `The user "${collab.email}" is already the collaborator of this board.`;
 }
 else{
   typeToast.value = "danger";
-  messageToast.value = `There is a problem please try again later`;
+  messageToast.value = `There is a problem please try again later.`;
 }
 }
 showToast.value = true;
@@ -134,49 +134,68 @@ function close(close) {
   isShowAddCollab.value=close
 }
 
-async function changeAccessOrRemoveCollab(index,confirmValue = false) {
+async function changeAccessOrRemoveCollab(confirmValue = false) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   }
   if (isChangeAccess.value) {
     //แก้ไข access right ของ user
+    let collab = boardStore.collabs[usernameId.value];
      if (confirmValue) {
-    console.log("เปลี่ยน access ได้");
+    const res = await updateCollabs(boardId.value,collab);
+    if(typeof res === "object"){
+      typeToast.value = "success";
+      messageToast.value = `Access right of "${collab.name}" changed to "${collab.access}" successfully.`;
+      boardStore.updateAccessCollab(usernameId.value,res.access);
+    }
+    else if(res === 404){
+      typeToast.value = "warning";
+      messageToast.value = `The user "${collab.name}" is not the collaborator of this board.`;
+    }
+    else if (res === 401) {
+      handleResponseError(res);
+    }
+    else if(res ===403){
+      typeToast.value = "warning";
+      messageToast.value = `You do not have permission to change collaborator access right.`;
+    }
+    else{
+      typeToast.value = "danger";
+      messageToast.value = `There is a problem please try again.`;
+
+    }
 
   } else {
-    console.log("ไม่เปลี่ยน access เพราะกด cancle");
-    console.log(accessSelect.value);
     //ถ้ากด cancle ให้ทำให้  accessSelect เป็นค่าเดิมของ user นั้นๆ 
-    accessSelect.value = "Read"
-    console.log(accessSelect.value);
+    collab.access = oldAccess.value;
   }
   } else {
     //ลบ user ออกจาก board
     if (confirmValue) {
-      let collabOid = boardStore.collabs[index].oid;
+      let collabOid = boardStore.collabs[usernameId.value].oid;
       const res = await deleteCollabs(boardId.value,collabOid);
       if(res===200){
         typeToast.value = "success";
-        messageToast.value = `Collaborator "${boardStore.collabs[index].email}" removed successfully`;
-        boardStore.removeCollab(index);
+        messageToast.value = `Collaborator "${boardStore.collabs[usernameId.value].name}" removed successfully.`;
+        boardStore.removeCollab(usernameId.value);
       }
       else if(res === 404){
         typeToast.value = "warning";
-        messageToast.value = `The user "${boardStore.collabs[index].email}" is not the collaborator of this board`;
+        messageToast.value = `The user "${boardStore.collabs[usernameId.value].name}" is not the collaborator of this board.`;
       }
       else if (res === 401 || res === 403) {
         handleResponseError(res);
       }
       else{
         typeToast.value = "danger";
-        messageToast.value = `There is a problem please try again`;
+        messageToast.value = `There is a problem please try again.`;
       }
   }
+  }
+  console.log('ถึงนะ')
   showConfirmModal.value=false
   showToast.value = true;
-  }
-
 }
 
 </script>
@@ -354,7 +373,7 @@ async function changeAccessOrRemoveCollab(index,confirmValue = false) {
                       <select
                         class="itbkk-collab border-2 border-gray-500 w-[10rem] h-[30px] rounded-lg"
                         v-model="collab.access"
-                        @change="accessSelect = collab.access"
+                        @change="accessSelect = collab.access,showConfirmModal=true,usernameId = index"
                       >
                         <option
                           v-for="access in accessRight"
@@ -435,8 +454,7 @@ async function changeAccessOrRemoveCollab(index,confirmValue = false) {
       <ConfirmModal
       v-if="showConfirmModal"
       :index="usernameId"
-      @user-action="showConfirmModal = false"
-      @confirm="changeAccessOrRemoveCollab"
+      @user-action="changeAccessOrRemoveCollab"
       :width="'w-[60vh]'"
       class="itbkk-modal-alert z-50"
     >
