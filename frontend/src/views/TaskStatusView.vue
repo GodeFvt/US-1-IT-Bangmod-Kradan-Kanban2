@@ -196,7 +196,6 @@ watch(
         showPopUp.value = true;
         return;
       } else {
-        showLoading.value = true;
         const res = await getStatusById(boardId.value, newId);
         if (res === 401 || res === 403 || res === 404) {
           handleResponseError(res);
@@ -676,10 +675,13 @@ async function clickRemove(index) {
       class="itbkk-modal-setting z-50"
     >
       <template #header>
-        <div class="flex flex-col justify-items-end	place-items-end cursor-pointer" @click="showSettingModal=false">
-             <CloseIcon />
-            </div>
-        <div class="flex justify-center">   
+        <div
+          class="flex flex-col justify-items-end place-items-end cursor-pointer"
+          @click="showSettingModal = false"
+        >
+          <CloseIcon />
+        </div>
+        <div class="flex justify-center">
           <span class="text-gray-800 font-bold text-[1.5rem]">
             Status Settings
           </span>
