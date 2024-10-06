@@ -46,7 +46,7 @@ public class BoardAccessFilter extends OncePerRequestFilter {
 
             chain.doFilter(request, response);
 
-        }  catch (Exception e) {
+        } catch (Exception e) {
             JwtAuthFilter.handleException(response, e, request.getRequestURI());
         }
     }
@@ -70,27 +70,28 @@ public class BoardAccessFilter extends OncePerRequestFilter {
         boolean isOwner = user != null && boardService.isOwnerOfBoard(boardId, user.getOid());
 
         if (user != null) {
-            boolean isCollab = boardService.isCollaborator(boardId,user.getOid());
+            boolean isCollab = boardService.isCollaborator(boardId, user.getOid());
             if (!isOwner && !isTokenValid && !isGetMethod) {
                 throw new UnauthorizedException(tokenError);
-            } else if ((!isOwner && !isCollab) && (!isPublicBoard || !isGetMethod )) {
+            } else if ((!isOwner && !isCollab) && (!isPublicBoard || !isGetMethod)) {
                 throw new AccessDeniedException("You are not the owner of this board");
             } else if (isCollab && !isGetMethod) {
                 Collaboration collab = boardService.getCollaboration(boardId, user.getOid());
                 String[] uriParts = uri.split("/");
                 int uriLength = uriParts.length;
-
                 if (uriLength <= 4 || collab.getAccess().equals(Collaboration.Access.READ) && !uriParts[4].equals("collabs")) {
                     throw new AccessDeniedException("You do not have permission to modify this board");
+                } else if (uriParts[4].equals("collabs") && !request.getMethod().equals("DELETE")) {
+                    throw new AccessDeniedException("You do not have permission to modify collaborators");
+                } else if (uriParts[4].equals("collabs") && request.getMethod().equals("DELETE")) {
+                    String collabId = uriParts.length >= 6 ? uriParts[5] : null;
+                    if (collabId == null) {
+                        throw new NotFoundException("Collaborator not found");
+                    } else if (!collabId.equals(user.getOid())) {
+                        throw new AccessDeniedException("You do not have permission to modify collaborators");
+                    }
                 }
-                if (uriParts[4].equals("collabs") && !request.getMethod().equals("DELETE")) {
-                    String message = collab.getAccess().equals(Collaboration.Access.READ)
-                            ? "You do not have permission to modify this board"
-                            : "You do not have permission to modify collaborators";
-                    throw new AccessDeniedException(message);
-                }
-            }
-            else if (!isTokenValid) {
+            } else if (!isTokenValid) {
                 throw new UnauthorizedException(tokenError);
             }
         } else if (!isPublicBoard && isGetMethod) {
@@ -99,6 +100,4 @@ public class BoardAccessFilter extends OncePerRequestFilter {
             throw new UnauthorizedException(tokenError);
         }
     }
-
-
 }

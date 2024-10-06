@@ -107,9 +107,11 @@ public class BoardService {
             board.setId(boardId);
             BoardUser owner = new BoardUser();
             owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
+            owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
             board.setOwner(owner);
             board.setIsCustomStatus(false);
             board.setVisibility(PRIVATE);
+            board.setCollaborators(new ArrayList<>());
             TaskLimit taskLimit = new TaskLimit();
             taskLimit.setIsLimit(false);
             taskLimit.setMaximumTask(10);
