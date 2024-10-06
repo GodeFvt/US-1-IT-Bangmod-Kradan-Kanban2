@@ -1,3 +1,4 @@
+
 import { defineStore, acceptHMRUpdate } from "pinia";
 
 export const useBoardStore = defineStore("useBoard", {
@@ -7,6 +8,7 @@ export const useBoardStore = defineStore("useBoard", {
       isCanEdit: true,
       currentBoard: {},
       collabBoard:[],
+      collabs:[],
     }),
   
     actions: {
@@ -37,6 +39,15 @@ export const useBoardStore = defineStore("useBoard", {
       setIsVisibilityCurrentBoard(visibility) {
         this.currentBoard.visibility = visibility
       } ,
+      setCollabs(collabs){
+        this.collabs = collabs;
+      },
+      addCollab(board){
+        this.collabs.push(board);
+      },
+      removeCollab(index){
+        this.collabs.splice(index,1);
+      },
     },
   });
   if (import.meta.hot) {

@@ -1,14 +1,19 @@
 <script setup>
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
-import { useStatusStore } from "../../stores/statuses.js";
 import { useUserStore } from "../../stores/user.js";
 import { useRoute, useRouter } from "vue-router";
 import collabDetail from "./collabDetail.vue"
-import { ref, watch } from "vue";
+import {onMounted, ref, watch } from "vue";
 import EditIcon from "../icon/EditIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue"
 import CloseIcon from "../icon/CloseIcon.vue"
+import { addCollabs, getCollabs,deleteCollabs } from "../../lib/fetchUtill";
+import { isTokenValid } from "../../lib/utill";
+import Toast from "../modal/Toasts.vue";
+import { useBoardStore } from "../../stores/boards.js";
+import AuthzPopup from "../AuthzPopup.vue";
+
 const props = defineProps({
   showErrorMSG: {
     type: Boolean,
@@ -20,97 +25,157 @@ const props = defineProps({
   },
 });
 
-let allStatus = ref([{ id: "0", name: "1", description: "2" }]);
-let accessRight = ref(["Read" , "Write"]);
-const accessSelect = ref("Read")
-const statusStore = useStatusStore();
 const userStore = useUserStore();
+const boardStore = useBoardStore();
+let accessRight = ref(["READ" , "WRITE"]);
+const accessSelect = ref("");
+
+const showToast = ref(false);
+const typeToast = ref("");
+const messageToast = ref("");
 const router = useRouter();
-
+const route = useRoute();
+const boardId = ref(route.params.boardId);
 const isVisible = ref([]);
-
 const isShowAddCollab = ref(false);
-const showAccessModal= ref(false);
+const showConfirmModal= ref(false);
 const isChangeAccess= ref(false);
-let username ="เอาใส่ด้วย"
-let usernameId = ref(50)
-console.log(usernameId.value);
-// watch(
-//   () => props.allStatus,
-//   () => {
-//     props.allStatus.forEach((task, index) => {
-//       setTimeout(() => {
-//         isVisible.value[index] = true;
-//       }, (index + 1) * 150);
-//     });
-//   },
-//   { deep: true }
-// );
+const showPopUp = ref(false);
+const username = ref(""); // เปลี่ยนเป็น ref เพื่อให้ตอบสนองต่อการเปลี่ยนแปลง
+const usernameId = ref(null); // ตั้งค่าเริ่มต้นเป็น null
 
-// function editStatus(id, name) {
-//   console.log(userStore.isCanEdit);
-//   if (userStore.isCanEdit) {
-//     // ***
-//     console.log("e");
-//     console.log(name);
-//     console.log(name !== "No Status" && name !== "Done");
-//     if (name !== "No Status" && name !== "Done") {
-//       console.log("ewd");
-//       // editMode.value = !editMode.value;
-//       console.log(id);
-//       router.push({ name: "EditStatus", params: { statusId: id } });
-//     }
-//   }
-// }
+function handleResponseError(responseCode) {
+  if (responseCode === 401) {
+    showPopUp.value = true;
+  } else if (
+    responseCode === 404 ||
+    responseCode === 500 ||
+    responseCode === 400
+  ) {
+    router.push({ name: "TaskNotFound", params: { page: "Board" } });
+  } else if (responseCode === 403) {
+    router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
+  }
+}
+
+
 watch(
   () => accessSelect.value,
   (newSelect, oldSelect) => {
     console.log("wdw",newSelect);
     console.log("wdw2",oldSelect);
    if (newSelect !== oldSelect) {
-    showAccessModal.value= true
+    showConfirmModal.value= true
     isChangeAccess.value=true
    } else {
-       showAccessModal.value= false
+       showConfirmModal.value= false
    }
-  //  console.log("wdw2efe",accessSelect.value);
-   // newSelect === oldSelect
-  }
-  // ,
-  // { immediate: true }
+  },
 )
 
-function close(e) {
-  isShowAddCollab.value=e
+onMounted(async () => {
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showPopUp.value = true;
+    return;
+  }
+ const res = await getCollabs(boardId.value);
+ if(typeof res === "object"){
+  boardStore.setCollabs(res);
+ }
+ else{
+  handleResponseError(res);
 }
-function confirmChange(e) {
+
+});
+
+
+
+async function addCollaborator(collab) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showPopUp.value = true;
+    return;
+  }
+  if (collab.email === null || collab.email === "") {
+      typeToast.value = "warning";
+      messageToast.value = `Must enter the email`;
+    } else {
+      collab.email = collab.email.trim();
+      collab.access = collab.access.toUpperCase();
+  const res = await addCollabs(boardId.value,collab);
+  if(typeof res === "object"){
+    typeToast.value = "success";
+        // taskStore.addTask(res);
+        messageToast.value = `Collaborator "${res.email}" added successfully`;
+        boardStore.addCollab(res);
+}
+else if(res ===404){
+  typeToast.value = "warning";
+  messageToast.value = `The user "${collab.email}" does not exists`;
+}
+else if (res === 401 || res === 403) {
+  handleResponseError(res);
+}
+else if (res===409){
+  typeToast.value = "warning";
+  messageToast.value = `The user "${collab.email}" is already the collaborator of this board`;
+}
+else{
+  typeToast.value = "danger";
+  messageToast.value = `There is a problem please try again later`;
+}
+}
+showToast.value = true;
+isShowAddCollab.value=false
+}
+
+
+
+function close(close) {
+  isShowAddCollab.value=close
+}
+
+async function changeAccessOrRemoveCollab(index,confirmValue = false) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showPopUp.value = true;
+    return;
+  }
   if (isChangeAccess.value) {
     //แก้ไข access right ของ user
-     if (e) {
+     if (confirmValue) {
     console.log("เปลี่ยน access ได้");
-    showAccessModal.value=false
 
   } else {
     console.log("ไม่เปลี่ยน access เพราะกด cancle");
-    showAccessModal.value=false
     console.log(accessSelect.value);
     //ถ้ากด cancle ให้ทำให้  accessSelect เป็นค่าเดิมของ user นั้นๆ 
     accessSelect.value = "Read"
     console.log(accessSelect.value);
-
- 
   }
   } else {
     //ลบ user ออกจาก board
-    console.log(usernameId.value);
-    if (e) {
-    console.log("user ออกจาก board");
-  } else {
-    console.log("ไม่user ออกจาก board");
-    showAccessModal.value=false
+    if (confirmValue) {
+      let collabOid = boardStore.collabs[index].oid;
+      const res = await deleteCollabs(boardId.value,collabOid);
+      if(res===200){
+        typeToast.value = "success";
+        messageToast.value = `Collaborator "${boardStore.collabs[index].email}" removed successfully`;
+        boardStore.removeCollab(index);
+      }
+      else if(res === 404){
+        typeToast.value = "warning";
+        messageToast.value = `The user "${boardStore.collabs[index].email}" is not the collaborator of this board`;
+      }
+      else if (res === 401 || res === 403) {
+        handleResponseError(res);
+      }
+      else{
+        typeToast.value = "danger";
+        messageToast.value = `There is a problem please try again`;
+      }
   }
+  showConfirmModal.value=false
+  showToast.value = true;
   }
- 
 
 }
 
@@ -128,7 +193,11 @@ function confirmChange(e) {
         <div class="m-[2px] flex sm:items-center items-end w-full">
           <router-link :to="{ name: 'task' }">
             <div class="itbkk-board-name text-gray-600 text-[1.5rem] font-bold">
-              xxxx Personal's Board
+              {{
+              userStore.currentBoard.owner.id === userStore.authToken.oid
+                ? userStore.currentBoard.name + " Personal's Board"
+                : userStore.currentBoard.name + "Collaborate's Board"
+            }}
             </div>
           </router-link>
 
@@ -243,13 +312,14 @@ function confirmChange(e) {
               >
                 <tr
                   class="itbkk-item flex w-full items-center justify-center bg-white border-l-4 border-b"
-                  v-for="(status, index) in allStatus"
+                  v-for="(collab, index) in boardStore.collabs"
                   :key="index"
                   :class="{ 'slide-in': isVisible[index] }"
+                  @click="username = collab.name; usernameId = index"
                 >
                   <td class="px-6 py-4 max-lg:hidden w-[5%]">
-                    <!-- {{ index + 1 }} -->
-                    1
+                    {{ index + 1 }}
+                    
                   </td>
 
                   <td
@@ -258,25 +328,22 @@ function confirmChange(e) {
                     <div
                       class="cursor-pointer h-full w-full items-center flex break-all"
                     >
-                      <span class="itbkk-status-name"> {{ status.name }} </span>
+                      <span class="itbkk-collab-name"> {{ collab.name }} </span>
                     </div>
                   </td>
 
                   <td
                     class="w-[30%] px-6 py-4 max-lg:[45%] max-lg:px-2 max-lg:py-3 break-all"
                     :class="
-                      status.description === null ||
-                      status.description?.length === 0
+                      collab.email === null ||
+                      collab.email?.length === 0
                         ? 'italic text-gray-600'
                         : ''
                     "
                   >
                     <span class="itbkk-email">
                       {{
-                        status.description === null ||
-                        status.description?.length === 0
-                          ? "No description is provided."
-                          : status.description
+                        collab.email
                       }}
                     </span>
                   </td>
@@ -285,11 +352,13 @@ function confirmChange(e) {
                   >
                     <div class="itbkk-acess-right">
                       <select
-                        class="itbkk-status border-2 border-gray-500 w-[10rem] h-[30px] rounded-lg"
-                        v-model="accessSelect"
+                        class="itbkk-collab border-2 border-gray-500 w-[10rem] h-[30px] rounded-lg"
+                        v-model="collab.access"
+                        @change="accessSelect = collab.access"
                       >
                         <option
                           v-for="access in accessRight"
+                          
                         >
                           {{ access }}
                         </option>
@@ -310,7 +379,7 @@ function confirmChange(e) {
                       >
                         <div
                           class="itbkk-collab-remove text-white fill-rose-300"
-                          @click="isChangeAccess=false , usernameId = index , showAccessModal= true"
+                          @click="isChangeAccess=false , usernameId = index , showConfirmModal= true"
                           :class="
                             userStore.isCanEdit
                               ? 'cursor-pointer'
@@ -344,7 +413,7 @@ function confirmChange(e) {
                 </div>
 
                 <div
-                  v-else-if="allStatus.length === 0 && !showLoading"
+                  v-else-if="boardStore.collabs.length == 0 && !showLoading"
                   class="flex h-[100%] items-center"
                 >
                   <span class="text-lg text-slate-700 opacity-50">
@@ -360,17 +429,20 @@ function confirmChange(e) {
       <collabDetail 
       v-if="isShowAddCollab"
       @user-action="close"
+      @addEdit="addCollaborator"
       />
 
       <ConfirmModal
-      v-if="showAccessModal"
-      @user-action="confirmChange"
+      v-if="showConfirmModal"
+      :index="usernameId"
+      @user-action="showConfirmModal = false"
+      @confirm="changeAccessOrRemoveCollab"
       :width="'w-[60vh]'"
       class="itbkk-modal-alert z-50"
     >
       <template #header>
         <div class="flex flex-col justify-items-end	place-items-end cursor-pointer" @click="showSettingModal=false">
-             <CloseIcon @click=" showAccessModal= false" />
+             <CloseIcon @click=" showConfirmModal= false" />
             </div>
         <div class="flex justify-center">   
           <span class="text-gray-800 font-bold text-[1.5rem]">
@@ -385,6 +457,18 @@ function confirmChange(e) {
       </template>
     </ConfirmModal>
 
+
+    <div
+      class="fixed flex items-center w-full max-w-xs right-5 bottom-5"
+      v-if="showToast"
+    >
+      <Toast :toast="typeToast" @close-toast="showToast = false">
+        <template #message>
+          <span class="itbkk-message break-all">{{ messageToast }}</span>
+        </template>
+      </Toast>
+    </div>
+    <AuthzPopup v-if="showPopUp" class="z-50" />
     </div>
   </div>
 </template>

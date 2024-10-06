@@ -11,7 +11,7 @@ import ManageCollab from "../views/ManageCollab.vue"
 const routes = [
   {
     path: "/",
-    redirect: { name: "board" },
+    redirect: { name: "Login" },
   },
   {
     path: "/board",
@@ -155,6 +155,7 @@ router.beforeEach(async (to, from, next) => {
       "AddStatus",
       "TaskDetail",
       "StatusDetail",
+      "ManageCollab",
     ].includes(to.name)
   ) {
     const board = await cachedGetBoardsById(boardId);

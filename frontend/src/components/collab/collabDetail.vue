@@ -23,83 +23,22 @@ const props = defineProps({
 const router = useRouter();
 const duplicateBoard = ref({});
 const validate = ref({ name: {}, description: {} });
-const allBoard = ref([]);
 const accessSelect = ref("Read")
 const email = ref("");
 
 let accessRight = ref(["Read" , "Write"]);
 
-// watch(
-//   () => props.board,
-//   (newBoard) => {
-//     allBoard.value = boardStore.boards;
-//     for (const key in newBoard) {
-//       if (newBoard[key] === null) {
-//         newBoard[key] = "";
-//       }
-//     }
-//     duplicateBoard.value = { ...newBoard };
-//     // duplicateBoard.value.name = `${props.username} personal board`
-//   },
-//   { immediate: true }
-// );
-
-// const isStatusChanged = computed(() => {
-//   // FALSE คือเปลี่ยน , true ไม่เปลี่ยน
-//   return JSON.stringify(props.board) === JSON.stringify(duplicateBoard.value);
-// });
-
-// const countBoardName = computed(() => {
-//   return duplicateBoard.value.name?.trim()?.length;
-// });
 
 function textShow(text) {
   if (text === null) {
     return "italic text-gray-600";
   }
 }
-function edit(boardId) {
-  console.log(boardId);
-  //   if (boardId !== null) {
-  //     editMode.value = !editMode.value;
-  //     router.push({ name: "EditStatus", params: { statusId: statusId  , boardId : "1"} });
-  //   }
-}
 
-// const duplicateName = computed(() => {
-//   return false;
-  // if (isStatusChanged.value === false) {
-  //   return allBoard.value
-  //     .filter((e) => e.name !== props.board.name)
-  //     .some(
-  //       (e) => e.name.toLowerCase() === duplicateBoard.value.name.toLowerCase()
-  //     );
-  // } else {
-  //   return false;
-  // }
-// });
 
-// const disabledSave = computed(() => {
-//   const arrStyle = validateSizeInput({
-//     propName: "Board name",
-//     propLenght: countBoardName.value,
-//     size: 120,
-//   });
 
-//   validate.value.name = arrStyle[0];
 
-//   if (
-//     isStatusChanged.value ||
-//     duplicateBoard.value.name === null ||
-//     countBoardName.value <= 0
-//   ) {
-//     return true;
-//   } else if (validate.value.name.boolean) {
-//     return true;
-//   } else {
-//     return false;
-//   }
-// });
+
 </script>
 
 <template>
@@ -165,7 +104,10 @@ function edit(boardId) {
               class="itbkk-button-ok text-white inline-flex items-center focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-gray-300"
             
               @click="
-                $emit('userAction', false)
+                $emit('addEdit', {
+                  email: email,
+                  access: accessSelect,
+                })
               "
             >
               ADD
