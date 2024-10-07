@@ -1,6 +1,5 @@
 <script setup>
 import { computed, ref, watch } from "vue";
-import EditTaskIcon from "../icon/EditTaskIcon.vue";
 import CloseIcon from "../icon/CloseIcon.vue";
 import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
@@ -9,9 +8,9 @@ import { useUserStore } from "../../stores/user.js";
 const boardStore = useUserStore();
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
-  board: {
-    type: Object,
-    required: false,
+  errorMSG: {
+    type: String,
+    default: "",
   },
   showLoading: {
     type: Boolean,
@@ -21,24 +20,27 @@ const props = defineProps({
   },
 });
 const router = useRouter();
-const duplicateBoard = ref({});
-const validate = ref({ name: {}, description: {} });
-const accessSelect = ref("Read")
+const validate = ref({ email: {} });
+const accessSelect = ref("Read");
 const email = ref("");
 
-let accessRight = ref(["Read" , "Write"]);
+let accessRight = ref(["Read", "Write"]);
 
+const isFormValid = computed(() => {
+  const arrStyle = validateSizeInput({
+    propName: "Email",
+    propLenght: email.value.trim().length,
+    size: 50,
+  });
 
-function textShow(text) {
-  if (text === null) {
-    return "italic text-gray-600";
-  }
-}
+  validate.value.email = arrStyle[0];
 
-
-
-
-
+  return (
+    validate.value.email.boolean === false &&
+    email.value.trim() !== "" &&
+    accessSelect.value !== ""
+  );
+});
 </script>
 
 <template>
@@ -47,7 +49,7 @@ function textShow(text) {
   >
     <div class="flex h-full items-center justify-center">
       <div
-        class="itbkk-modal-board flex flex-col justify-start rounded-md bg-white h-[22%]  w-[45rem] max-lg:w-[35rem] max-lg:h-[29%] max-md:w-[30rem] max-md:h-[29%] max-sm:w-[25rem] max-sm:h-[30%] shadow-md relative overflow-auto"
+        class="itbkk-modal-board flex flex-col justify-start rounded-md bg-white h-[24%] w-[45rem] max-lg:w-[35rem] max-lg:h-[29%] max-md:w-[30rem] max-md:h-[29%] max-sm:w-[25rem] max-sm:h-[30%] shadow-md relative overflow-auto"
       >
         <!-- Close Button -->
         <div class="w-full flex justify-end">
@@ -60,38 +62,38 @@ function textShow(text) {
         </div>
 
         <!-- Content -->
-        <div class="flex flex-col w-full pl-9 mt-1 	">
+        <div class="flex flex-col w-full pl-9 mt-1">
           <!-- Status Name -->
           <div class="flex flex-col w-fit">
             <span class="font-bold text-xl"> Add Collaborater</span>
             <div class="flex flex-row items-center gap-2 w-fit flex-wrap">
               <div class="flex flex-col">
-                <label  class="font-medium">Collaborater e-mail</label>
+                <label class="font-medium">Collaborater e-mail</label>
                 <input
-                  class="itbkk-collaborater-email 
-                  read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all 
-                  mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none w-[30rem] max-sm:w-[20rem] max-md:w-[25rem]"
+                  class="itbkk-collaborater-email read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none w-[30rem] max-sm:w-[20rem] max-md:w-[25rem]"
                   type="text"
                   name="statusName"
                   id="statusName"
                   v-model="email"
                   maxlength="50"
+                  placeholder="example@ad.sit.kmutt.ac.th"
                 />
+                <span class="text-xs text-red-500 h-[0.1rem]" v-if="errorMSG">
+                  {{ errorMSG }}
+                </span>
               </div>
               <div class="flex flex-col items-start">
                 <label class="font-medium">Access Right</label>
-                  <div class="itbkk-acess-right">
-                      <select
-                        class="itbkk-status border-2 border-gray-500 w-[10rem] h-[40px] mt-2  rounded-lg"
-                        v-model="accessSelect"
-                      >
-                        <option
-                          v-for="access in accessRight"
-                        >
-                          {{ access }}
-                        </option>
-                      </select>
-                    </div>
+                <div class="itbkk-acess-right">
+                  <select
+                    class="itbkk-status border-2 border-gray-500 w-[10rem] h-[40px] mt-2 rounded-lg"
+                    v-model="accessSelect"
+                  >
+                    <option v-for="access in accessRight">
+                      {{ access }}
+                    </option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -101,14 +103,14 @@ function textShow(text) {
         <div class="w-full flex justify-end mb-5 mt-4">
           <div class="flex mr-10 gap-2">
             <button
-              class="itbkk-button-ok text-white inline-flex items-center focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-gray-300"
-            
-              @click="
-                $emit('addEdit', {
-                  email: email,
-                  access: accessSelect,
-                })
+              class="itbkk-button-ok text-white inline-flex items-center focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              :class="
+                isFormValid
+                  ? 'cursor-pointer bg-green-700 hover:bg-green-800'
+                  : 'bg-gray-300 cursor-not-allowed'
               "
+              :disabled="!isFormValid"
+              @click="$emit('addEdit', { email: email, access: accessSelect })"
             >
               ADD
             </button>

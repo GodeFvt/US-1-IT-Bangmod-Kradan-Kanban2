@@ -559,7 +559,7 @@ async function removeTask(index, confirmDelete = false) {
           </router-link>
           <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold">
             {{
-              userStore.currentBoard.owner.id === userStore.authToken.oid
+              userStore.currentBoard.owner.id === userStore.authToken?.oid
                 ? userStore.currentBoard.name + " Personal's Board"
                 : userStore.currentBoard.name + "Collaborate's Board"
             }}

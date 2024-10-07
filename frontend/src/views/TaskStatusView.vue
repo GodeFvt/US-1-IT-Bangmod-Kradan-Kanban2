@@ -517,7 +517,11 @@ async function clickRemove(index) {
             </button>
           </router-link>
           <div class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold">
-            {{ boardName }} Personal's Board
+            {{
+              userStore.currentBoard.owner.id === userStore.authToken?.oid
+                ? userStore.currentBoard.name + " Personal's Board"
+                : userStore.currentBoard.name + "Collaborate's Board"
+            }}
           </div>
         </div>
         <!-- <div class="m-[2px] flex sm:items-center items-end">

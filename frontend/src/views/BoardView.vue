@@ -39,17 +39,7 @@ const showDeleteModal = ref(false);
 const showLeaveModal = ref(false);
 // console.log(userStore.authToken.name);
 
-const collabBoard = computed(() => {
-      return userStore.boards.filter(
-        (board) => board.owner.id !== userStore.authToken.oid
-      );
-    });
-    
-    const personalBoard = computed(() => {
-      return userStore.boards.filter(
-        (board) => board.owner.id === userStore.authToken.oid
-      );
-    });
+
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
     showPopUp.value = true;
@@ -78,11 +68,21 @@ onMounted(async () => {
       }
     //}
   }
-  console.log(personalBoard.value);
-  console.log(collabBoard.value);
 });
 
+const collabBoard = computed(() => {
+  if (!userStore.authToken) return []; // ถ้า authToken เป็น null ให้คืนค่าเป็น array ว่าง เกิดปัญหา logout แล้วหาauthToken ไม่ได้
+  return userStore.boards.filter(
+    (board) => board.owner.id !== userStore.authToken.oid
+  );
+});
 
+const personalBoard = computed(() => {
+  if (!userStore.authToken) return [];
+  return userStore.boards.filter(
+    (board) => board.owner.id === userStore.authToken.oid
+  );
+});
 watch(
   () => route.path,
   (newPath, oldPath) => {
@@ -305,7 +305,7 @@ function openBoard(boardId) {
 
         <!-- Collab Board -->
         <div class=" mb-12"></div>
-        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6" v-if="collabBoard.length>1">Collab Board</h2>
+        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6" v-if="collabBoard?.length>0">Collab Board</h2>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <!-- <router-link :to="{ name: 'AddBoard' }">
             <div

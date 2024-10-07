@@ -4,7 +4,6 @@ import { useUserStore } from "../../stores/user.js";
 import { useRoute, useRouter } from "vue-router";
 import collabDetail from "./collabDetail.vue"
 import {onMounted, ref, watch } from "vue";
-import EditIcon from "../icon/EditIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue"
 import CloseIcon from "../icon/CloseIcon.vue"
@@ -41,6 +40,8 @@ const isShowAddCollab = ref(false);
 const showConfirmModal= ref(false);
 const isChangeAccess= ref(false);
 const showPopUp = ref(false);
+const showLoading = ref(true);
+const errorMSG = ref("");
 const username = ref(""); // เปลี่ยนเป็น ref เพื่อให้ตอบสนองต่อการเปลี่ยนแปลง
 const usernameId = ref(null); // ตั้งค่าเริ่มต้นเป็น null
 
@@ -57,6 +58,19 @@ function handleResponseError(responseCode) {
     router.push({ name: "TaskNotFound", params: { page: "authorizAccess" } });
   }
 }
+
+watch(
+  () => boardStore.collabs,
+  () => {
+    boardStore.collabs.forEach((task, index) => {
+      setTimeout(() => {
+        isVisible.value[index] = true;
+      }, (index + 1) * 150);
+    });
+  },
+  { deep: true }
+);
+
 
 
 watch(
@@ -85,7 +99,7 @@ onMounted(async () => {
  else{
   handleResponseError(res);
 }
-
+showLoading.value = false;
 });
 
 
@@ -107,25 +121,27 @@ async function addCollaborator(collab) {
         // taskStore.addTask(res);
         messageToast.value = `Collaborator "${res.email}" added successfully.`;
         boardStore.addCollab(res);
+        isShowAddCollab.value=false;
 }
 else if(res ===404){
-  typeToast.value = "warning";
-  messageToast.value = `The user "${collab.email}" does not exists.`;
+ //The user "${collab.email}" does not exists. ที่ addModal
+ errorMSG.value = `The user "${collab.email}" does not exists.`;
 }
 else if (res === 401 || res === 403) {
   handleResponseError(res);
 }
 else if (res===409){
-  typeToast.value = "warning";
-  messageToast.value = `The user "${collab.email}" is already the collaborator of this board.`;
+  // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
+  errorMSG.value = `The user "${collab.email}" is already the collaborator of this board.`;
 }
 else{
   typeToast.value = "danger";
   messageToast.value = `There is a problem please try again later.`;
+  isShowAddCollab.value=false;
 }
 }
 showToast.value = true;
-isShowAddCollab.value=false
+
 }
 
 
@@ -213,7 +229,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
           <router-link :to="{ name: 'task' }">
             <div class="itbkk-board-name text-gray-600 text-[1.5rem] font-bold">
               {{
-              userStore.currentBoard.owner.id === userStore.authToken.oid
+              userStore.currentBoard.owner.id === userStore.authToken?.oid
                 ? userStore.currentBoard.name + " Personal's Board"
                 : userStore.currentBoard.name + "Collaborate's Board"
             }}
@@ -275,7 +291,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                         ? 'cursor-pointer'
                         : 'cursor-not-allowed disabled'
                     "
-                    @click="isShowAddCollab=true"
+                    @click="isShowAddCollab=true,errorMSG=''"
                   >
                     Add Collaborater
                   </button>
@@ -436,7 +452,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                   class="flex h-[100%] items-center"
                 >
                   <span class="text-lg text-slate-700 opacity-50">
-                    No Record Found
+                    No Collaborator
                   </span>
                 </div>
               </tbody>
@@ -447,6 +463,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
 
       <collabDetail 
       v-if="isShowAddCollab"
+      :errorMSG="errorMSG"
       @user-action="close"
       @addEdit="addCollaborator"
       />

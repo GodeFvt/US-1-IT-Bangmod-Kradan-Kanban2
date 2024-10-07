@@ -25,11 +25,10 @@ const props = defineProps({
   },
 });
 const userStore = useUserStore();
-const indexCo = computed(() => {
-  return props.allBoard.findIndex((board) =>
-    board.collaborators.some((collaborator) => collaborator.oid === userStore.authToken.oid)
-  );
-});
+function getCollaboratorAccess(board) {
+  const collaborator = board.collaborators.find(collab => collab.oid === userStore.authToken.oid);
+  return collaborator.access;
+}
 
 </script>
 
@@ -92,13 +91,14 @@ const indexCo = computed(() => {
     <!-- <template #content>
               <p class="slide-right text-sm text-muted-foreground">{{ board.description }}</p>
             </template> -->
-    <template #collab v-if="boardType === 'collab'">
+    <template #collab v-if="boardType === 'collab'"
+    >
       <div
         class="flex flex-col w-[75%] text-center mt-1 place-items-start ml-3 mb-2"
       >
-        <p class="itbkk-owner-name text-sm font-medium">Board Owner :: {{ board.owner.username }}</p>
+      <p class="itbkk-owner-name text-sm font-medium">Board Owner :: {{ board.owner.username }}</p>
         <p class="itbkk-access-right text-sm font-medium">
-          Access Rignt :: {{ board.collaborators[indexCo].access}}
+          Access Right :: {{ getCollaboratorAccess(board) }}
         </p>
       </div>
     </template>
