@@ -179,9 +179,9 @@ public class BoardService {
             String oid = collaboration.getOid();
             Optional<User> user = userRepository.findById(oid);
             if (user.isEmpty()) {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess(), collaboration.getAddedOn()));
+                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess().toString(), collaboration.getAddedOn()));
             }
-            simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess(), collaboration.getAddedOn()));
+            simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn()));
         });
 
         return simpleCollaboratorDTOS;
@@ -191,9 +191,9 @@ public class BoardService {
         Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
         Optional<User> user = userRepository.findById(collaboration.getOid());
         if (user.isEmpty()) {
-            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess(), collaboration.getAddedOn());
+            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess().toString(), collaboration.getAddedOn());
         }
-        return new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess(), collaboration.getAddedOn());
+        return new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn());
     }
 
     @Transactional

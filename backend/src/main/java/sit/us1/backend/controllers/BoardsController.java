@@ -99,12 +99,12 @@ public class BoardsController {
     }
 
     @PostMapping("/{id}/collabs")
-    public ResponseEntity<SimpleCollaboratorDTO> addCollaborator(@PathVariable String id, @Validated(ValidationGroups.OnCreate.class) @RequestBody SimpleCollaboratorDTO newCollab) {
+    public ResponseEntity<SimpleCollaboratorDTO> addCollaborator(@PathVariable String id, @Validated({ValidationGroups.OnCreate.class, Default.class}) @RequestBody SimpleCollaboratorDTO newCollab) {
         return ResponseEntity.status(HttpStatus.CREATED).body(boardService.addCollaborator(id, newCollab));
     }
 
     @PatchMapping("/{id}/collabs/{collabId}")
-    public ResponseEntity<SimpleCollaboratorDTO> updateCollaborator(@PathVariable String id, @PathVariable String collabId, @Validated(ValidationGroups.OnUpdate.class) @RequestBody SimpleCollaboratorDTO collab) {
+    public ResponseEntity<SimpleCollaboratorDTO> updateCollaborator(@PathVariable String id, @PathVariable String collabId, @Validated({ValidationGroups.OnUpdate.class, Default.class}) @RequestBody SimpleCollaboratorDTO collab) {
         return ResponseEntity.ok(boardService.updateCollaborator(id, collabId, collab));
     }
 
