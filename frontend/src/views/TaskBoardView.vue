@@ -201,11 +201,6 @@ function countStatuses() {
 }
 
 onMounted(async () => {
-  console.log(
-    "onMounted",
-    toggleVisibleActive.value,
-    userStore.visibilityPublic
-  );
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail();
     if (userStore.visibilityPublic === false) {
@@ -623,22 +618,9 @@ async function removeTask(index, confirmDelete = false) {
             </div>
             <div class="">
               <router-link :to="{ name: 'ManageCollab' }">
-                <div
-                  :class="
-                    userStore.isCanEdit
-                      ? ''
-                      : 'tooltip tooltip-bottom tooltip-hover'
-                  "
-                  data-tip="You need to be board owner to perform this action."
-                >
+                <div>
                   <button
                     class="itbkk-manage-collaborater bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                    :disabled="!userStore.isCanEdit"
-                    :class="
-                      userStore.isCanEdit
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
-                    "
                   >
                     Manage Collabotater
                   </button>

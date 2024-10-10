@@ -162,7 +162,7 @@ onUnmounted(() => {
     <!-- Table -->
     <TaskTable :taskFiltered="taskFiltered">
       <template #sortStatus>
-        <div class="itbkk-status-sort flex gap-1">
+        <div class="itbkk-status-sort flex gap-1" @click="switchSortType">
           <span>Status</span>
 
           <SortIcon sortType="default" v-if="sortType === 'default'" />

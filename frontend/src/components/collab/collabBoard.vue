@@ -7,7 +7,7 @@ import {onMounted, ref, watch } from "vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue"
 import CloseIcon from "../icon/CloseIcon.vue"
-import { addCollabs, getCollabs,deleteCollabs, updateCollabs } from "../../lib/fetchUtill";
+import { addCollabs, getCollabs,deleteCollabs, updateCollabs,getAllBoards } from "../../lib/fetchUtill";
 import { isTokenValid } from "../../lib/utill";
 import Toast from "../modal/Toasts.vue";
 import { useBoardStore } from "../../stores/boards.js";
@@ -27,7 +27,7 @@ const props = defineProps({
 const userStore = useUserStore();
 const boardStore = useBoardStore();
 let accessRight = ref(["READ" , "WRITE"]);
-const accessSelect = ref("READ");
+const accessSelect = ref("");
 const oldAccess = ref("");
 const showToast = ref(false);
 const typeToast = ref("");
@@ -92,9 +92,20 @@ onMounted(async () => {
     showPopUp.value = true;
     return;
   }
+  if (userStore.boards.length === 0) {
+      const resBoard = await getAllBoards();
+
+      if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
+        handleResponseError(resBoard);
+      } else {
+        userStore.setAllBoard(resBoard);
+      }
+  }
  const res = await getCollabs(boardId.value);
  if(typeof res === "object"){
   boardStore.setCollabs(res);
+  const indexCollab = boardStore.collabs.findIndex(collab => collab.oid === userStore.authToken.oid); //หา index ของ user ที่ login อยู่
+  accessSelect.value = boardStore.collabs[indexCollab].access; //เอา access ของ user ที่ login อยู่ ต้องทำเพราะถ้าเข้ามาแล้วเปลี่ยนค่าทันทีมันจะเปลี่ยนเป็น null ค่า default นั่นแหละ
  }
  else{
   handleResponseError(res);
@@ -127,8 +138,13 @@ else if(res ===404){
  //The user "${collab.email}" does not exists. ที่ addModal
  errorMSG.value = `The user "${collab.email}" does not exists.`;
 }
-else if (res === 401 || res === 403) {
+else if (res === 401) {
   handleResponseError(res);
+}
+else if(res===403){
+  typeToast.value = "warning";
+  messageToast.value = `You do not have permission to add collaborator.`;
+  isShowAddCollab.value=false;
 }
 else if (res===409){
   // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
@@ -146,10 +162,6 @@ showToast.value = true;
 
 
 
-function close(close) {
-  isShowAddCollab.value=close
-}
-
 async function changeAccessOrRemoveCollab(confirmValue = false) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
@@ -164,10 +176,12 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
       typeToast.value = "success";
       messageToast.value = `Access right of "${collab.name}" changed to "${collab.access}" successfully.`;
       boardStore.updateAccessCollab(usernameId.value,res.access);
+
     }
     else if(res === 404){
       typeToast.value = "warning";
       messageToast.value = `The user "${collab.name}" is not the collaborator of this board.`;
+      boardStore.removeCollab(usernameId.value);//ลบ user ออกจาก boardถ้าไม่กดแล้วไม่เจอ เช่นโดนลบออกจาก board โดยเจ้าของ ณ ตอนนั้น
     }
     else if (res === 401) {
       handleResponseError(res);
@@ -175,6 +189,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
     else if(res ===403){
       typeToast.value = "warning";
       messageToast.value = `You do not have permission to change collaborator access right.`;
+      collab.access = oldAccess.value;
     }
     else{
       typeToast.value = "danger";
@@ -208,8 +223,8 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
         messageToast.value = `There is a problem please try again.`;
       }
   }
+
   }
-  console.log('ถึงนะ')
   showConfirmModal.value=false
   showToast.value = true;
 }
@@ -285,11 +300,11 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                 >
                   <button
                     class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                    :disabled="!userStore.isCanEdit"
+                    :disabled="userStore.currentBoard.owner.id !== userStore.authToken?.oid"
                     :class="
-                      userStore.isCanEdit
+                      userStore.currentBoard.owner.id === userStore.authToken?.oid
                         ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
+                        : 'cursor-not-allowed'
                     "
                     @click="isShowAddCollab=true,errorMSG=''"
                   >
@@ -415,6 +430,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                         <div
                           class="itbkk-collab-remove text-white fill-rose-300"
                           @click="isChangeAccess=false , usernameId = index , showConfirmModal= true"
+                          :disable="!userStore.isCanEdit"
                           :class="
                             userStore.isCanEdit
                               ? 'cursor-pointer'
@@ -464,7 +480,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
       <collabDetail 
       v-if="isShowAddCollab"
       :errorMSG="errorMSG"
-      @user-action="close"
+      @user-action="isShowAddCollab=false"
       @addEdit="addCollaborator"
       />
 
