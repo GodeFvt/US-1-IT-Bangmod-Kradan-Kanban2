@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useUserStore } from "../../stores/user.js";
 
+
 const boardStore = useUserStore();
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
@@ -19,10 +20,12 @@ const props = defineProps({
     type: String,
   },
 });
+const userStore = useUserStore();
 const router = useRouter();
 const validate = ref({ email: {} });
 const accessSelect = ref("Read");
 const email = ref("");
+const errorMSG = ref(props.errorMSG);
 
 let accessRight = ref(["Read", "Write"]);
 
@@ -32,15 +35,39 @@ const isFormValid = computed(() => {
     propLenght: email.value.trim().length,
     size: 50,
   });
-
   validate.value.email = arrStyle[0];
+  const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  const isEmailValid = emailPattern.test(email.value.trim());
+  const isOwner = email.value.trim() === userStore.authToken.email;
 
   return (
     validate.value.email.boolean === false &&
     email.value.trim() !== "" &&
-    accessSelect.value !== ""
+    accessSelect.value !== "" &&
+    isEmailValid &&
+    !isOwner
   );
 });
+
+watch(
+  () => email.value,
+  () => {
+    if(email.value.trim() ===userStore.authToken.email){
+      errorMSG.value = "Board owner cannot be a collaborator of his/her own board."; //check if email is owner
+    }
+    else{
+      errorMSG.value = ""; // clear error message
+    }
+  }
+);
+
+watch(
+  () => props.errorMSG,
+  () => {
+    errorMSG.value = props.errorMSG;
+  }
+); // watch error message ถ้าไม้ใส่ไว้จะไม่แสดง error message
+
 </script>
 
 <template>
@@ -71,7 +98,7 @@ const isFormValid = computed(() => {
                 <label class="font-medium">Collaborater e-mail</label>
                 <input
                   class="itbkk-collaborater-email read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none w-[30rem] max-sm:w-[20rem] max-md:w-[25rem]"
-                  type="text"
+                  type="email"
                   name="statusName"
                   id="statusName"
                   v-model="email"
@@ -109,7 +136,7 @@ const isFormValid = computed(() => {
                   ? 'cursor-pointer bg-green-700 hover:bg-green-800'
                   : 'bg-gray-300 cursor-not-allowed'
               "
-              :disabled="!isFormValid"
+              :disabled="!isFormValid "
               @click="$emit('addEdit', { email: email, access: accessSelect })"
             >
               ADD

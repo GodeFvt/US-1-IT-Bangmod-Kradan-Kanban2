@@ -105,7 +105,7 @@ onMounted(async () => {
  if(typeof res === "object"){
   boardStore.setCollabs(res);
   const indexCollab = boardStore.collabs.findIndex(collab => collab.oid === userStore.authToken.oid); //หา index ของ user ที่ login อยู่
-  accessSelect.value = boardStore.collabs[indexCollab].access; //เอา access ของ user ที่ login อยู่ ต้องทำเพราะถ้าเข้ามาแล้วเปลี่ยนค่าทันทีมันจะเปลี่ยนเป็น null ค่า default นั่นแหละ
+  accessSelect.value = boardStore.collabs[indexCollab]?.access; //เอา access ของ user ที่ login อยู่ ต้องทำเพราะถ้าเข้ามาแล้วเปลี่ยนค่าทันทีมันจะเปลี่ยนเป็น null ค่า default นั่นแหละ
  }
  else{
   handleResponseError(res);
