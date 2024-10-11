@@ -187,7 +187,7 @@ router.beforeEach(async (to, from, next) => {
       userStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
       const oidByGet = board.owner.id;
       const oidByToken = userStore.authToken?.oid;
-      const collaBorator = board.collaborators.find(c => c.oid === userStore.authToken.oid);
+      const collaBorator = board.collaborators.find(c => c.oid === userStore.authToken?.oid);
       userStore.setCurrentBoard(board);
       userStore.updatevIsCanEdit(
         isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet,collaBorator)
@@ -210,14 +210,16 @@ router.beforeEach(async (to, from, next) => {
 
       if (
         board.visibility === "PRIVATE" &&
-        ((!isOwner && !collaBorator) || !userStore.authToken )
+        (
+          ((!isOwner && !collaBorator) || !userStore.authToken ) || ((collaBorator?.access !== "WRITE" && !isOwner) && isEditAction)
+
+        )
       ) {
         return next({ 
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
         });
       }
-
     }
   }
 

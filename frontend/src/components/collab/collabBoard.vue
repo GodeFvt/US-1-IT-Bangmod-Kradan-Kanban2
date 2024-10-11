@@ -400,11 +400,19 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                   <td
                     class="w-[20%] px-6 py-4 max-lg:[45%] max-lg:px-2 max-lg:py-3 break-all"
                   >
-                    <div class="itbkk-acess-right">
+                    <div class="itbkk-acess-right"
+                    
+                    >
                       <select
                         class="itbkk-collab border-2 border-gray-500 w-[10rem] h-[30px] rounded-lg"
                         v-model="collab.access"
                         @change="accessSelect = collab.access,showConfirmModal=true,usernameId = index"
+                        :disabled="!userStore.isCanEdit"
+                          :class="
+                            userStore.isCanEdit
+                              ? 'cursor-pointer'
+                              : 'cursor-not-allowed disabled'
+                          "
                       >
                         <option
                           v-for="access in accessRight"
@@ -419,18 +427,11 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                     class="w-[20%] px-4 py-4 max-lg:w-[25%] max-lg:px-2 max-lg:py-3 cursor-pointer flex justify-center items-center"
                   >
                     <div class="flex flex-row gap-4 max-sm:flex-col">
-                      <div
-                        :class="
-                          userStore.isCanEdit
-                            ? ''
-                            : 'tooltip tooltip-top tooltip-hover'
-                        "
-                        data-tip="You need to be board owner to perform this action."
-                      >
+                      <div>
                         <div
                           class="itbkk-collab-remove text-white fill-rose-300"
-                          @click="isChangeAccess=false , usernameId = index , showConfirmModal= true"
-                          :disable="!userStore.isCanEdit"
+                         @click="isChangeAccess=false , usernameId = index , userStore.isCanEdit ? showConfirmModal= true: showConfirmModal= false"
+                          :disabled="!userStore.isCanEdit"
                           :class="
                             userStore.isCanEdit
                               ? 'cursor-pointer'

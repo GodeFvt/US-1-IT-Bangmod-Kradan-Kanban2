@@ -1,5 +1,5 @@
 <script setup>
-import {computed } from "vue";
+import {ref } from "vue";
 import boardCard from "./boardCard.vue";
 import MoreActionIcon from "../icon/MoreActionIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
@@ -47,6 +47,7 @@ function getCollaboratorAccess(board) {
       class="itbkk-button-action dropdown dropdown-hover flex justify-center items-center absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
     >
       <div
+        v-if="boardType !== 'collab'"
         :tabindex="board.id"
         role="button"
         class="p-1 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-50"
@@ -96,7 +97,7 @@ function getCollaboratorAccess(board) {
       <div
         class="flex flex-col w-[75%] text-center mt-1 place-items-start ml-3 mb-2"
       >
-      <p class="itbkk-owner-name text-sm font-medium">Board Owner :: {{ board.owner.username }}</p>
+      <p class="itbkk-owner-name text-sm font-medium">Owner :: {{ board.owner.username }}</p>
         <p class="itbkk-access-right text-sm font-medium">
           Access Right :: {{ getCollaboratorAccess(board) }}
         </p>

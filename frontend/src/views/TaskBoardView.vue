@@ -201,6 +201,7 @@ function countStatuses() {
 }
 
 onMounted(async () => {
+  
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail();
     if (userStore.visibilityPublic === false) {
