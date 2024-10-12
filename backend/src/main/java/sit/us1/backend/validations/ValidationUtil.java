@@ -1,9 +1,13 @@
-package sit.us1.backend.exceptions;
+package sit.us1.backend.validations;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
-import java.util.Set;
+import org.springframework.stereotype.Component;
+import sit.us1.backend.exceptions.NotFoundException;
+import sit.us1.backend.exceptions.ValidationException;
 
+import java.util.Set;
+@Component
 public class ValidationUtil {
 
     private final Validator validator;
