@@ -93,16 +93,20 @@ watch(
 
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
-    showPopUp.value = true;
-    return;
+    if (userStore.visibilityPublic === false) {
+      showPopUp.value = true;
+      return;
+    }
   }
-  if (userStore.boards.length === 0) {
-    const resBoard = await getAllBoards();
-
-    if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
-      handleResponseError(resBoard);
-    } else {
-      userStore.setAllBoard(resBoard);
+  if (userStore.authToken !== null) {
+    if (userStore.boards.length === 0) {
+      const resBoard = await getAllBoards();
+      console.log(resBoard);
+      if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
+        handleResponseError(resBoard);
+      } else {
+        userStore.setAllBoard(resBoard);
+      }
     }
   }
   const res = await getCollabs(boardId.value);
@@ -277,7 +281,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
           >
             <div
               :class="
-                userStore.isCanEdit
+                userStore.currentBoard.owner.id === userStore.authToken?.oid
                   ? ''
                   : 'tooltip tooltip-bottom tooltip-hover'
               "
@@ -388,7 +392,8 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                   >
                     <div
                       :class="
-                        userStore.isCanEdit
+                        userStore.currentBoard.owner.id ===
+                        userStore.authToken?.oid
                           ? ''
                           : 'tooltip tooltip-bottom tooltip-hover'
                       "
@@ -405,9 +410,9 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                               (usernameId = index),
                               console.log(accessSelect)
                           "
-                          :disabled="!userStore.isCanEdit"
+                          :disabled="userStore.currentBoard.owner.id !== userStore.authToken?.oid"
                           :class="
-                            userStore.isCanEdit
+                             userStore.currentBoard.owner.id === userStore.authToken?.oid
                               ? 'cursor-pointer'
                               : 'cursor-not-allowed disabled'
                           "
@@ -426,7 +431,8 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                       <div>
                         <div
                           :class="
-                            userStore.isCanEdit
+                            userStore.currentBoard.owner.id ===
+                            userStore.authToken?.oid
                               ? ''
                               : 'tooltip tooltip-bottom tooltip-hover'
                           "
@@ -437,20 +443,20 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                             @click="
                               (isChangeAccess = false),
                                 (usernameId = index),
-                                userStore.isCanEdit
+                                userStore.currentBoard.owner.id === userStore.authToken?.oid
                                   ? (showConfirmModal = true)
                                   : (showConfirmModal = false)
                             "
-                            :disabled="!userStore.isCanEdit"
+                            :disabled="userStore.currentBoard.owner.id !== userStore.authToken?.oid"
                             :class="
-                              userStore.isCanEdit
+                              userStore.currentBoard.owner.id === userStore.authToken?.oid
                                 ? 'cursor-pointer'
                                 : 'cursor-not-allowed disabled'
                             "
                           >
                             <DeleteIcon
                               :class="
-                                userStore.isCanEdit
+                                userStore.currentBoard.owner.id === userStore.authToken?.oid
                                   ? ' hover:fill-rose-400'
                                   : ' hover:fill-rose-300'
                               "

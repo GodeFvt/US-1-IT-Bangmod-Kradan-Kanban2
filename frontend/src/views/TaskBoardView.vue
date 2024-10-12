@@ -567,15 +567,15 @@ async function removeTask(index, confirmDelete = false) {
             <div
               class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2 disabled"
               @click="
-                userStore.isCanEdit
+                userStore.currentBoard.owner.id === userStore.authToken?.oid
                   ? (showVisibilityModal = true)
                   : (showVisibilityModal = false)
               "
             >
               <div
                 :class="
-                  userStore.isCanEdit
-                    ? ''
+                userStore.currentBoard.owner.id === userStore.authToken?.oid                   
+                 ? ''
                     : 'tooltip tooltip-bottom tooltip-hover'
                 "
                 data-tip="You need to be board owner to perform this action."
@@ -586,13 +586,15 @@ async function removeTask(index, confirmDelete = false) {
                 <Toggle
                   :toggleActive="toggleVisibleActive"
                   :class="
-                    userStore.isCanEdit
-                      ? 'cursor-pointer'
+                  userStore.currentBoard.owner.id === userStore.authToken?.oid                      
+                  ? 'cursor-pointer'
                       : 'cursor-not-allowed'
                   "
                 />
               </div>
             </div>
+
+
             <div class="">
               <router-link :to="{ name: 'AddTask' }">
                 <div

@@ -201,7 +201,7 @@ router.beforeEach(async (to, from, next) => {
         "AddStatus",
       ].includes(to.name);
 
-      if (board.visibility === "PUBLIC" && !isOwner && isEditAction) {
+      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.access !== "WRITE" && !isOwner) && isEditAction) ) {
         return next({
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
