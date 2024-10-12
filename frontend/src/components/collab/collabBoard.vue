@@ -79,7 +79,7 @@ watch(
     console.log("wdw",newSelect);
     console.log("wdw2",oldSelect);
    if (newSelect !== oldSelect) {
-    isChangeAccess.value=true
+    isChangeAccess.value = true;
     oldAccess.value = oldSelect
    } else {
        showConfirmModal.value= false
@@ -104,8 +104,6 @@ onMounted(async () => {
  const res = await getCollabs(boardId.value);
  if(typeof res === "object"){
   boardStore.setCollabs(res);
-  const indexCollab = boardStore.collabs.findIndex(collab => collab.oid === userStore.authToken.oid); //หา index ของ user ที่ login อยู่
-  accessSelect.value = boardStore.collabs[indexCollab]?.access; //เอา access ของ user ที่ login อยู่ ต้องทำเพราะถ้าเข้ามาแล้วเปลี่ยนค่าทันทีมันจะเปลี่ยนเป็น null ค่า default นั่นแหละ
  }
  else{
   handleResponseError(res);
@@ -196,9 +194,10 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
       messageToast.value = `There is a problem please try again.`;
 
     }
-
+    showToast.value = true;
   } else {
     //ถ้ากด cancle ให้ทำให้  accessSelect เป็นค่าเดิมของ user นั้นๆ 
+
     collab.access = oldAccess.value;
   }
   } else {
@@ -222,11 +221,12 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
         typeToast.value = "danger";
         messageToast.value = `There is a problem please try again.`;
       }
+      showToast.value = true;
   }
 
   }
   showConfirmModal.value=false
-  showToast.value = true;
+  // showToast.value = true;
 }
 
 </script>
@@ -406,7 +406,8 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                       <select
                         class="itbkk-collab border-2 border-gray-500 w-[10rem] h-[30px] rounded-lg"
                         v-model="collab.access"
-                        @change="accessSelect = collab.access,showConfirmModal=true,usernameId = index"
+                        @click-once="accessSelect = collab.access"
+                        @change="accessSelect = collab.access,showConfirmModal=true,usernameId = index,console.log(accessSelect)"
                         :disabled="!userStore.isCanEdit"
                           :class="
                             userStore.isCanEdit
