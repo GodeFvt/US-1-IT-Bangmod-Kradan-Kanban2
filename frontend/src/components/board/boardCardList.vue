@@ -27,7 +27,7 @@ const props = defineProps({
 const userStore = useUserStore();
 function getCollaboratorAccess(board) {
   const collaborator = board.collaborators.find(collab => collab.oid === userStore.authToken.oid);
-  return collaborator.access;
+  return collaborator.accessRight;
 }
 
 </script>
