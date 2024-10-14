@@ -84,7 +84,7 @@ public class BoardAccessFilter extends OncePerRequestFilter {
             } else if (!isGetMethod) {
                 if(isCollab){
                     Collaboration collab = collabService.getCollaboration(boardId, user.getOid());
-                    if (uriLength <= 4 || collab.getAccess().equals(Collaboration.Access.READ) && !uriParts[4].equals("collabs")) {
+                    if (uriLength <= 4 || collab.getAccessRight().equals(Collaboration.Access.READ) && !uriParts[4].equals("collabs")) {
                         throw new AccessDeniedException("You do not have permission to modify this board");
                     } else if (uriParts[4].equals("collabs") && !method.equals("DELETE")) {
                         throw new AccessDeniedException("You do not have permission to modify collaborators");

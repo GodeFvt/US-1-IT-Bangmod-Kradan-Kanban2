@@ -25,7 +25,8 @@ public class SimpleCollaboratorDTO {
     private String accessRight;
     private ZonedDateTime addedOn;
 
-    public Collaboration.Access getAccess() {
+    public Collaboration.Access getAccessRight() {
+        System.out.println(this.accessRight);
         return Collaboration.Access.valueOf(this.accessRight.toUpperCase());
     }
 }
