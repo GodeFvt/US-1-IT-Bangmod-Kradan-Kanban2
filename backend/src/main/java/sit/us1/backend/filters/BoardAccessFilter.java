@@ -96,7 +96,7 @@ public class BoardAccessFilter extends OncePerRequestFilter {
                             throw new AccessDeniedException("You do not have permission to modify collaborators");
                         }
                     }
-                }else if (uriLength > 4 && uriParts[4].equals("collabs")) {
+                }else if (uriLength > 5 && uriParts[4].equals("collabs")) {
                     if (uriParts[5].equals(user.getOid())) {
                         throw new AccessDeniedException("You is owner of this board");
                     }

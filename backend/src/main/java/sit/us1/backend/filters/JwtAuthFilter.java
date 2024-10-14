@@ -104,7 +104,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             message = e.getMessage();
         } else {
             status = HttpStatus.UNAUTHORIZED;
-            message = "An unexpected error occurred";
+            message = e.getMessage();
         }
 
         response.setStatus(status.value());

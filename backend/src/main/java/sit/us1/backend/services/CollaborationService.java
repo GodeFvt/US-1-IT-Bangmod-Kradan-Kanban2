@@ -53,7 +53,7 @@ public class CollaborationService {
             if (user.isEmpty()) {
                 simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess().toString(), collaboration.getAddedOn()));
             }else {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn()));
+                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn()));
             }
         });
 
@@ -66,7 +66,7 @@ public class CollaborationService {
         if (user.isEmpty()) {
             return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess().toString(), collaboration.getAddedOn());
         }
-        return new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn());
+        return new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn());
     }
 
     @Transactional
@@ -100,7 +100,7 @@ public class CollaborationService {
 
             Collaboration newCol = collaborationRepository.save(collaboration);
             newCollab.setOid(newCol.getOid());
-            newCollab.setName(user.getUsername());
+            newCollab.setName(user.getName());
             newCollab.setAddedOn(newCol.getAddedOn());
             return newCollab;
         } catch (Exception e) {
