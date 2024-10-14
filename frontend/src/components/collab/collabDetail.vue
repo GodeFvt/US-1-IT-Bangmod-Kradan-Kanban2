@@ -137,7 +137,7 @@ watch(
                   : 'bg-gray-300 cursor-not-allowed'
               "
               :disabled="!isFormValid "
-              @click="$emit('addEdit', { email: email, access: accessSelect })"
+              @click="$emit('addEdit', { email: email, accessRight: accessSelect })"
             >
               ADD
             </button>

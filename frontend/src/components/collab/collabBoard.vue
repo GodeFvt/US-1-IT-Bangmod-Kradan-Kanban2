@@ -126,9 +126,10 @@ async function addCollaborator(collab) {
   if (collab.email === null || collab.email === "") {
     typeToast.value = "warning";
     messageToast.value = `Must enter the email.`;
+    showToast.value = true;
   } else {
     collab.email = collab.email.trim();
-    collab.accessRight = collab.accessRight.toUpperCase();
+    collab.accessRight = collab.accessRight?.toUpperCase();
     const res = await addCollabs(boardId.value, collab);
     if (typeof res === "object") {
       typeToast.value = "success";
@@ -136,25 +137,31 @@ async function addCollaborator(collab) {
       messageToast.value = `Collaborator "${res.email}" added successfully.`;
       boardStore.addCollab(res);
       isShowAddCollab.value = false;
+      showToast.value = true;
     } else if (res === 404) {
       //The user "${collab.email}" does not exists. ที่ addModal
+      typeToast.value = "warning";
       errorMSG.value = `The user "${collab.email}" does not exists.`;
+      showToast.value = false;
     } else if (res === 401) {
       handleResponseError(res);
     } else if (res === 403) {
       typeToast.value = "warning";
       messageToast.value = `You do not have permission to add collaborator.`;
       isShowAddCollab.value = false;
+      showToast.value = true;
+
     } else if (res === 409) {
       // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
       errorMSG.value = `The user "${collab.email}" is already the collaborator of this board.`;
+      showToast.value = false;
     } else {
       typeToast.value = "danger";
       messageToast.value = `There is a problem please try again later.`;
       isShowAddCollab.value = false;
+      showToast.value = true;
     }
   }
-  showToast.value = true;
 }
 
 async function changeAccessOrRemoveCollab(confirmValue = false) {
