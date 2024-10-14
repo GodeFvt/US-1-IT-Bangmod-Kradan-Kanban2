@@ -43,6 +43,10 @@ public class StatusService {
     @Value("${non-editable-statuses}")
     private String[] nonEditableStatuses;
 
+    public boolean isStatusExist(Integer statusId) {
+        return statusRepository.existsById(statusId);
+    }
+
     public List<SimpleStatusDTO> getAllStatus(String boardId) {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {

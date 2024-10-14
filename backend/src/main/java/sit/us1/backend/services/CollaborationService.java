@@ -93,6 +93,7 @@ public class CollaborationService {
                 BoardUser newUser = new BoardUser();
                 newUser.setId(user.getOid());
                 newUser.setUsername(user.getUsername());
+                newUser.setName(user.getName());
                 boardUserRepository.save(newUser);
             }
 

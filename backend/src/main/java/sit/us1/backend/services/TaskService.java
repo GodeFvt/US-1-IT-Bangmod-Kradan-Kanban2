@@ -34,6 +34,9 @@ public class TaskService {
     @Autowired
     private ModelMapper mapper;
 
+    public boolean isTaskExist(Integer taskId) {
+        return taskRepository.existsById(taskId);
+    }
     public List<SimpleTaskDTO> getAllTask() {
         return listMapper.mapList(taskRepository.findAll(), SimpleTaskDTO.class, mapper);
     }
