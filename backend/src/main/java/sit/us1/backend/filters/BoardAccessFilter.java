@@ -15,10 +15,7 @@ import sit.us1.backend.exceptions.AccessDeniedException;
 import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.exceptions.UnauthorizedException;
-import sit.us1.backend.services.BoardService;
-import sit.us1.backend.services.CollaborationService;
-import sit.us1.backend.services.JwtTokenUtil;
-import sit.us1.backend.services.SecurityUtil;
+import sit.us1.backend.services.*;
 
 import java.io.IOException;
 
@@ -29,6 +26,10 @@ public class BoardAccessFilter extends OncePerRequestFilter {
     private BoardService boardService;
     @Autowired
     private CollaborationService collabService;
+    @Autowired
+    private TaskService taskService;
+    @Autowired
+    private StatusService statusService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
@@ -75,6 +76,14 @@ public class BoardAccessFilter extends OncePerRequestFilter {
         String[] uriParts = uri.split("/");
         int uriLength = uriParts.length;
 
+        if (uriLength >= 6 && uriParts[4].equals("statuses") && !statusService.isStatusExist(Integer.parseInt(uriParts[5]))) {
+            throw new NotFoundException("Status not found");
+        }
+
+        if (uriLength >= 6 && uriParts[4].equals("tasks") && !taskService.isTaskExist(Integer.parseInt(uriParts[5]))) {
+            throw new NotFoundException("Task not found");
+        }
+
         if (user != null) {
             boolean isCollab = collabService.isCollaborator(boardId, user.getOid());
             if (!isOwner && !isTokenValid && !isGetMethod) {
@@ -114,4 +123,6 @@ public class BoardAccessFilter extends OncePerRequestFilter {
             throw new UnauthorizedException(tokenError);
         }
     }
+
+
 }

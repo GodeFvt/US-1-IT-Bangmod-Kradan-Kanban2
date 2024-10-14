@@ -90,6 +90,7 @@ public class BoardService {
                 BoardUser user = new BoardUser();
                 user.setId(userDetails.getOid());
                 user.setUsername(userDetails.getUsername());
+                user.setName(userDetails.getName());
                 boardUserRepository.save(user);
             }
         } catch (Exception e) {
