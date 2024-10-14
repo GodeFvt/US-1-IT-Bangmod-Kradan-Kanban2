@@ -242,7 +242,7 @@ onUnmounted(() => {
                     ? ''
                     : 'tooltip tooltip-bottom tooltip-hover'
                 "
-                data-tip="You need to be board owner to perform this action."
+                data-tip="You need to be board owner or has write access to perform this action"
               >
                 <div
                   class="itbkk-button-edit"
@@ -269,7 +269,7 @@ onUnmounted(() => {
                     ? ''
                     : 'tooltip tooltip-bottom tooltip-hover'
                 "
-                data-tip="You need to be board owner to perform this action."
+                data-tip="You need to be board owner or has write access to perform this action"
               >
                 <div
                   class="itbkk-button-delete"

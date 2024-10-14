@@ -126,9 +126,10 @@ async function addCollaborator(collab) {
   if (collab.email === null || collab.email === "") {
     typeToast.value = "warning";
     messageToast.value = `Must enter the email.`;
+    showToast.value = true;
   } else {
     collab.email = collab.email.trim();
-    collab.access = collab.access.toUpperCase();
+    collab.accessRight = collab.accessRight?.toUpperCase();
     const res = await addCollabs(boardId.value, collab);
     if (typeof res === "object") {
       typeToast.value = "success";
@@ -136,25 +137,31 @@ async function addCollaborator(collab) {
       messageToast.value = `Collaborator "${res.email}" added successfully.`;
       boardStore.addCollab(res);
       isShowAddCollab.value = false;
+      showToast.value = true;
     } else if (res === 404) {
       //The user "${collab.email}" does not exists. ที่ addModal
+      typeToast.value = "warning";
       errorMSG.value = `The user "${collab.email}" does not exists.`;
+      showToast.value = false;
     } else if (res === 401) {
       handleResponseError(res);
     } else if (res === 403) {
       typeToast.value = "warning";
       messageToast.value = `You do not have permission to add collaborator.`;
       isShowAddCollab.value = false;
+      showToast.value = true;
+
     } else if (res === 409) {
       // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
       errorMSG.value = `The user "${collab.email}" is already the collaborator of this board.`;
+      showToast.value = false;
     } else {
       typeToast.value = "danger";
       messageToast.value = `There is a problem please try again later.`;
       isShowAddCollab.value = false;
+      showToast.value = true;
     }
   }
-  showToast.value = true;
 }
 
 async function changeAccessOrRemoveCollab(confirmValue = false) {
@@ -169,8 +176,8 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
       const res = await updateCollabs(boardId.value, collab);
       if (typeof res === "object") {
         typeToast.value = "success";
-        messageToast.value = `Access right of "${collab.name}" changed to "${collab.access}" successfully.`;
-        boardStore.updateAccessCollab(usernameId.value, res.access);
+        messageToast.value = `Access right of "${collab.name}" changed to "${collab.accessRight}" successfully.`;
+        boardStore.updateAccessCollab(usernameId.value, res.accessRight);
       } else if (res === 404) {
         typeToast.value = "warning";
         messageToast.value = `The user "${collab.name}" is not the collaborator of this board.`;
@@ -180,7 +187,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
       } else if (res === 403) {
         typeToast.value = "warning";
         messageToast.value = `You do not have permission to change collaborator access right.`;
-        collab.access = oldAccess.value;
+        collab.accessRight = oldAccess.value;
       } else {
         typeToast.value = "danger";
         messageToast.value = `There is a problem please try again.`;
@@ -189,7 +196,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
     } else {
       //ถ้ากด cancle ให้ทำให้  accessSelect เป็นค่าเดิมของ user นั้นๆ
 
-      collab.access = oldAccess.value;
+      collab.accessRight = oldAccess.value;
     }
   } else {
     //ลบ user ออกจาก board
@@ -402,10 +409,10 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                       <div class="itbkk-acess-right">
                         <select
                           class="itbkk-collab border-2 border-gray-500 w-[10rem] h-[30px] rounded-lg"
-                          v-model="collab.access"
-                          @click-once="accessSelect = collab.access"
+                          v-model="collab.accessRight"
+                          @click-once="accessSelect = collab.accessRight"
                           @change="
-                            (accessSelect = collab.access),
+                            (accessSelect = collab.accessRight),
                               (showConfirmModal = true),
                               (usernameId = index),
                               console.log(accessSelect)

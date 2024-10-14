@@ -25,7 +25,7 @@ public class Collaboration {
     private String oid;
     @Column(name = "access")
     @Enumerated(EnumType.STRING)
-    private Access access;
+    private Access accessRight;
     @Column(name = "addedOn", updatable = false, insertable = false)
     private ZonedDateTime addedOn;
 

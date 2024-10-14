@@ -201,7 +201,7 @@ router.beforeEach(async (to, from, next) => {
         "AddStatus",
       ].includes(to.name);
 
-      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.access !== "WRITE" && !isOwner) && isEditAction) ) {
+      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction) ) {
         return next({
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
@@ -211,7 +211,7 @@ router.beforeEach(async (to, from, next) => {
       if (
         board.visibility === "PRIVATE" &&
         (
-          ((!isOwner && !collaBorator) || !userStore.authToken ) || ((collaBorator?.access !== "WRITE" && !isOwner) && isEditAction)
+          ((!isOwner && !collaBorator) || !userStore.authToken ) || ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction)
 
         )
       ) {

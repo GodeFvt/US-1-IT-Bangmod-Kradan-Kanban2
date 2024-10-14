@@ -76,7 +76,7 @@ async function isTokenValid(token) {
 function isNotDisable(isPublic, user, owner,collaBorator) {
   //isPublic ถ้า True จะเป็น public
   if (isPublic) {
-    if (user !== undefined && (user === owner || (user === collaBorator?.oid && collaBorator?.access === "WRITE"))) {
+    if (user !== undefined && (user === owner || (user === collaBorator?.oid && collaBorator?.accessRight === "WRITE"))) {
       //ถ้า เป็น public แต้ owner = user ก็แก้ไข
       return true;
     } else {
@@ -84,7 +84,7 @@ function isNotDisable(isPublic, user, owner,collaBorator) {
       return false;
     }
   } else {
-    if (user !== undefined && (user === owner || (user === collaBorator?.oid && collaBorator?.access === "WRITE"))) {
+    if (user !== undefined && (user === owner || (user === collaBorator?.oid && collaBorator?.accessRight === "WRITE"))) {
       //ถ้า เป็น private แต้ owner = user ก็แก้ไข
       return true;
     } else {

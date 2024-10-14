@@ -36,6 +36,9 @@ public class CollaborationService {
     @Autowired
     private ModelMapper mapper;
 
+    public boolean collaboratorExists(String oid) {
+        return collaborationRepository.existsByOid(oid);
+    }
     public boolean isCollaborator(String boardId, String oid) {
         return collaborationRepository.existsById(new CollaborationId(boardId, oid));
     }
@@ -51,9 +54,9 @@ public class CollaborationService {
             String oid = collaboration.getOid();
             Optional<User> user = userRepository.findById(oid);
             if (user.isEmpty()) {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess().toString(), collaboration.getAddedOn()));
+                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getAddedOn()));
             }else {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn()));
+                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getAddedOn()));
             }
         });
 
@@ -64,9 +67,9 @@ public class CollaborationService {
         Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
         Optional<User> user = userRepository.findById(collaboration.getOid());
         if (user.isEmpty()) {
-            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccess().toString(), collaboration.getAddedOn());
+            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getAddedOn());
         }
-        return new SimpleCollaboratorDTO(oid, user.get().getUsername(), user.get().getEmail(), collaboration.getAccess().toString(), collaboration.getAddedOn());
+        return new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getAddedOn());
     }
 
     @Transactional
@@ -96,11 +99,11 @@ public class CollaborationService {
             Collaboration collaboration = new Collaboration();
             collaboration.setBoardId(id);
             collaboration.setOid(user.getOid());
-            collaboration.setAccess(newCollab.getAccess());
+            collaboration.setAccessRight(newCollab.getAccessRight());
 
             Collaboration newCol = collaborationRepository.save(collaboration);
             newCollab.setOid(newCol.getOid());
-            newCollab.setName(user.getUsername());
+            newCollab.setName(user.getName());
             newCollab.setAddedOn(newCol.getAddedOn());
             return newCollab;
         } catch (Exception e) {
@@ -111,7 +114,7 @@ public class CollaborationService {
     @Transactional
     public SimpleCollaboratorDTO updateCollaborator(String id,String oid, SimpleCollaboratorDTO newCollab) {
         Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
-        collaboration.setAccess(newCollab.getAccess());
+        collaboration.setAccessRight(newCollab.getAccessRight());
         try {
             return mapper.map(collaborationRepository.save(collaboration), SimpleCollaboratorDTO.class);
         } catch (Exception e) {

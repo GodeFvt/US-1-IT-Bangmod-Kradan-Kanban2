@@ -22,10 +22,11 @@ public class SimpleCollaboratorDTO {
     @NotBlank(groups = {ValidationGroups.OnCreate.class})
     private String email;
     @ValidEnum(enumClass = Collaboration.Access.class, message = "Invalid access type (READ, WRITE)", groups = {Default.class})
-    private String access;
+    private String accessRight;
     private ZonedDateTime addedOn;
 
-    public Collaboration.Access getAccess() {
-        return Collaboration.Access.valueOf(this.access.toUpperCase());
+    public Collaboration.Access getAccessRight() {
+        System.out.println(this.accessRight);
+        return Collaboration.Access.valueOf(this.accessRight.toUpperCase());
     }
 }
