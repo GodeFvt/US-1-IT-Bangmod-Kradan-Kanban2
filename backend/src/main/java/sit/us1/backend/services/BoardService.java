@@ -123,8 +123,10 @@ public class BoardService {
     @Transactional
     public SimpleBoardDTO deleteBoardById(String id) {
         List<TaskList> allTask = taskListRepository.findAllByBoard_Id(id);
+        List<Collaboration> allCollaboration = collaborationRepository.findAllByBoardId(id);
         TaskLimit taskLimits = taskLimitRepository.findByBoardId(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
         try {
+            collaborationRepository.deleteAll(allCollaboration);
             taskListRepository.deleteAll(allTask);
             Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
             List<TaskStatus> allStatus = taskStatusRepository.findAllByBoardId(id);

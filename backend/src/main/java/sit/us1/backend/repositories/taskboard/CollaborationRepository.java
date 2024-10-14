@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface CollaborationRepository extends JpaRepository<Collaboration, CollaborationId> {
     List<Collaboration> findAllByBoardIdOrderByAddedOn (String boardId);
+    List<Collaboration> findAllByBoardId (String boardId);
 }
