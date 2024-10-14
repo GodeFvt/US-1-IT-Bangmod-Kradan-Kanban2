@@ -76,20 +76,11 @@ public class BoardAccessFilter extends OncePerRequestFilter {
         String[] uriParts = uri.split("/");
         int uriLength = uriParts.length;
 
-        if (uriLength >= 6 && uriParts[4].equals("statuses") && !statusService.isStatusExist(Integer.parseInt(uriParts[5]))) {
-            throw new NotFoundException("Status not found");
-        }
-
-        if (uriLength >= 6 && uriParts[4].equals("tasks") && !taskService.isTaskExist(Integer.parseInt(uriParts[5]))) {
-            throw new NotFoundException("Task not found");
-        }
-
         if (user != null) {
             boolean isCollab = collabService.isCollaborator(boardId, user.getOid());
             if (!isOwner && !isTokenValid && !isGetMethod) {
                 throw new UnauthorizedException(tokenError);
             } else if ((!isOwner && !isCollab) && (!isPublicBoard || !isGetMethod)) {
-
                 throw new AccessDeniedException("You are not the owner of this board");
             } else if (!isGetMethod) {
                 if(isCollab){
@@ -121,6 +112,12 @@ public class BoardAccessFilter extends OncePerRequestFilter {
             throw new AccessDeniedException("Board is not public");
         } else if (!isPublicBoard || !isGetMethod) {
             throw new UnauthorizedException(tokenError);
+        }
+        if (uriLength >= 6 && uriParts[4].equals("statuses") && !statusService.isStatusExist(Integer.parseInt(uriParts[5]))) {
+            throw new NotFoundException("Status not found");
+        }
+        if (uriLength >= 6 && uriParts[4].equals("tasks") && !taskService.isTaskExist(Integer.parseInt(uriParts[5]))) {
+            throw new NotFoundException("Task not found");
         }
     }
 
