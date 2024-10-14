@@ -36,6 +36,9 @@ public class CollaborationService {
     @Autowired
     private ModelMapper mapper;
 
+    public boolean collaboratorExists(String oid) {
+        return collaborationRepository.existsByOid(oid);
+    }
     public boolean isCollaborator(String boardId, String oid) {
         return collaborationRepository.existsById(new CollaborationId(boardId, oid));
     }

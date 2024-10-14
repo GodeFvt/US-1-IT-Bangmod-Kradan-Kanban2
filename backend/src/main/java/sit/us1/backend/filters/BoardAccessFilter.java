@@ -80,9 +80,13 @@ public class BoardAccessFilter extends OncePerRequestFilter {
             if (!isOwner && !isTokenValid && !isGetMethod) {
                 throw new UnauthorizedException(tokenError);
             } else if ((!isOwner && !isCollab) && (!isPublicBoard || !isGetMethod)) {
+
                 throw new AccessDeniedException("You are not the owner of this board");
             } else if (!isGetMethod) {
                 if(isCollab){
+//                    if(uriLength >= 6 && !collabService.collaboratorExists(uriParts[5]) && uriParts[4].equals("collabs")){
+//                        throw new NotFoundException("Collaborator not found");
+//                    }
                     Collaboration collab = collabService.getCollaboration(boardId, user.getOid());
                     if (uriLength <= 4 || collab.getAccessRight().equals(Collaboration.Access.READ) && !uriParts[4].equals("collabs")) {
                         throw new AccessDeniedException("You do not have permission to modify this board");
@@ -98,7 +102,7 @@ public class BoardAccessFilter extends OncePerRequestFilter {
                     }
                 }else if (uriLength > 5 && uriParts[4].equals("collabs")) {
                     if (uriParts[5].equals(user.getOid())) {
-                        throw new AccessDeniedException("You is owner of this board");
+                        throw new NotFoundException("You is owner of this board");
                     }
                 }
             }  else if (!isTokenValid) {
