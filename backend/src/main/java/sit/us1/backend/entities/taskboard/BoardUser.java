@@ -14,4 +14,6 @@ public class BoardUser {
     @Id
     @Column(name = "oid")
     private String id;
+    @Column(name = "username")
+    private String username;
 }

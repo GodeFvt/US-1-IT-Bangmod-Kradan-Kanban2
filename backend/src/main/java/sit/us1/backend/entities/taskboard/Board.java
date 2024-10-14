@@ -1,10 +1,12 @@
 package sit.us1.backend.entities.taskboard;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Entity
@@ -13,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "boards")
 public class Board {
+
     @Id
     @Column(name = "boardId")
     private String id;
@@ -20,8 +23,10 @@ public class Board {
     private String name;
     @Column(name = "isCustomStatus",nullable = false, columnDefinition = "TINYINT", length = 1)
     private Boolean isCustomStatus;
+    @Enumerated(EnumType.STRING)
     @Column(name = "visibility")
-    private String visibility;
+    private Visibility visibility;
+
     @OneToOne
     @JoinColumn(name = "oid")
     private BoardUser owner;
@@ -29,4 +34,16 @@ public class Board {
     @OneToMany(mappedBy = "board" , fetch = FetchType.EAGER)
     private List<TaskList> taskList;
 
+    @OneToMany(mappedBy = "board" , fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<Collaboration> collaborators;
+
+    @Column(name = "createdOn",updatable = false, insertable = false)
+    private ZonedDateTime createdOn;
+    @Column(name = "updatedOn",updatable = false, insertable = false)
+    private ZonedDateTime updatedOn;
+
+    public enum Visibility {
+        PUBLIC, PRIVATE
+    }
 }

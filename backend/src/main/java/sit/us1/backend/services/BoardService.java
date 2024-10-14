@@ -7,16 +7,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
+import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
 import sit.us1.backend.dtos.tasksDTO.SimpleTaskDTO;
 import sit.us1.backend.entities.account.CustomUserDetails;
+import sit.us1.backend.entities.account.User;
 import sit.us1.backend.entities.taskboard.*;
 import sit.us1.backend.exceptions.BadRequestException;
+import sit.us1.backend.exceptions.ConflictException;
 import sit.us1.backend.exceptions.NotFoundException;
+import sit.us1.backend.repositories.account.UserRepository;
 import sit.us1.backend.repositories.taskboard.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static sit.us1.backend.entities.taskboard.Board.Visibility.*;
 
 @Service
 public class BoardService {
@@ -29,7 +35,11 @@ public class BoardService {
     @Autowired
     private TaskListRepository taskListRepository;
     @Autowired
-    BoardUserRepository boardUserRepository;
+    private BoardUserRepository boardUserRepository;
+    @Autowired
+    private CollaborationRepository collaborationRepository;
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private ListMapper listMapper;
     @Autowired
@@ -41,7 +51,7 @@ public class BoardService {
 
     public boolean isBoardPublic(String boardId) {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
-        return "PUBLIC".equalsIgnoreCase(board.getVisibility());
+        return PUBLIC.equals(board.getVisibility());
     }
 
     public boolean isOwnerOfBoard(String boardId, String oid) {
@@ -56,13 +66,19 @@ public class BoardService {
         return boardRepository.existsById(boardId);
     }
 
+
+
     public List<SimpleBoardDTO> getAllBoardByOid() {
         try {
             String Oid = SecurityUtil.getCurrentUserDetails().getOid();
-            return listMapper.mapList(boardRepository.findAllByOwner_Id(Oid), SimpleBoardDTO.class, mapper);
+            return listMapper.mapList(boardRepository.findAllByOwnerOrCollaboration(Oid), SimpleBoardDTO.class, mapper);
         } catch (Exception e) {
             throw new BadRequestException("the specified board does not exist");
         }
+    }
+
+    public SimpleBoardDTO getBoardById(String id) {
+        return mapper.map(boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist")), SimpleBoardDTO.class);
     }
 
     @Transactional
@@ -73,17 +89,12 @@ public class BoardService {
             if (boardUserRepository.findById(Oid).isEmpty()) {
                 BoardUser user = new BoardUser();
                 user.setId(userDetails.getOid());
+                user.setUsername(userDetails.getUsername());
                 boardUserRepository.save(user);
             }
         } catch (Exception e) {
             throw new BadRequestException("Cannot create user");
         }
-//        try {
-//            taskLimit.setBoardId(boardRepository.save(board).getId());
-//        } catch (Exception e) {
-//            board.setId(NanoIdUtils.randomNanoId(10));
-//            taskLimit.setBoardId(boardRepository.save(board).getId());
-//        }
         Board board = mapper.map(newBoard, Board.class);
         try {
             String boardId;
@@ -93,9 +104,11 @@ public class BoardService {
             board.setId(boardId);
             BoardUser owner = new BoardUser();
             owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
+            owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
             board.setOwner(owner);
             board.setIsCustomStatus(false);
-            board.setVisibility("PRIVATE");
+            board.setVisibility(PRIVATE);
+            board.setCollaborators(new ArrayList<>());
             TaskLimit taskLimit = new TaskLimit();
             taskLimit.setIsLimit(false);
             taskLimit.setMaximumTask(10);
@@ -105,10 +118,6 @@ public class BoardService {
             throw new BadRequestException("Cannot create board");
         }
         return mapper.map(board, SimpleBoardDTO.class);
-    }
-
-    public SimpleBoardDTO getBoardById(String id) {
-        return mapper.map(boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist")), SimpleBoardDTO.class);
     }
 
     @Transactional
@@ -145,13 +154,8 @@ public class BoardService {
     }
 
     @Transactional
-    public SimpleBoardDTO updateVisibilityById(String id, String visibility) {
+    public SimpleBoardDTO updateVisibilityById(String id, Board.Visibility visibility) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
-        if(visibility.equalsIgnoreCase("PUBLIC") || visibility.equalsIgnoreCase("PRIVATE")) {
-            board.setVisibility(visibility);
-        } else {
-            throw new BadRequestException("Invalid visibility");
-        }
         board.setVisibility(visibility);
         try {
             boardRepository.save(board);
@@ -160,6 +164,5 @@ public class BoardService {
         }
         return mapper.map(board, SimpleBoardDTO.class);
     }
-
 
 }

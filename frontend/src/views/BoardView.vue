@@ -6,6 +6,7 @@ import {
   createBoard,
   updateBoard,
   getAllBoards,
+  deleteCollabs,
 } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import AddButton from "../components/icon/AddButton.vue";
@@ -17,8 +18,10 @@ import ConfirmModal from "../components/modal/ConfirmModal.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { isTokenValid } from "../lib/utill.js";
+import {useBoardStore} from "../stores/boards.js";
 
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const router = useRouter();
 const route = useRoute();
 
@@ -33,7 +36,9 @@ const showBoardModal = ref(false);
 const isEdit = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
+const showLeaveModal = ref(false);
 // console.log(userStore.authToken.name);
+
 
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
@@ -65,6 +70,19 @@ onMounted(async () => {
   }
 });
 
+const collabBoard = computed(() => {
+  if (!userStore.authToken) return []; // ถ้า authToken เป็น null ให้คืนค่าเป็น array ว่าง เกิดปัญหา logout แล้วหาauthToken ไม่ได้
+  return userStore.boards.filter(
+    (board) => board.owner.id !== userStore.authToken.oid
+  );
+});
+
+const personalBoard = computed(() => {
+  if (!userStore.authToken) return [];
+  return userStore.boards.filter(
+    (board) => board.owner.id === userStore.authToken.oid
+  );
+});
 watch(
   () => route.path,
   (newPath, oldPath) => {
@@ -95,8 +113,6 @@ watch(
           if (route.path === `/board/${newId}/edit`) {
             console.log("edit eiei");
             board.value = userStore.boards.find((board) => board.id === newId);
-            console.log(userStore.boards);
-            console.log(board.value);
 
             showBoardModal.value = true;
             isEdit.value = true;
@@ -217,13 +233,48 @@ async function removeBoard(boardId, confirmDelete = false) {
         messageToast.value = `The board has been deleted`;
       }
       showDeleteModal.value = false;
+      showToast.value = true;
     }
   }
 }
 
+async function leaveBoard(boardId, confirmLeave = false) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showPopUp.value = true;
+    return;
+  }  
+  showLeaveModal.value = true;
+  if (typeof boardId === "string") {
+      boardIdForDelete.value = boardId;
+      board.value = userStore.boards.find((board) => board.id === boardId);  
+    }
+  if (confirmLeave === true) {
+    const res = await deleteCollabs(boardIdForDelete.value, userStore.authToken.oid);
+      if (res === 200) {
+        typeToast.value = "success";
+        userStore.deleteBoard(boardId);
+        messageToast.value = `You have left the board`;
+       
+      } else if (res === 401) {
+        handleResponseError(res);
+      } else {
+        typeToast.value = "warning";
+        messageToast.value = `An error has occurred, the board could not be left`;
+      }
+      showLeaveModal.value = false;
+      showToast.value = true;
+    }
+}
+
+
+
 function openBoard(boardId) {
   router.push({ name: "task", params: { boardId: boardId } });
 }
+
+
+
+
 </script>
 <template>
   <div class="flex flex-col min-h-screen bg-background w-full">
@@ -231,6 +282,7 @@ function openBoard(boardId) {
       <div class="container px-4 mx-auto">
         <h2 class="slide-right mb-6 text-2xl font-bold">Your Boards</h2>
         <div class="border-b border-gray-300 mb-12"></div>
+        <h2 class="itbkk-personal-board font-bold	text-2xl mb-6">Personal Board</h2>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <router-link :to="{ name: 'AddBoard' }">
             <div
@@ -244,8 +296,32 @@ function openBoard(boardId) {
           </router-link>
           <!-- board card list -->
           <boardCardList
-            :allBoard="userStore.boards"
+            :allBoard="personalBoard"
             @removeBoard="removeBoard"
+            @openBoard="openBoard"
+          >
+          </boardCardList>
+        </div>
+
+        <!-- Collab Board -->
+        <div class=" mb-12"></div>
+        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6" v-if="collabBoard?.length>0">Collab Board</h2>
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <!-- <router-link :to="{ name: 'AddBoard' }">
+            <div
+              class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
+            >
+              <AddButton />
+              <h3 class="text-lg font-semibold mb-2 text-gray-400">
+                Add Collab Board
+              </h3>
+            </div>
+          </router-link> -->
+          <!-- board card list -->
+          <boardCardList
+            :allBoard="collabBoard"
+            boardType="collab"
+            @leaveBoard="leaveBoard"
             @openBoard="openBoard"
           >
           </boardCardList>
@@ -299,6 +375,32 @@ function openBoard(boardId) {
       </span>
     </template>
   </ConfirmModal>
+
+  <ConfirmModal
+    v-if="showLeaveModal"
+    @user-action="showLeaveModal = false"
+    @confirm="leaveBoard"
+    :index="
+      userStore.boards.findIndex((board) => board.id === boardIdForDelete)
+    "
+    class="z-50"
+    width="w-[42vh]"
+  >
+    <template #header>
+      <div class="flex justify-center">
+        <AlertSquareIcon class="w-16 h-16 opacity-40" />
+      </div>
+    </template>
+    <template #body>
+      <span class="itbkk-message">
+        Do you want to leave this "<span class="font-semibold">{{
+          board.name
+        }}</span
+        >"
+      </span>
+    </template>
+  </ConfirmModal>
+
   <AuthzPopup v-if="showPopUp" />
 </template>
 

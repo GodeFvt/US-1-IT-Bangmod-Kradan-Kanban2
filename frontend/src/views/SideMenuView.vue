@@ -26,6 +26,7 @@ const countBoard = computed(() => {
 function signOut() {
   userStore.clearAuthToken();
   // userStore.updateIsAuthen(false);
+
   router.push({ name: "Login" });
 }
 

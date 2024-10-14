@@ -173,6 +173,8 @@ async function signInOnClick(userLogin) {
                         <button
                           @mousedown="toggleIcon = true"
                           @mouseup="toggleIcon = false"
+                          @touchstart="toggleIcon = true"
+                          @touchend="toggleIcon = false"
                           type="button"
                           autocapitalize="none"
                           class="absolute inset-y-0 end-0 flex items-center z-20 px-3 cursor-pointer text-gray-400 rounded-e-md focus:outline-none focus:text-blue-600"

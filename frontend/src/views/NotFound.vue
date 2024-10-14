@@ -92,7 +92,7 @@ function clearAllInterval() {
       <span class="text-red-700">{{ timeCount }}</span> seconds...
     </p>
     <br />
-    <router-link :to="{ name: 'board' }">
+    <router-link :to="{ name: 'Login' }">
       <button
         class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded"
       >

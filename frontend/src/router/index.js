@@ -7,11 +7,11 @@ import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
-
+import ManageCollab from "../views/ManageCollab.vue"
 const routes = [
   {
     path: "/",
-    redirect: { name: "board" },
+    redirect: { name: "Login" },
   },
   {
     path: "/board",
@@ -83,6 +83,11 @@ const routes = [
     name: "Login",
     component: Login,
   },
+  {
+    path: "/board/:boardId/collab",
+    name: "ManageCollab",
+    component: ManageCollab,
+  },
 ];
 
 const router = createRouter({
@@ -150,6 +155,7 @@ router.beforeEach(async (to, from, next) => {
       "AddStatus",
       "TaskDetail",
       "StatusDetail",
+      "ManageCollab",
     ].includes(to.name)
   ) {
     const board = await cachedGetBoardsById(boardId);
@@ -181,9 +187,10 @@ router.beforeEach(async (to, from, next) => {
       userStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
       const oidByGet = board.owner.id;
       const oidByToken = userStore.authToken?.oid;
+      const collaBorator = board.collaborators.find(c => c.oid === userStore.authToken?.oid);
       userStore.setCurrentBoard(board);
       userStore.updatevIsCanEdit(
-        isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
+        isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet,collaBorator)
       );
 
       const isOwner = userStore.authToken?.oid === board.owner.id;
@@ -194,7 +201,7 @@ router.beforeEach(async (to, from, next) => {
         "AddStatus",
       ].includes(to.name);
 
-      if (board.visibility === "PUBLIC" && !isOwner && isEditAction) {
+      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.access !== "WRITE" && !isOwner) && isEditAction) ) {
         return next({
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
@@ -203,14 +210,16 @@ router.beforeEach(async (to, from, next) => {
 
       if (
         board.visibility === "PRIVATE" &&
-        (!isOwner || !userStore.authToken)
+        (
+          ((!isOwner && !collaBorator) || !userStore.authToken ) || ((collaBorator?.access !== "WRITE" && !isOwner) && isEditAction)
+
+        )
       ) {
         return next({ 
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
         });
       }
-
     }
   }
 

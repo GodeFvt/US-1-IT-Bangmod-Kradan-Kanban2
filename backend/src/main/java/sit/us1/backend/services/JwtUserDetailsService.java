@@ -41,7 +41,6 @@ public class JwtUserDetailsService implements UserDetailsService {
     }
 
     public CustomUserDetails loadUserByOid(String oid) throws UsernameNotFoundException {
-        System.out.println("oid: " + oid);
         Optional<User> user = userRepository.findById(oid);
         if (user.isEmpty()) {
             throw new InternalAuthenticationServiceException("Token is invalid.");

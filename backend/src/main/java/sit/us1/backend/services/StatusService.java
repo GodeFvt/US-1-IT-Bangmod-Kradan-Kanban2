@@ -100,7 +100,6 @@ public class StatusService {
 
         if (!board.getIsCustomStatus()) {
             List<TaskStatus> statusList = copyDefaultStatusesToBoard(boardId, board);
-            System.out.println(statusList);
             TaskStatus newStatus;
             for (TaskStatus status : statusList) {
                 if (status.getName().equals(oldStatus.getName())) {
@@ -127,7 +126,6 @@ public class StatusService {
         try {
             limitRepository.updateLimit(boardId, maximumTask, isLimit);
             List<StatusLimitResponseDTO> statusLimits = statusRepository.countTaskByStatus(boardId);
-            System.out.println(statusLimits);
             statusLimits = statusLimits.stream()
                     .filter(statusLimit -> !Arrays.asList(nonEditableStatuses).contains(statusLimit.getName()))
                     .collect(Collectors.toList());
@@ -138,7 +136,6 @@ public class StatusService {
                     statusLimit.setTasks(taskInLimitDTOS);
                 }
             });
-            System.out.println(statusLimits);
             return statusLimits;
         } catch (Exception e) {
             throw new BadRequestException("Failed to update This status");
@@ -162,7 +159,6 @@ public class StatusService {
         try {
             if (!board.getIsCustomStatus()) {
                 List<TaskStatus> statusList = copyDefaultStatusesToBoard(boardId, board);
-                System.out.println(statusList);
                 for (TaskStatus status : statusList) {
                     if (status.getName().equals(oldStatus.getName())) {
                         statusRepository.delete(status);
