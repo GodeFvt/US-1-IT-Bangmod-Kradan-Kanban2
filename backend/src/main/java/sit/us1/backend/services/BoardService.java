@@ -71,7 +71,7 @@ public class BoardService {
     public List<SimpleBoardDTO> getAllBoardByOid() {
         try {
             String Oid = SecurityUtil.getCurrentUserDetails().getOid();
-            return listMapper.mapList(boardRepository.findAllByOwnerOrCollaboration(Oid), SimpleBoardDTO.class, mapper);
+            return listMapper.mapList(boardRepository.findAllByOwnerOrCollaborationOrderByCreatedOn(Oid), SimpleBoardDTO.class, mapper);
         } catch (Exception e) {
             throw new BadRequestException("the specified board does not exist");
         }
