@@ -113,12 +113,12 @@ public class BoardAccessFilter extends OncePerRequestFilter {
         } else if (!isPublicBoard || !isGetMethod) {
             throw new UnauthorizedException(tokenError);
         }
-        if (uriLength >= 6 && uriParts[4].equals("statuses") && !statusService.isStatusExist(Integer.parseInt(uriParts[5]))) {
-            throw new NotFoundException("Status not found");
-        }
-        if (uriLength >= 6 && uriParts[4].equals("tasks") && !taskService.isTaskExist(Integer.parseInt(uriParts[5]))) {
-            throw new NotFoundException("Task not found");
-        }
+//        if (uriLength >= 6 && uriParts[4].equals("statuses") && !statusService.isStatusExist(Integer.parseInt(uriParts[5]))) {
+//            throw new NotFoundException("Status not found");
+//        }
+//        if (uriLength >= 6 && uriParts[4].equals("tasks") && !taskService.isTaskExist(Integer.parseInt(uriParts[5]))) {
+//            throw new NotFoundException("Task not found");
+//        }
     }
 
 
