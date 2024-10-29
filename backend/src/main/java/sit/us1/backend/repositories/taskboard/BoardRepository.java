@@ -13,6 +13,7 @@ public interface BoardRepository extends JpaRepository<Board, String> {
 
     @Query("SELECT b FROM Board b " +
             "WHERE b.owner.id = :oid " +
-            "OR b.id IN (SELECT c.boardId FROM Collaboration c WHERE c.oid = :oid)")
-    List<Board> findAllByOwnerOrCollaboration(@Param("oid") String oid);
+            "OR b.id IN (SELECT c.boardId FROM Collaboration c WHERE c.oid = :oid)" +
+            "ORDER BY b.createdOn")
+    List<Board> findAllByOwnerOrCollaborationOrderByCreatedOn(@Param("oid") String oid);
 }
