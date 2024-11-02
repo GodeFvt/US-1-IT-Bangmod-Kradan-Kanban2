@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import sit.us1.backend.entities.account.CustomUserDetails;
+import sit.us1.backend.properties.JwtProperties;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,22 +17,21 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil implements Serializable {
 
-    @Value("${jwt.secret}")
-    private String SECRET_KEY;
+    private final String SECRET_KEY;
+    private final String SECRET_KEY_REFRESH;
+    private final long jwtExpiration;
+    private final long refreshExpiration ;
+    private final String issuer;
 
-    @Value("${jwt.secret.refresh}")
-    private String SECRET_KEY_REFRESH;
+    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
-    @Value("#{${jwt.max-token-interval-hour}*60*60*1000}")
-    private long jwtExpiration;
-
-    @Value("#{${jwt.max-refresh-token-interval-hour}*60*60*1000}")
-    private long refreshExpiration;
-
-    @Value("${jwt.issuer}")
-    private String issuer;
-
-    SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
+    public JwtTokenUtil(JwtProperties jwtProperties) {
+        this.SECRET_KEY = jwtProperties.getSecret();
+        this.SECRET_KEY_REFRESH = jwtProperties.getSecretRefresh();
+        this.jwtExpiration = (long) (jwtProperties.getMaxTokenIntervalHour() * 60 * 60 * 1000);
+        this.refreshExpiration = (long) (jwtProperties.getMaxRefreshTokenIntervalHour() * 60 * 60 * 1000);
+        this.issuer = jwtProperties.getIssuer();
+    }
 
     public String getSubjectFromToken(String token, boolean isRefreshToken) {
         return getClaimFromToken(token, Claims::getSubject, isRefreshToken);

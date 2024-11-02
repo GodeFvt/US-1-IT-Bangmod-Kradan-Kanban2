@@ -51,4 +51,9 @@ public class CollaborationController {
     public ResponseEntity<SimpleCollaboratorDTO> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
         return ResponseEntity.ok(collabService.deleteCollaborator(boardId, collabId));
     }
+
+    @PatchMapping("/collabs/invitations")
+    public ResponseEntity<SimpleCollaboratorDTO> acceptCollaborator(@PathVariable String boardId) {
+        return ResponseEntity.ok(collabService.acceptCollaborator(boardId));
+    }
 }

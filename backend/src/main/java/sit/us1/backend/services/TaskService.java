@@ -2,21 +2,20 @@ package sit.us1.backend.services;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.web.multipart.MultipartFile;
 import sit.us1.backend.dtos.tasksDTO.*;
 import sit.us1.backend.entities.taskboard.Board;
+import sit.us1.backend.entities.taskboard.TaskAttachment;
 import sit.us1.backend.entities.taskboard.TaskList;
 import sit.us1.backend.entities.taskboard.TaskStatus;
 import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.exceptions.NotFoundException;
-import sit.us1.backend.repositories.taskboard.BoardRepository;
-import sit.us1.backend.repositories.taskboard.TaskLimitRepository;
-import sit.us1.backend.repositories.taskboard.TaskListRepository;
-import sit.us1.backend.repositories.taskboard.TaskStatusRepository;
+import sit.us1.backend.properties.FileStorageProperties;
+import sit.us1.backend.repositories.taskboard.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,50 +29,65 @@ public class TaskService {
     @Autowired
     private BoardRepository boardRepository;
     @Autowired
+    private TaskAttachmentRepository taskAttachmentRepository;
+
+    @Autowired
+    TaskAttachmentService fileService;
+
+    @Autowired
     private ListMapper listMapper;
+
     @Autowired
     private ModelMapper mapper;
+
+    private final String hostName;
+
+    @Autowired
+    public TaskService(FileStorageProperties fileStorageProperties) {
+        this.hostName = fileStorageProperties.getFileServiceHostName();
+    }
 
     public boolean isTaskExist(Integer taskId) {
         return taskRepository.existsById(taskId);
     }
+
     public List<SimpleTaskDTO> getAllTask() {
         return listMapper.mapList(taskRepository.findAll(), SimpleTaskDTO.class, mapper);
     }
 
-    public List<SimpleTaskDTO> getTaskFiltered(String sortBy, String[] filterStatuses ,String boardId) {
+    public List<SimpleTaskDTO> getTaskFiltered(String sortBy, String[] filterStatuses, String boardId) {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         try {
             Sort sort = Sort.by(sortBy == null || sortBy.isEmpty() ? "createdOn" : sortBy);
             if (filterStatuses.length > 0) {
-                return listMapper.mapList(taskRepository.findByStatusNamesSorted(filterStatuses,boardId, sort), SimpleTaskDTO.class, mapper);
+                return listMapper.mapList(taskRepository.findByStatusNamesSorted(filterStatuses, boardId, sort), SimpleTaskDTO.class, mapper);
             } else {
-                return listMapper.mapList(taskRepository.findAllByBoardId(boardId,sort), SimpleTaskDTO.class, mapper);
+                return listMapper.mapList(taskRepository.findAllByBoardId(boardId, sort), SimpleTaskDTO.class, mapper);
             }
         } catch (Exception e) {
             throw new BadRequestException("Invalid sortBy property: " + sortBy);
         }
     }
 
-    public TaskDetailDTO getTaskById(String boardId ,Integer id) {
-        TaskList task = taskRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
+    public TaskDetailDTO getTaskById(String boardId, Integer id) {
+        TaskList task = taskRepository.findByBoardIdAndId(boardId, id).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         return mapper.map(task, TaskDetailDTO.class);
     }
 
-    public StatusCountDTO getCountByStatusIdAndReturnStatusName(String boardId ,Integer statusId) {
+    public StatusCountDTO getCountByStatusIdAndReturnStatusName(String boardId, Integer statusId) {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-        TaskStatus status ;
-        if(board.getIsCustomStatus()){
-            status = statusRepository.findByBoardIdAndId(boardId,statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
-        }else {
+        TaskStatus status;
+        if (board.getIsCustomStatus()) {
+            status = statusRepository.findByBoardIdAndId(boardId, statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
+        } else {
             status = statusRepository.findById(statusId).orElseThrow(() -> new NotFoundException("Status Id not found: " + statusId));
         }
-        StatusCountDTO StatusCount = taskRepository.countByStatusIdAndReturnName(boardId,statusId);
+        StatusCountDTO StatusCount = taskRepository.countByStatusIdAndReturnName(boardId, statusId);
         return StatusCount == null ? new StatusCountDTO(0L, status.getName()) : StatusCount;
     }
 
     @Transactional
-    public TaskResponseDTO createTask(String boardId, TaskRequestDTO taskRequestDTO) {
+    public TaskResponseDTO createTask(String boardId, TaskRequestDTO taskRequestDTO, MultipartFile[] files) {
         TaskList task = mapper.map(taskRequestDTO, TaskList.class);
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         TaskStatus status;
@@ -86,10 +100,30 @@ public class TaskService {
             task.setStatus(status);
             task.setBoard(board);
             TaskList newTask = taskRepository.save(task);
-            return mapper.map(newTask, TaskResponseDTO.class);
+            TaskResponseDTO newTaskResponse = mapper.map(newTask, TaskResponseDTO.class);
+            if (files != null && files.length > 0) {
+                List<Attachment> taskAttachment = fileService.saveTaskAttachment(boardId,newTask.getId(), files);
+//                List<Attachment> attachments = getAttachments(boardId, taskAttachment, newTask);
+                newTaskResponse.setAttachments(taskAttachment);
+            }
+
+            return newTaskResponse;
         } catch (Exception e) {
             throw new NotFoundException("Failed to add This task");
         }
+    }
+
+    private List<Attachment> getAttachments(String boardId, List<TaskAttachment> taskAttachment, TaskList task) {
+        List<Attachment> attachments = new ArrayList<>();
+        for (TaskAttachment attachment : taskAttachment) {
+            Attachment newAttachment = new Attachment();
+            newAttachment.setFilename(attachment.getFilename());
+            newAttachment.setContentType(attachment.getContentType());
+            newAttachment.setDownloadUrl(this.hostName + "/boards/" + boardId + "/tasks/" + task.getId() + "/attachments/" + attachment.getFilename() + "?disposition=attachment");
+            newAttachment.setPreviewUrl(this.hostName + "/boards/" + boardId + "/tasks/" + task.getId() + "/attachments/" + attachment.getFilename() + "?disposition=inline");
+            attachments.add(newAttachment);
+        }
+        return attachments;
     }
 
     @Transactional
@@ -115,14 +149,17 @@ public class TaskService {
     }
 
     @Transactional
-    public SimpleTaskDTO deleteTask(String boardId , Integer taskId) {
+    public SimpleTaskDTO deleteTask(String boardId, Integer taskId) {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-        TaskList taskList = taskRepository.findByBoardIdAndId(boardId,taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
-        taskRepository.delete(taskList);
-        return mapper.map(taskList, SimpleTaskDTO.class);
+        TaskList taskList = taskRepository.findByBoardIdAndId(boardId, taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
+        fileService.removeAllTaskResource(taskId);
+        try {
+            taskRepository.delete(taskList);
+            return mapper.map(taskList, SimpleTaskDTO.class);
+        } catch (Exception e) {
+            throw new NotFoundException("Failed to delete this task with Id number :" + taskId);
+        }
     }
-
-
 }
 
 

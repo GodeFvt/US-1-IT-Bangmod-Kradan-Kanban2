@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
 import sit.us1.backend.entities.account.User;
+import sit.us1.backend.entities.taskboard.Board;
 import sit.us1.backend.entities.taskboard.BoardUser;
 import sit.us1.backend.entities.taskboard.Collaboration;
 import sit.us1.backend.entities.taskboard.CollaborationId;
@@ -21,6 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+
 @Service
 public class CollaborationService {
     @Autowired
@@ -31,6 +35,9 @@ public class CollaborationService {
     private BoardRepository boardRepository;
     @Autowired
     private BoardUserRepository boardUserRepository;
+
+    @Autowired
+    private EmailService emailService;
     @Autowired
     private ListMapper listMapper;
     @Autowired
@@ -40,7 +47,8 @@ public class CollaborationService {
         return collaborationRepository.existsByOid(oid);
     }
     public boolean isCollaborator(String boardId, String oid) {
-        return collaborationRepository.existsById(new CollaborationId(boardId, oid));
+//        return collaborationRepository.existsById(new CollaborationId(boardId, oid));
+        return collaborationRepository.existsByOidAndBoardIdAndIsPendingFalse(oid, boardId);
     }
 
     public Collaboration getCollaboration(String boardId, String oid) {
@@ -54,9 +62,9 @@ public class CollaborationService {
             String oid = collaboration.getOid();
             Optional<User> user = userRepository.findById(oid);
             if (user.isEmpty()) {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getAddedOn()));
+                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getIsPending(),collaboration.getAddedOn()));
             }else {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getAddedOn()));
+                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(),collaboration.getIsPending(), collaboration.getAddedOn()));
             }
         });
 
@@ -67,14 +75,14 @@ public class CollaborationService {
         Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
         Optional<User> user = userRepository.findById(collaboration.getOid());
         if (user.isEmpty()) {
-            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getAddedOn());
+            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(),collaboration.getIsPending(), collaboration.getAddedOn());
         }
-        return new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getAddedOn());
+        return new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(),collaboration.getIsPending(), collaboration.getAddedOn());
     }
 
     @Transactional
     public SimpleCollaboratorDTO addCollaborator(String id, SimpleCollaboratorDTO newCollab) {
-        boardRepository.findById(id).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
+        Board board =   boardRepository.findById(id).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
         User user = userRepository.findByEmail(newCollab.getEmail());
         if (user == null) {
             throw new NotFoundException("the specified user does not exist");
@@ -101,14 +109,17 @@ public class CollaborationService {
             collaboration.setBoardId(id);
             collaboration.setOid(user.getOid());
             collaboration.setAccessRight(newCollab.getAccessRight());
+            collaboration.setIsPending(TRUE);
 
             Collaboration newCol = collaborationRepository.save(collaboration);
             newCollab.setOid(newCol.getOid());
             newCollab.setName(user.getName());
+            newCollab.setIsPending(newCol.getIsPending());
             newCollab.setAddedOn(newCol.getAddedOn());
+            emailService.sendInvitationEmail(SecurityUtil.getCurrentUserDetails().getName(), user.getEmail(), board.getName(), newCollab.getAccessRight(), id);
             return newCollab;
         } catch (Exception e) {
-            throw new BadRequestException("Cannot add collaborator");
+            throw new BadRequestException(e.getMessage());
         }
     }
 
@@ -133,4 +144,31 @@ public class CollaborationService {
             throw new BadRequestException("Cannot delete collaborator");
         }
     }
+
+    @Transactional
+    public SimpleCollaboratorDTO acceptCollaborator(String id) {
+        if(SecurityUtil.getCurrentUserDetails() == null){
+            throw new BadRequestException("Cannot accept collaborator");
+        }
+
+        String oid = SecurityUtil.getCurrentUserDetails().getOid();
+        Board board = boardRepository.findById(id).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
+
+        if(board.getOwner().getId().equals(oid)){
+            throw new ConflictException("Cannot accept collaborator as owner");
+        }
+        Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
+
+        if(!collaboration.getIsPending()){
+            throw new ConflictException("Collaborator is not pending");
+        }
+        collaboration.setIsPending(FALSE);
+        try {
+            return mapper.map(collaborationRepository.save(collaboration), SimpleCollaboratorDTO.class);
+        } catch (Exception e) {
+            throw new BadRequestException("Cannot accept collaborator");
+        }
+    }
+
+
 }
