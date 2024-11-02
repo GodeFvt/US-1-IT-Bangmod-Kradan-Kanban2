@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `taskboard`.`collaboration` (
   `boardId` VARCHAR(10) NOT NULL,
   `oid` VARCHAR(40) NOT NULL,
   `access` ENUM('READ', 'WRITE') NOT NULL DEFAULT 'READ',
+  `isPending` TINYINT(1) NOT NULL DEFAULT '1',
   `addedOn` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`boardId`, `oid`),
   INDEX `fk_boards_has_users_users1_idx` (`oid` ASC) VISIBLE,
@@ -98,6 +99,27 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8mb3;
 
+-- -----------------------------------------------------
+-- Table `taskboard`.`taskattachment`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `taskboard`.`taskattachment` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `filename` VARCHAR(255) NULL,
+  `storedName` VARCHAR(255) NULL,
+  `contentType` VARCHAR(45) NULL,
+  `uploadedAt` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `taskId` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `storedName_UNIQUE` (`storedName` ASC) VISIBLE,
+  INDEX `fk_taskattachment_tasklists_idx` (`taskId` ASC) VISIBLE,
+  CONSTRAINT `fk_taskattachment_tasklists`
+    FOREIGN KEY (`taskId`)
+    REFERENCES `taskboard`.`tasklists` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+AUTO_INCREMENT = 1
+DEFAULT CHARACTER SET = utf8mb3;
 
 -- -----------------------------------------------------
 -- Table `taskboard`.`tasklists`
