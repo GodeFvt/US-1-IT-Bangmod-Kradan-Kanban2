@@ -588,6 +588,23 @@ async function deleteCollabs(boardId, collabId) {
   }
 }
 
+async function responseInvite() {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/invitations`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status;
+  } catch (error) {
+    return undefined;
+  }
+}
 
 export {
   getTaskByStatus,
@@ -616,4 +633,5 @@ export {
   addCollabs,
   updateCollabs,
   deleteCollabs,
+  responseInvite,
 };

@@ -150,7 +150,6 @@ async function addCollaborator(collab) {
       messageToast.value = `You do not have permission to add collaborator.`;
       isShowAddCollab.value = false;
       showToast.value = true;
-
     } else if (res === 409) {
       // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
       errorMSG.value = `The user "${collab.email}" is already the collaborator of this board.`;
@@ -378,7 +377,15 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                     <div
                       class="cursor-pointer h-full w-full items-center flex break-all"
                     >
-                      <span class="itbkk-collab-name"> {{ collab.name }} </span>
+                      <span class="itbkk-collab-name">{{ collab.name }}</span>
+
+                      <!-- Pending -->
+                      <span
+                        v-if="collab.isPending"
+                        class="ml-2 px-2 py-1 text-xs font-bold text-yellow-800 bg-yellow-200 rounded"
+                      >
+                        Pending
+                      </span>
                     </div>
                   </td>
 
@@ -417,9 +424,13 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                               (usernameId = index),
                               console.log(accessSelect)
                           "
-                          :disabled="userStore.currentBoard.owner.id !== userStore.authToken?.oid"
+                          :disabled="
+                            userStore.currentBoard.owner.id !==
+                            userStore.authToken?.oid
+                          "
                           :class="
-                             userStore.currentBoard.owner.id === userStore.authToken?.oid
+                            userStore.currentBoard.owner.id ===
+                            userStore.authToken?.oid
                               ? 'cursor-pointer'
                               : 'cursor-not-allowed disabled'
                           "
@@ -450,20 +461,26 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                             @click="
                               (isChangeAccess = false),
                                 (usernameId = index),
-                                userStore.currentBoard.owner.id === userStore.authToken?.oid
+                                userStore.currentBoard.owner.id ===
+                                userStore.authToken?.oid
                                   ? (showConfirmModal = true)
                                   : (showConfirmModal = false)
                             "
-                            :disabled="userStore.currentBoard.owner.id !== userStore.authToken?.oid"
+                            :disabled="
+                              userStore.currentBoard.owner.id !==
+                              userStore.authToken?.oid
+                            "
                             :class="
-                              userStore.currentBoard.owner.id === userStore.authToken?.oid
+                              userStore.currentBoard.owner.id ===
+                              userStore.authToken?.oid
                                 ? 'cursor-pointer'
                                 : 'cursor-not-allowed disabled'
                             "
                           >
                             <DeleteIcon
                               :class="
-                                userStore.currentBoard.owner.id === userStore.authToken?.oid
+                                userStore.currentBoard.owner.id ===
+                                userStore.authToken?.oid
                                   ? ' hover:fill-rose-400'
                                   : ' hover:fill-rose-300'
                               "

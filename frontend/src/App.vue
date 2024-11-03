@@ -15,7 +15,7 @@ onMounted(() => {
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    if (newPath === "/login" || newPath === "/login/" || newPath === "/" || newPath.includes("TaskNotFound") || route.name === "404"  ) {
+    if (newPath === "/login" || newPath === "/login/" || newPath === "/" || newPath.includes("TaskNotFound") || route.name === "404" || newPath.includes("invitation")) {
       disabledSideMenu.value = true;
     } else {
       disabledSideMenu.value = false;

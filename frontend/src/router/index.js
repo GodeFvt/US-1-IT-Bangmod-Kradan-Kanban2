@@ -8,6 +8,7 @@ import { useUserStore } from "../stores/user.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
 import ManageCollab from "../views/ManageCollab.vue"
+import Invitations from "../views/Invitations.vue"
 const routes = [
   {
     path: "/",
@@ -87,6 +88,11 @@ const routes = [
     path: "/board/:boardId/collab",
     name: "ManageCollab",
     component: ManageCollab,
+  },
+  {
+    path: "/board/:boardId/invitations",
+    name: "Invitations",
+    component: Invitations,
   },
 ];
 
