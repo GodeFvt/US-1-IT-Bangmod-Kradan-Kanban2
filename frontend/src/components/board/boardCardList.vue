@@ -1,10 +1,10 @@
 <script setup>
-import {ref } from "vue";
+import { ref } from "vue";
 import boardCard from "./boardCard.vue";
 import MoreActionIcon from "../icon/MoreActionIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
 import { useUserStore } from "../../stores/user.js";
-defineEmits(["removeBoard", "openBoard", "leaveBoard"]);
+defineEmits(["removeBoard", "openBoard", "leaveBoard", "invitation"]);
 
 const props = defineProps({
   allBoard: {
@@ -25,11 +25,10 @@ const props = defineProps({
   },
 });
 const userStore = useUserStore();
-function getCollaboratorAccess(board) {
-  const collaborator = board.collaborators.find(collab => collab.oid === userStore.authToken.oid);
-  return collaborator.accessRight;
+function getCollaborator(board) {
+  const collaborator = board.collaborators.find((collab) => collab.oid === userStore.authToken.oid);
+  return collaborator;
 }
-
 </script>
 
 <template>
@@ -92,75 +91,93 @@ function getCollaboratorAccess(board) {
     <!-- <template #content>
               <p class="slide-right text-sm text-muted-foreground">{{ board.description }}</p>
             </template> -->
-    <template #collab v-if="boardType === 'collab'"
-    >
+    <template #collab v-if="boardType === 'collab'">
       <div
         class="flex flex-col w-[75%] text-center mt-1 place-items-start ml-3 mb-2"
       >
-      <p class="itbkk-owner-name text-sm font-medium">Owner :: {{ board.owner.username }}</p>
-        <p class="itbkk-access-right text-sm font-medium">
-          Access Right :: {{ getCollaboratorAccess(board) }}
+        <p class="itbkk-owner-name text-sm font-medium">
+          Owner :: {{ board.owner.username }}
         </p>
+        <p class="itbkk-access-right text-sm font-medium">
+          Access Right :: {{ getCollaborator(board).accessRight }}
+        </p>
+        <div
+          v-if="getCollaborator(board)?.isPending"
+          class="bg-yellow-200 text-yellow-800 text-xs font-bold py-1 px-2 rounded mt-1"
+        >
+          Pending
+        </div>
       </div>
     </template>
     <template #action>
       <div class="flex flex-row gap-1">
+        <!-- Invitation Button for Pending Invitations -->
         <button
+          v-if="getCollaborator(board)?.isPending"
+          @click="$emit('invitation', board.id)"
+          class="inline-flex items-center justify-center mt-3 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input border-green-500 hover:bg-green-400 hover:text-accent-foreground h-10 px-4 py-2 w-full"
+        >
+          <p class="text-green-900">Accept/</p>
+          <p class="text-red-500">Decline</p>
+        </button>
+
+        <!-- Open Board Button (Shown Only If Not Pending) -->
+        <button
+          v-else
           @click="$emit('openBoard', board.id)"
           class="inline-flex items-center justify-center mt-3 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
         >
           Open Board
         </button>
+
+        <!-- Leave Button (Shown Only If Not Pending) -->
         <div
-        @click="$emit('leaveBoard', board.id)"
-        v-if="boardType === 'collab'"
-        class="itbkk-leave-board inline-flex items-center justify-center cursor-pointer p-0 mt-3  "
-      >
-        <div
-          class="tooltip tooltip-bottom tooltip-hover "
-          data-tip="Leave Collab Board"
+          v-if="!getCollaborator(board)?.isPending && boardType === 'collab'"
+          @click="$emit('leaveBoard', board.id)"
+          class="itbkk-leave-board inline-flex items-center justify-center cursor-pointer p-0 mt-3"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 26 26"
+          <div
+            class="tooltip tooltip-bottom tooltip-hover"
+            data-tip="Leave Collab Board"
           >
-            <g fill="none">
-              <defs>
-                <mask id="pepiconsPencilLeaveCircleFilled0">
-                  <path fill="#fff" d="M0 0h26v26H0z" />
-                  <g fill="#000" fill-rule="evenodd" clip-rule="evenodd">
-                    <path
-                      d="M18.347 10.116a.5.5 0 0 1 .704.064l2.083 2.5a.5.5 0 0 1-.768.64l-2.084-2.5a.5.5 0 0 1 .064-.704"
-                    />
-                    <path
-                      d="M18.347 15.884a.5.5 0 0 1-.065-.704l2.084-2.5a.5.5 0 1 1 .768.64l-2.083 2.5a.5.5 0 0 1-.704.064"
-                    />
-                    <path
-                      d="M20.5 13a.5.5 0 0 1-.5.5h-7.5a.5.5 0 0 1 0-1H20a.5.5 0 0 1 .5.5m-14-7a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1H7a.5.5 0 0 1-.5-.5m0 14a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1H7a.5.5 0 0 1-.5-.5"
-                    />
-                    <path
-                      d="M16 5.5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m0 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 1 .5-.5m-9-10a.5.5 0 0 1 .5.5v14a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5"
-                    />
-                  </g>
-                </mask>
-              </defs>
-              <circle
-                cx="13"
-                cy="13"
-                r="13"
-                fill=""
-                class="fill-rose-300 hover:fill-rose-400"
-                mask="url(#pepiconsPencilLeaveCircleFilled0)"
-              />
-            </g>
-          </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 26 26"
+            >
+              <g fill="none">
+                <defs>
+                  <mask id="pepiconsPencilLeaveCircleFilled0">
+                    <path fill="#fff" d="M0 0h26v26H0z" />
+                    <g fill="#000" fill-rule="evenodd" clip-rule="evenodd">
+                      <path
+                        d="M18.347 10.116a.5.5 0 0 1 .704.064l2.083 2.5a.5.5 0 0 1-.768.64l-2.084-2.5a.5.5 0 0 1 .064-.704"
+                      />
+                      <path
+                        d="M18.347 15.884a.5.5 0 0 1-.065-.704l2.084-2.5a.5.5 0 1 1 .768.64l-2.083 2.5a.5.5 0 0 1-.704.064"
+                      />
+                      <path
+                        d="M20.5 13a.5.5 0 0 1-.5.5h-7.5a.5.5 0 0 1 0-1H20a.5.5 0 0 1 .5.5m-14-7a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1H7a.5.5 0 0 1-.5-.5m0 14a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1H7a.5.5 0 0 1-.5-.5"
+                      />
+                      <path
+                        d="M16 5.5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m0 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 1 .5-.5m-9-10a.5.5 0 0 1 .5.5v14a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5"
+                      />
+                    </g>
+                  </mask>
+                </defs>
+                <circle
+                  cx="13"
+                  cy="13"
+                  r="13"
+                  class="fill-rose-300 hover:fill-rose-400"
+                  mask="url(#pepiconsPencilLeaveCircleFilled0)"
+                />
+              </g>
+            </svg>
+          </div>
         </div>
       </div>
-      </div>
-
-   
     </template>
 
     <template #visibility v-if="boardType === 'personal'">

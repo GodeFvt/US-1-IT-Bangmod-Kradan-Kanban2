@@ -272,7 +272,9 @@ function openBoard(boardId) {
   router.push({ name: "task", params: { boardId: boardId } });
 }
 
-
+function invitation(boardId) {
+  router.push({ name: "Invitations", params: { boardId: boardId } });
+}
 
 
 </script>
@@ -323,6 +325,7 @@ function openBoard(boardId) {
             boardType="collab"
             @leaveBoard="leaveBoard"
             @openBoard="openBoard"
+            @invitation="invitation"
           >
           </boardCardList>
         </div>
