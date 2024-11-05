@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import sit.us1.backend.dtos.statusesDTO.SimpleStatusDTO;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -17,6 +15,6 @@ public class TaskResponseDTO {
     private String description;
     private String assignees;
     private SimpleStatusDTO status;
-    private List<Attachment> attachments;
+    private AttachmentResponseDTO attachments;
 
 }

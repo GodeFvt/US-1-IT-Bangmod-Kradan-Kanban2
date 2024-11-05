@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; color: #333333; }
+        .container { max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; }
+        .header { text-align: center; font-size: 24px; font-weight: bold; color: #f8f8f8; margin-bottom: 20px; background-color: #1F2937; padding: 10px; border-radius: 10px 10px 0 0; }
+        .content { padding: 20px; text-align: center; } /* จัดกึ่งกลางเนื้อหา */
+        .inviter { font-size: 20px; color: #333333; margin-bottom: 20px; }
+        .board-details { font-size: 18px; color: #333333; margin-bottom: 20px; }
+        .board-details-access { font-size: 16px; color: #333333; margin-bottom: 20px; }
+        .link-button { display: inline-block; padding: 10px 20px; margin-top: 20px; background-color: #1F2937; color: #f8f8f8; text-decoration: none; border-radius: 5px; }
+        .link-button:hover { background-color: #2D3B4A; }
+        .footer {text-align: center; font-size: 14px; color: #555555; padding: 10px; border-top: 1px solid #eaeaea; border-radius: 0 0 10px 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">You have a new invitation!</div>
+    <div class="content">
+        <div class="inviter"><b>{{inviterName}}</b> has invited you to collaborate</div>
+        <div class="board-details"> on the board: <b>"{{boardName}}"</b></div>
+        <div class="board-details-access">You have been granted <b>{{accessRole}}</b> access.</div>
+        <a href="{{invitationLink}}" class="link-button">Accept Invitation</a>
+    </div>
+    <div class="footer">If you did not expect this invitation, you can safely ignore this email.</div>
+</div>
+</body>
+</html>
+

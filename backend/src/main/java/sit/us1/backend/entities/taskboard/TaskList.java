@@ -1,8 +1,10 @@
 package sit.us1.backend.entities.taskboard;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -29,6 +31,10 @@ public class TaskList {
     @ManyToOne
     @JoinColumn(name = "boardId")
     private Board board;
+
+    @OneToMany(mappedBy = "task", fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<TaskAttachment> attachments;
 
     @Column(updatable = false, insertable = false)
     private ZonedDateTime createdOn;

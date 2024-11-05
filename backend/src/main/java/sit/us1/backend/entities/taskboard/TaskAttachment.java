@@ -1,5 +1,7 @@
 package sit.us1.backend.entities.taskboard;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,14 +18,22 @@ import java.time.ZonedDateTime;
 public class TaskAttachment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Integer id;
-
+    @JsonIgnore
     private Integer taskId;
     private String filename;
+    @JsonIgnore
     private String storedName;
     private String contentType;
     @Column(updatable = false, insertable = false)
     private ZonedDateTime uploadedAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "taskId", insertable = false, updatable = false)
+    @JsonBackReference
+    private TaskList task;
 
 
     public TaskAttachment(Integer taskId, String filename, String storedName, String contentType) {

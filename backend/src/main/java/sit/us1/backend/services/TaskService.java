@@ -71,6 +71,9 @@ public class TaskService {
 
     public TaskDetailDTO getTaskById(String boardId, Integer id) {
         TaskList task = taskRepository.findByBoardIdAndId(boardId, id).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
+        TaskDetailDTO taskDetailDTO = mapper.map(task, TaskDetailDTO.class);
+        List<TaskAttachment> taskAttachments = taskAttachmentRepository.findAllByTaskId(id);
+
         return mapper.map(task, TaskDetailDTO.class);
     }
 
@@ -87,7 +90,7 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponseDTO createTask(String boardId, TaskRequestDTO taskRequestDTO, MultipartFile[] files) {
+    public TaskResponseDTO createTask(String boardId, TaskRequestDTO taskRequestDTO, List<MultipartFile> files) {
         TaskList task = mapper.map(taskRequestDTO, TaskList.class);
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
         TaskStatus status;
@@ -101,9 +104,14 @@ public class TaskService {
             task.setBoard(board);
             TaskList newTask = taskRepository.save(task);
             TaskResponseDTO newTaskResponse = mapper.map(newTask, TaskResponseDTO.class);
-            if (files != null && files.length > 0) {
-                List<Attachment> taskAttachment = fileService.saveTaskAttachment(boardId,newTask.getId(), files);
-//                List<Attachment> attachments = getAttachments(boardId, taskAttachment, newTask);
+//            if (files != null && files.length > 0) {
+//                List<Attachment> taskAttachment = fileService.saveTaskAttachment(boardId,newTask.getId(), files);
+////                List<Attachment> attachments = getAttachments(boardId, taskAttachment, newTask);
+//                newTaskResponse.setAttachments(taskAttachment);
+//            }
+
+            if (files != null && files.size() > 0) {
+                AttachmentResponseDTO taskAttachment = fileService.saveTaskAttachment(boardId, newTask.getId(), files);
                 newTaskResponse.setAttachments(taskAttachment);
             }
 
@@ -113,10 +121,10 @@ public class TaskService {
         }
     }
 
-    private List<Attachment> getAttachments(String boardId, List<TaskAttachment> taskAttachment, TaskList task) {
-        List<Attachment> attachments = new ArrayList<>();
+    private List<SimpleAttachmentDTO> getAttachments(String boardId, List<TaskAttachment> taskAttachment, TaskList task) {
+        List<SimpleAttachmentDTO> attachments = new ArrayList<>();
         for (TaskAttachment attachment : taskAttachment) {
-            Attachment newAttachment = new Attachment();
+            SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
             newAttachment.setFilename(attachment.getFilename());
             newAttachment.setContentType(attachment.getContentType());
             newAttachment.setDownloadUrl(this.hostName + "/boards/" + boardId + "/tasks/" + task.getId() + "/attachments/" + attachment.getFilename() + "?disposition=attachment");
@@ -127,25 +135,68 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponseDTO updateTask(String boardId, Integer taskId, TaskRequestDTO taskRequestDTO) {
+    public TaskResponseDTO updateTask(String boardId, Integer taskId, TaskRequestDTO taskRequestDTO, List<MultipartFile> files, List<String> filesToDelete) {
         TaskList taskList = taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         TaskStatus status;
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
+
         if (board.getIsCustomStatus()) {
             status = statusRepository.findByBoardIdAndName(boardId, taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
         } else {
             status = statusRepository.findByNameAndBoardIdIsNull(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
         }
+        taskRequestDTO.setId(taskId);
+        TaskList task = mapper.map(taskRequestDTO, TaskList.class);
+        TaskList newTask;
+
         try {
-            taskRequestDTO.setId(taskId);
-            TaskList task = mapper.map(taskRequestDTO, TaskList.class);
             task.setStatus(status);
             task.setBoard(board);
-            TaskList newTask = taskRepository.save(task);
-            return mapper.map(newTask, TaskResponseDTO.class);
+            newTask = taskRepository.save(task);
         } catch (Exception e) {
-            throw new NotFoundException("Failed to update this task with Id number :" + taskId);
+            throw new BadRequestException("Failed to update this task with Id number :" + taskId);
         }
+
+        TaskResponseDTO newTaskResponse = mapper.map(newTask, TaskResponseDTO.class);
+
+
+
+        if (filesToDelete != null && !filesToDelete.isEmpty()) {
+            AttachmentResponseDTO taskAttachment = newTaskResponse.getAttachments();
+            for (String filename : filesToDelete) {
+                AttachmentResponseDTO taskAttachmentDelete = fileService.removeTaskResource(taskId, filename);
+                if (taskAttachment == null) {
+                    taskAttachment = new AttachmentResponseDTO();
+                }
+                if(taskAttachment.getFilesErrors() == null) {
+                    taskAttachment.setFilesErrors(new ArrayList<>());
+                }
+                if(taskAttachment.getFilesSuccess() == null) {
+                    taskAttachment.setFilesSuccess(new ArrayList<>());
+                }
+
+                taskAttachment.getFilesErrors().addAll(taskAttachmentDelete.getFilesErrors());
+                taskAttachment.getFilesSuccess().addAll(taskAttachmentDelete.getFilesSuccess());
+            }
+            newTaskResponse.setAttachments(taskAttachment);
+        }
+
+        if (files != null && !files.isEmpty()) {
+            AttachmentResponseDTO taskAttachment = fileService.saveTaskAttachment(boardId, taskId, files);
+            if(newTaskResponse.getAttachments() == null) {
+                newTaskResponse.setAttachments(taskAttachment);
+            } else {
+                if(taskAttachment.getFilesErrors() != null) {
+                    newTaskResponse.getAttachments().getFilesErrors().addAll(taskAttachment.getFilesErrors());
+                }
+                if(taskAttachment.getFilesSuccess() != null) {
+                    newTaskResponse.getAttachments().getFilesSuccess().addAll(taskAttachment.getFilesSuccess());
+                }
+            }
+
+        }
+
+        return mapper.map(newTaskResponse, TaskResponseDTO.class);
     }
 
     @Transactional

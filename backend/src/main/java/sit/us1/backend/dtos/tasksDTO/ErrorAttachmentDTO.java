@@ -5,11 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class Attachment {
-    private String filename;
+@NoArgsConstructor
+public class ErrorAttachmentDTO {
+    private String message;
+    private String fileName;
     private String contentType;
-    private String downloadUrl;
-    private String previewUrl;
 }

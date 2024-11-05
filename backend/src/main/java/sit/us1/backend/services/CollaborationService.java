@@ -146,8 +146,8 @@ public class CollaborationService {
     }
 
     @Transactional
-    public SimpleCollaboratorDTO acceptCollaborator(String id) {
-        if(SecurityUtil.getCurrentUserDetails() == null){
+    public SimpleCollaboratorDTO acceptCollaborator(String id, String action) {
+        if(SecurityUtil.getCurrentUserDetails() == null || action == null){
             throw new BadRequestException("Cannot accept collaborator");
         }
 
@@ -162,9 +162,15 @@ public class CollaborationService {
         if(!collaboration.getIsPending()){
             throw new ConflictException("Collaborator is not pending");
         }
+
         collaboration.setIsPending(FALSE);
         try {
-            return mapper.map(collaborationRepository.save(collaboration), SimpleCollaboratorDTO.class);
+            if(action.equals("accept")) {
+                return mapper.map(collaborationRepository.save(collaboration), SimpleCollaboratorDTO.class);
+            }else{
+                collaborationRepository.delete(collaboration);
+                return mapper.map(collaboration, SimpleCollaboratorDTO.class);
+            }
         } catch (Exception e) {
             throw new BadRequestException("Cannot accept collaborator");
         }

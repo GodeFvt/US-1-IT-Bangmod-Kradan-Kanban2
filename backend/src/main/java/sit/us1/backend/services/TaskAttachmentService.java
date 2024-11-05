@@ -5,13 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import sit.us1.backend.dtos.tasksDTO.Attachment;
+import sit.us1.backend.dtos.tasksDTO.SimpleAttachmentDTO;
+import sit.us1.backend.dtos.tasksDTO.AttachmentResponseDTO;
+import sit.us1.backend.dtos.tasksDTO.ErrorAttachmentDTO;
 import sit.us1.backend.dtos.tasksDTO.ResourceFileDTO;
 import sit.us1.backend.entities.taskboard.TaskAttachment;
 import sit.us1.backend.exceptions.BadRequestException;
-import sit.us1.backend.exceptions.ConflictException;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.properties.FileStorageProperties;
 import sit.us1.backend.repositories.taskboard.TaskAttachmentRepository;
@@ -32,60 +32,134 @@ import java.util.List;
 public class TaskAttachmentService {
 
     private final Path fileStorageLocation;
-    private final String hostName ;
+    private final String fileServiceHostName;
+    private final Integer maxFilePerTask;
+    private final Integer maxFileSize;
+
+
     @Autowired
     private TaskAttachmentRepository taskAttachmentRepository;
 
     @Autowired
     public TaskAttachmentService(FileStorageProperties fileStorageProperties) {
         this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize();
-        this.hostName = fileStorageProperties.getFileServiceHostName();
+        this.fileServiceHostName = fileStorageProperties.getFileServiceHostName();
+        this.maxFilePerTask = fileStorageProperties.getMaxFilePerTask();
+        this.maxFileSize = fileStorageProperties.getMaxFileSize();
         try {
             if (!Files.exists(this.fileStorageLocation)) {
                 Files.createDirectories(this.fileStorageLocation);
             }
         } catch (IOException ex) {
-            throw new RuntimeException(
-                    "Could not create the directory where the uploaded files will be stored.", ex);
+            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", ex);
         }
     }
 
-    public List<Attachment> saveTaskAttachment(String boardId,Integer taskId, MultipartFile[] files) {
-        List<Attachment> attachments = new ArrayList<>();
+//    public List<Attachment> saveTaskAttachment(String boardId, Integer taskId, MultipartFile[] files) {
+//        List<Attachment> attachments = new ArrayList<>();
+//
+//        for (MultipartFile file : files) {
+//            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+//
+//            if (taskAttachmentRepository.existsByTaskIdAndFilename(taskId, fileName)) {
+//                throw new ConflictException("File name already exists in this task");
+//            }
+//
+//            try {
+//                if (fileName.contains("..")) {
+//                    throw new RuntimeException("Sorry! Filename contains invalid path sequence " + fileName);
+//                }
+//                String storedName = "task" + taskId + "_" + fileName;
+//                Path targetLocation = this.fileStorageLocation.resolve(storedName);
+//                Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+//
+//                Attachment newAttachment = new Attachment();
+//                newAttachment.setFilename(fileName);
+//                newAttachment.setContentType(file.getContentType());
+//                newAttachment.setDownloadUrl("https://" + hostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=attachment");
+//                newAttachment.setPreviewUrl("https://" + hostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=inline");
+//                attachments.add(newAttachment);
+//                taskAttachmentRepository.save(new TaskAttachment(taskId, fileName, storedName, file.getContentType()));
+//
+//            } catch (Exception ex) {
+//                throw new BadRequestException("Could not store file " + fileName + ". Please try again!" + ex);
+//            }
+//        }
+//
+//        return attachments;
+//    }
+
+    public AttachmentResponseDTO saveTaskAttachment(String boardId, Integer taskId, List<MultipartFile> files) {
+        List<ErrorAttachmentDTO> errorMessages = new ArrayList<>();
+        List<SimpleAttachmentDTO> addedFiles = new ArrayList<>();
+
+        long MAX_FILE_SIZE = maxFileSize * 1024 * 1024;
+        long MAX_TOTAL_SIZE = ((long) maxFilePerTask * maxFileSize) * 1024 * 1024;
+
+        // ตรวจสอบขนาดไฟล์รวม
+        long totalSize = files.stream().mapToLong(MultipartFile::getSize).sum();
+        if (totalSize > MAX_TOTAL_SIZE) {
+            errorMessages.add(new ErrorAttachmentDTO("Total file size exceeds " + MAX_TOTAL_SIZE / (1024 * 1024) + " MB", null, null));
+            return new AttachmentResponseDTO(errorMessages);
+        }
+
+        List<TaskAttachment> existingAttachments = taskAttachmentRepository.findAllByTaskId(taskId);
+
+        // ตรวจสอบจำนวนไฟล์สูงสุดต่อ Task
+        if (existingAttachments.size() >= maxFilePerTask) {
+            errorMessages.add(new ErrorAttachmentDTO("Max " + maxFilePerTask + " files allowed per task", null, null));
+            return new AttachmentResponseDTO(errorMessages);
+        }
 
         for (MultipartFile file : files) {
-            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+            String fileName = file.getOriginalFilename();
 
-            if (taskAttachmentRepository.existsByTaskIdAndFilename(taskId, fileName)) {
-                throw new ConflictException("File name already exists in this task");
+            // ตรวจสอบขนาดของแต่ละไฟล์
+            if (file.getSize() > MAX_FILE_SIZE) {
+                errorMessages.add(new ErrorAttachmentDTO("File exceeds " + maxFileSize + " MB", fileName, file.getContentType()));
+                continue;
             }
 
+            // ตรวจสอบจำนวนไฟล์ใน Task รวมกับไฟล์ที่จะเพิ่มใหม่
+            if (existingAttachments.size() + addedFiles.size() >= maxFilePerTask) {
+                errorMessages.add(new ErrorAttachmentDTO("Max " + maxFilePerTask + " files allowed", fileName, file.getContentType()));
+                break;
+            }
+
+            // ตรวจสอบชื่อไฟล์ซ้ำ
+            boolean isDuplicate = existingAttachments.stream().anyMatch(att -> att.getFilename().equals(fileName));
+            if (isDuplicate) {
+                errorMessages.add(new ErrorAttachmentDTO("Duplicate filename not allowed", fileName, file.getContentType()));
+                continue;
+            }
+
+            String storedName = "task" + taskId + "_" + fileName;
+
             try {
-                if (fileName.contains("..")) {
-                    throw new RuntimeException("Sorry! Filename contains invalid path sequence " + fileName);
-                }
-                String storedName = "task" + taskId + "_" + fileName;
                 Path targetLocation = this.fileStorageLocation.resolve(storedName);
                 Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-                Attachment newAttachment = new Attachment();
+                taskAttachmentRepository.save(new TaskAttachment(taskId, fileName, storedName, file.getContentType()));
+                SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
                 newAttachment.setFilename(fileName);
                 newAttachment.setContentType(file.getContentType());
-                newAttachment.setDownloadUrl(this.hostName + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=attachment");
-                newAttachment.setPreviewUrl(this.hostName + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=inline");
-                attachments.add(newAttachment);
-
+                newAttachment.setDownloadUrl("https://" + fileServiceHostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=attachment");
+                newAttachment.setPreviewUrl("https://" + fileServiceHostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=inline");
+                newAttachment.setFileData(file.getSize());
+                addedFiles.add(newAttachment);
             } catch (Exception ex) {
-                throw new BadRequestException("Could not store file " + fileName + ". Please try again!" + ex);
+                errorMessages.add(new ErrorAttachmentDTO("Failed to save file", fileName, file.getContentType()));
             }
         }
 
-        return attachments;
+        return new AttachmentResponseDTO(errorMessages, addedFiles);
     }
 
 
-    public ResourceFileDTO loadFileAsResource(Integer taskId,String fileName) {
-        TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName).orElseThrow(() -> new NotFoundException("File not found " + fileName));
+    public ResourceFileDTO loadFileAsResource(Integer taskId, String fileName) {
+        TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName);
+        if (taskAttachment == null) {
+            throw new NotFoundException("File not found " + fileName);
+        }
         try {
             Path filePath = this.fileStorageLocation.resolve(taskAttachment.getStoredName()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
@@ -99,22 +173,52 @@ public class TaskAttachmentService {
                 throw new NotFoundException("File not found " + fileName);
             }
         } catch (MalformedURLException ex) {
-            throw new RuntimeException("File operation error: " + fileName, ex);
+            throw new BadRequestException("File operation error: " + fileName);
         }
     }
 
-    public void removeTaskResource(Integer taskId,String fileName) {
-        TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName).orElseThrow(() -> new NotFoundException("File not found " + fileName));
+//    public TaskAttachment removeTaskResource(Integer taskId, String fileName) {
+//        TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName).orElseThrow(() -> new NotFoundException("File not found " + fileName));
+//        try {
+//            Path filePath = this.fileStorageLocation.resolve(taskAttachment.getStoredName()).normalize();
+//            if (Files.exists(filePath)) {
+//                SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
+//                taskAttachmentRepository.delete(taskAttachment);
+//                Files.delete(filePath);
+//                return taskAttachment;
+//            } else {
+//                throw new NotFoundException("File not found " + taskAttachment.getStoredName());
+//            }
+//        } catch (Exception ex) {
+//            throw new BadRequestException("File operation error: " + taskAttachment.getStoredName());
+//        }
+//    }
+
+    public AttachmentResponseDTO removeTaskResource(Integer taskId, String fileName) {
+        TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName);
+        List<ErrorAttachmentDTO> errorMessages = new ArrayList<>();
+        List<SimpleAttachmentDTO> addedFiles = new ArrayList<>();
+        if (taskAttachment == null ) {
+            errorMessages.add(new ErrorAttachmentDTO("File not found", fileName, null));
+            return new AttachmentResponseDTO(errorMessages, addedFiles);
+        }
         try {
             Path filePath = this.fileStorageLocation.resolve(taskAttachment.getStoredName()).normalize();
             if (Files.exists(filePath)) {
+                taskAttachmentRepository.delete(taskAttachment);
                 Files.delete(filePath);
+                SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
+                newAttachment.setFilename(fileName);
+                newAttachment.setContentType(taskAttachment.getContentType());
+                addedFiles.add(newAttachment);
             } else {
-                throw new NotFoundException("File not found " + taskAttachment.getStoredName());
+                errorMessages.add(new ErrorAttachmentDTO("File not found", fileName, taskAttachment.getContentType()));
             }
         } catch (Exception ex) {
-            throw new NotFoundException("File operation error: " + taskAttachment.getStoredName());
+            throw new BadRequestException("File operation error: " + taskAttachment.getStoredName());
         }
+
+        return new AttachmentResponseDTO(errorMessages, addedFiles);
     }
 
     public void removeAllTaskResource(Integer taskId) {
@@ -132,7 +236,7 @@ public class TaskAttachmentService {
                 }
             }
         } catch (Exception ex) {
-            throw new NotFoundException("File operation error: " + taskId);
+            throw new BadRequestException("File operation error: " + taskId);
         }
     }
 }

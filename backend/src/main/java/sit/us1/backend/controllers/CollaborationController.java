@@ -1,6 +1,8 @@
 package sit.us1.backend.controllers;
 
 import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.groups.Default;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -53,7 +55,7 @@ public class CollaborationController {
     }
 
     @PatchMapping("/collabs/invitations")
-    public ResponseEntity<SimpleCollaboratorDTO> acceptCollaborator(@PathVariable String boardId) {
-        return ResponseEntity.ok(collabService.acceptCollaborator(boardId));
+    public ResponseEntity<SimpleCollaboratorDTO> acceptCollaborator(@PathVariable String boardId, @NotBlank @Pattern(regexp = "accept|decline") @RequestParam String action) {
+        return ResponseEntity.ok(collabService.acceptCollaborator(boardId, action));
     }
 }

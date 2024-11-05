@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskAttachmentRepository extends JpaRepository<TaskAttachment, Integer> {
-    Optional<TaskAttachment> findByTaskIdAndFilename(Integer taskId, String filename);
+    TaskAttachment findByTaskIdAndFilename(Integer taskId, String filename);
 
     void deleteByTaskIdAndFilename(Integer taskId, String filename);
 
