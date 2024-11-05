@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS `taskboard`.`taskattachment` (
   `filename` VARCHAR(255) NULL,
   `storedName` VARCHAR(255) NULL,
   `contentType` VARCHAR(255) NULL,
+  `fileData` LONG NULL,
   `uploadedAt` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   `taskId` INT NOT NULL,
   PRIMARY KEY (`id`),
