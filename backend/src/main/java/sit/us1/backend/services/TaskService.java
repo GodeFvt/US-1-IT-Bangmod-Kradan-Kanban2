@@ -71,9 +71,6 @@ public class TaskService {
 
     public TaskDetailDTO getTaskById(String boardId, Integer id) {
         TaskList task = taskRepository.findByBoardIdAndId(boardId, id).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
-        TaskDetailDTO taskDetailDTO = mapper.map(task, TaskDetailDTO.class);
-        List<TaskAttachment> taskAttachments = taskAttachmentRepository.findAllByTaskId(id);
-
         return mapper.map(task, TaskDetailDTO.class);
     }
 
@@ -103,35 +100,19 @@ public class TaskService {
             task.setStatus(status);
             task.setBoard(board);
             TaskList newTask = taskRepository.save(task);
+
             TaskResponseDTO newTaskResponse = mapper.map(newTask, TaskResponseDTO.class);
-//            if (files != null && files.length > 0) {
-//                List<Attachment> taskAttachment = fileService.saveTaskAttachment(boardId,newTask.getId(), files);
-////                List<Attachment> attachments = getAttachments(boardId, taskAttachment, newTask);
-//                newTaskResponse.setAttachments(taskAttachment);
-//            }
 
             if (files != null && files.size() > 0) {
                 AttachmentResponseDTO taskAttachment = fileService.saveTaskAttachment(boardId, newTask.getId(), files);
-                newTaskResponse.setAttachments(taskAttachment);
+                newTaskResponse.setAttachments(taskAttachment.getFilesSuccess());
+                newTaskResponse.setFilesErrors(taskAttachment.getFilesErrors());
             }
 
             return newTaskResponse;
         } catch (Exception e) {
             throw new NotFoundException("Failed to add This task");
         }
-    }
-
-    private List<SimpleAttachmentDTO> getAttachments(String boardId, List<TaskAttachment> taskAttachment, TaskList task) {
-        List<SimpleAttachmentDTO> attachments = new ArrayList<>();
-        for (TaskAttachment attachment : taskAttachment) {
-            SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
-            newAttachment.setFilename(attachment.getFilename());
-            newAttachment.setContentType(attachment.getContentType());
-            newAttachment.setDownloadUrl(this.hostName + "/boards/" + boardId + "/tasks/" + task.getId() + "/attachments/" + attachment.getFilename() + "?disposition=attachment");
-            newAttachment.setPreviewUrl(this.hostName + "/boards/" + boardId + "/tasks/" + task.getId() + "/attachments/" + attachment.getFilename() + "?disposition=inline");
-            attachments.add(newAttachment);
-        }
-        return attachments;
     }
 
     @Transactional
@@ -145,14 +126,17 @@ public class TaskService {
         } else {
             status = statusRepository.findByNameAndBoardIdIsNull(taskRequestDTO.getStatus()).orElseThrow(() -> new NotFoundException("Status Name not found: " + taskRequestDTO.getStatus()));
         }
+
         taskRequestDTO.setId(taskId);
-        TaskList task = mapper.map(taskRequestDTO, TaskList.class);
+        taskList.setAssignees(taskRequestDTO.getAssignees());
+        taskList.setDescription(taskRequestDTO.getDescription());
+        taskList.setTitle(taskRequestDTO.getTitle());
+        taskList.setStatus(status);
+        taskList.setBoard(board);
         TaskList newTask;
 
         try {
-            task.setStatus(status);
-            task.setBoard(board);
-            newTask = taskRepository.save(task);
+            newTask = taskRepository.save(taskList);
         } catch (Exception e) {
             throw new BadRequestException("Failed to update this task with Id number :" + taskId);
         }
@@ -160,41 +144,24 @@ public class TaskService {
         TaskResponseDTO newTaskResponse = mapper.map(newTask, TaskResponseDTO.class);
 
 
+        List<ErrorAttachmentDTO> errors = new ArrayList<>();
 
         if (filesToDelete != null && !filesToDelete.isEmpty()) {
-            AttachmentResponseDTO taskAttachment = newTaskResponse.getAttachments();
+
             for (String filename : filesToDelete) {
                 AttachmentResponseDTO taskAttachmentDelete = fileService.removeTaskResource(taskId, filename);
-                if (taskAttachment == null) {
-                    taskAttachment = new AttachmentResponseDTO();
-                }
-                if(taskAttachment.getFilesErrors() == null) {
-                    taskAttachment.setFilesErrors(new ArrayList<>());
-                }
-                if(taskAttachment.getFilesSuccess() == null) {
-                    taskAttachment.setFilesSuccess(new ArrayList<>());
-                }
-
-                taskAttachment.getFilesErrors().addAll(taskAttachmentDelete.getFilesErrors());
-                taskAttachment.getFilesSuccess().addAll(taskAttachmentDelete.getFilesSuccess());
+                newTaskResponse.getAttachments().stream().filter(attachment -> attachment.getFilename().equals(filename)).findFirst().ifPresent(newTaskResponse.getAttachments()::remove);
+                errors.addAll(taskAttachmentDelete.getFilesErrors());
             }
-            newTaskResponse.setAttachments(taskAttachment);
         }
 
         if (files != null && !files.isEmpty()) {
             AttachmentResponseDTO taskAttachment = fileService.saveTaskAttachment(boardId, taskId, files);
-            if(newTaskResponse.getAttachments() == null) {
-                newTaskResponse.setAttachments(taskAttachment);
-            } else {
-                if(taskAttachment.getFilesErrors() != null) {
-                    newTaskResponse.getAttachments().getFilesErrors().addAll(taskAttachment.getFilesErrors());
-                }
-                if(taskAttachment.getFilesSuccess() != null) {
-                    newTaskResponse.getAttachments().getFilesSuccess().addAll(taskAttachment.getFilesSuccess());
-                }
-            }
-
+            newTaskResponse.getAttachments().addAll(taskAttachment.getFilesSuccess());
+            errors.addAll(taskAttachment.getFilesErrors());
         }
+
+        newTaskResponse.setFilesErrors(errors);
 
         return mapper.map(newTaskResponse, TaskResponseDTO.class);
     }

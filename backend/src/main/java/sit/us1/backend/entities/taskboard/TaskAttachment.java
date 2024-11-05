@@ -26,6 +26,7 @@ public class TaskAttachment {
     @JsonIgnore
     private String storedName;
     private String contentType;
+    private long fileData;
     @Column(updatable = false, insertable = false)
     private ZonedDateTime uploadedAt;
 
@@ -36,10 +37,11 @@ public class TaskAttachment {
     private TaskList task;
 
 
-    public TaskAttachment(Integer taskId, String filename, String storedName, String contentType) {
+    public TaskAttachment(Integer taskId, String filename, String storedName, String contentType,long fileData) {
         this.taskId = taskId;
         this.filename = filename;
         this.storedName = storedName;
         this.contentType = contentType;
+        this.fileData = fileData;
     }
 }

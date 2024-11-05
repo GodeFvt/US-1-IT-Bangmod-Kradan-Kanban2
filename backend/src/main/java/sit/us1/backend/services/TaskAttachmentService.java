@@ -6,7 +6,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import sit.us1.backend.dtos.tasksDTO.SimpleAttachmentDTO;
 import sit.us1.backend.dtos.tasksDTO.AttachmentResponseDTO;
 import sit.us1.backend.dtos.tasksDTO.ErrorAttachmentDTO;
 import sit.us1.backend.dtos.tasksDTO.ResourceFileDTO;
@@ -91,7 +90,7 @@ public class TaskAttachmentService {
 
     public AttachmentResponseDTO saveTaskAttachment(String boardId, Integer taskId, List<MultipartFile> files) {
         List<ErrorAttachmentDTO> errorMessages = new ArrayList<>();
-        List<SimpleAttachmentDTO> addedFiles = new ArrayList<>();
+        List<TaskAttachment> addedFiles = new ArrayList<>();
 
         long MAX_FILE_SIZE = maxFileSize * 1024 * 1024;
         long MAX_TOTAL_SIZE = ((long) maxFilePerTask * maxFileSize) * 1024 * 1024;
@@ -138,13 +137,8 @@ public class TaskAttachmentService {
             try {
                 Path targetLocation = this.fileStorageLocation.resolve(storedName);
                 Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-                taskAttachmentRepository.save(new TaskAttachment(taskId, fileName, storedName, file.getContentType()));
-                SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
-                newAttachment.setFilename(fileName);
-                newAttachment.setContentType(file.getContentType());
-                newAttachment.setDownloadUrl("https://" + fileServiceHostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=attachment");
-                newAttachment.setPreviewUrl("https://" + fileServiceHostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=inline");
-                newAttachment.setFileData(file.getSize());
+                TaskAttachment newAttachment =new TaskAttachment(taskId, fileName, storedName, file.getContentType(), file.getSize());
+                taskAttachmentRepository.save(newAttachment);
                 addedFiles.add(newAttachment);
             } catch (Exception ex) {
                 errorMessages.add(new ErrorAttachmentDTO("Failed to save file", fileName, file.getContentType()));
@@ -177,27 +171,10 @@ public class TaskAttachmentService {
         }
     }
 
-//    public TaskAttachment removeTaskResource(Integer taskId, String fileName) {
-//        TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName).orElseThrow(() -> new NotFoundException("File not found " + fileName));
-//        try {
-//            Path filePath = this.fileStorageLocation.resolve(taskAttachment.getStoredName()).normalize();
-//            if (Files.exists(filePath)) {
-//                SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
-//                taskAttachmentRepository.delete(taskAttachment);
-//                Files.delete(filePath);
-//                return taskAttachment;
-//            } else {
-//                throw new NotFoundException("File not found " + taskAttachment.getStoredName());
-//            }
-//        } catch (Exception ex) {
-//            throw new BadRequestException("File operation error: " + taskAttachment.getStoredName());
-//        }
-//    }
-
     public AttachmentResponseDTO removeTaskResource(Integer taskId, String fileName) {
         TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName);
         List<ErrorAttachmentDTO> errorMessages = new ArrayList<>();
-        List<SimpleAttachmentDTO> addedFiles = new ArrayList<>();
+        List<TaskAttachment> addedFiles = new ArrayList<>();
         if (taskAttachment == null ) {
             errorMessages.add(new ErrorAttachmentDTO("File not found", fileName, null));
             return new AttachmentResponseDTO(errorMessages, addedFiles);
@@ -207,9 +184,7 @@ public class TaskAttachmentService {
             if (Files.exists(filePath)) {
                 taskAttachmentRepository.delete(taskAttachment);
                 Files.delete(filePath);
-                SimpleAttachmentDTO newAttachment = new SimpleAttachmentDTO();
-                newAttachment.setFilename(fileName);
-                newAttachment.setContentType(taskAttachment.getContentType());
+                TaskAttachment newAttachment = new TaskAttachment( taskId, fileName, taskAttachment.getStoredName(), taskAttachment.getContentType(), taskAttachment.getFileData());
                 addedFiles.add(newAttachment);
             } else {
                 errorMessages.add(new ErrorAttachmentDTO("File not found", fileName, taskAttachment.getContentType()));
