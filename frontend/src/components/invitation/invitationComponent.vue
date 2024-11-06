@@ -4,7 +4,7 @@ import { useUserStore } from '../../stores/user.js';
 import { useBoardStore } from '../../stores/boards.js';
 import { useRoute, useRouter } from 'vue-router';
 import LoginPopUp from '../modal/PopUp.vue';
-import { getBoardsById,getCollabs, responseInvite } from '../../lib/fetchUtill.js';
+import { getAllBoards, responseInvite } from '../../lib/fetchUtill.js';
 import AuthzPopup from "../AuthzPopup.vue";
 
 const route = useRoute();
@@ -12,7 +12,7 @@ const router = useRouter();
 const boardId = ref(route.params.boardId);
 const userStore = useUserStore();
 const showLoginPopup = ref(false);
-const message = ref("");
+const message = ref(``);
 const boardStore = useBoardStore();
 const showPopUp = ref(false);
 
@@ -30,54 +30,52 @@ function handleResponseError(responseCode) {
   }
 }
 
-
-// check ว่า boardId ที่ส่งมามีไหม
-async function CheckBoardIsValid(){
- const resBoard = await getBoardsById(boardId.value);
-  if(resBoard === 404 || resBoard === 400 || resBoard === 500 ){
-    router.push({ name: "TaskNotFound", params: { page: "Board" } });
-  }
-  else{
-  boardStore.setCurrentBoard(resBoard);
-  const resCollab = await getCollabs(boardId.value);
-  if(resCollab.length >= 0){
-    const collabFound = resCollab.find(collab => collab.oid === userStore.authToken.oid);
-    if(collabFound === undefined){
-      message.value = "Sorry, we couldn't find the invitation to this board";
-    }
-    else{
-      message.value = `You have been invited to ${resBoard.name} board`;
-      }
-  }
-  else{
-    handleResponseError(resCollab);
-  }
-  }
-}
-
-
 onMounted(async () => {
   if(userStore.authToken === null) {
     showLoginPopup.value = true;
   }
   else{
-  await CheckBoardIsValid();
+    const res = await getAllBoards();
+    if(typeof res === "object"){
+      console.log(res);
+      
+      boardStore.setAllBoard(res);
+      const collaborator = res.invited.collaborators.find(collab => collab.oid === userStore.authToken.oid);
+      if(collaborator.isPending === true){
+        message.value = `${res.invited.owner.name} has invited you to collaborate with ${collaborator.accessRight} access right on ${res.invited.name} board`;
+      }
+      else{
+        message.value = "Sorry, we couldn't find your active invitation to this board.";
+      }
+    }
+
+    else{
+      message.value = "Sorry, we couldn't find your active invitation to this board.";
+    }
+   
   }
   
 });
 
 async function acceptInvitation(){
-  const res = await responseInvite();
+  const res = await responseInvite(boardId.value, "accept");
   if(res === 200){
-    router.push({ name: "board", params: { boardId: boardId.value } });
+    router.push({ name: "task", params: { boardId: boardId.value } });
+  }
+  else{
+      handleResponseError(res);
+   
+  }
+}
+
+async function declineInvitation(){
+  const res = await responseInvite(boardId.value, "decline");
+  if(res === 200){
+    router.push({ name: "board" });
   }
   else{
     handleResponseError(res);
   }
-}
-
-function declineInvitation(){
-  console.log("acceptInvitation");
 }
 
 </script>
@@ -89,12 +87,12 @@ function declineInvitation(){
   </h1>
   <br />
     <p
-      class="itbkk-message text-5xl text-gray-500"
+      class="itbkk-message text-2xl text-gray-500"
     >
       {{ message }}
     </p>
 
-    <div v-if ="message !== `Sorry, we couldn't find the invitation to this board` "
+    <div v-if ="message !== `Sorry, we couldn't find your active invitation to this board.` && message !== `` "
     class="flex flex-row gap-10">
 
 

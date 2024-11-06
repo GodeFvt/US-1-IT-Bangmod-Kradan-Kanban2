@@ -90,7 +90,7 @@ const routes = [
     component: ManageCollab,
   },
   {
-    path: "/board/:boardId/invitations",
+    path: "/board/:boardId/collab/invitations",
     name: "Invitations",
     component: Invitations,
   },
@@ -162,6 +162,7 @@ router.beforeEach(async (to, from, next) => {
       "TaskDetail",
       "StatusDetail",
       "ManageCollab",
+     
     ].includes(to.name)
   ) {
     const board = await cachedGetBoardsById(boardId);
@@ -207,7 +208,7 @@ router.beforeEach(async (to, from, next) => {
         "AddStatus",
       ].includes(to.name);
 
-      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction) ) {
+      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction && collaBorator?.isPending === true) ) {
         return next({
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
@@ -217,7 +218,8 @@ router.beforeEach(async (to, from, next) => {
       if (
         board.visibility === "PRIVATE" &&
         (
-          ((!isOwner && !collaBorator) || !userStore.authToken ) || ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction)
+          ((!isOwner && !collaBorator) || !userStore.authToken || collaBorator?.isPending === true ) || 
+          ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction) || (collaBorator?.isPending === true && isEditAction)
 
         )
       ) {
@@ -226,6 +228,7 @@ router.beforeEach(async (to, from, next) => {
           params: { boardId, page: "authorizAccess" },
         });
       }
+
     }
   }
 

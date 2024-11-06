@@ -47,8 +47,8 @@ const showConfirmModal = ref(false);
 const isChangeAccess = ref(false);
 const showPopUp = ref(false);
 const showLoading = ref(true);
+const chooseCollab = ref(null);
 const errorMSG = ref("");
-const username = ref(""); // เปลี่ยนเป็น ref เพื่อให้ตอบสนองต่อการเปลี่ยนแปลง
 const usernameId = ref(null); // ตั้งค่าเริ่มต้นเป็น null
 
 function handleResponseError(responseCode) {
@@ -80,8 +80,6 @@ watch(
 watch(
   () => accessSelect.value,
   (newSelect, oldSelect) => {
-    console.log("wdw", newSelect);
-    console.log("wdw2", oldSelect);
     if (newSelect !== oldSelect) {
       isChangeAccess.value = true;
       oldAccess.value = oldSelect;
@@ -99,7 +97,7 @@ onMounted(async () => {
     }
   }
   if (userStore.authToken !== null) {
-    if (userStore.boards.length === 0) {
+    if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       console.log(resBoard);
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
@@ -152,7 +150,7 @@ async function addCollaborator(collab) {
       showToast.value = true;
     } else if (res === 409) {
       // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
-      errorMSG.value = `The user "${collab.email}" is already the collaborator of this board.`;
+      errorMSG.value = `The user "${collab.email}" is already the collaborator or pending collaborator of this board.`;
       showToast.value = false;
     } else {
       typeToast.value = "danger";
@@ -363,7 +361,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                   :key="index"
                   :class="{ 'slide-in': isVisible[index] }"
                   @click="
-                    username = collab.name;
+                    chooseCollab = collab;
                     usernameId = index;
                   "
                 >
@@ -457,6 +455,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                           data-tip="You need to be board owner to perform this action."
                         >
                           <div
+                            v-if="!collab.isPending"
                             class="itbkk-collab-remove text-white fill-rose-300"
                             @click="
                               (isChangeAccess = false),
@@ -485,6 +484,30 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                                   : ' hover:fill-rose-300'
                               "
                             />
+                          </div>
+                          <div
+                            v-else
+                            class="bg-red-500 text-white px-2 py-1 rounded cursor-pointer"
+                            @click="
+                              (isChangeAccess = false),
+                                (usernameId = index),
+                                userStore.currentBoard.owner.id ===
+                                userStore.authToken?.oid
+                                  ? (showConfirmModal = true)
+                                  : (showConfirmModal = false)
+                            "
+                            :disabled="
+                              userStore.currentBoard.owner.id !==
+                              userStore.authToken?.oid
+                            "
+                            :class="
+                              userStore.currentBoard.owner.id ===
+                              userStore.authToken?.oid
+                                ? 'cursor-pointer'
+                                : 'cursor-not-allowed disabled'
+                            "
+                          >
+                            Cancel
                           </div>
                         </div>
                       </div>
@@ -552,8 +575,10 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
           <span class="itbkk-message">
             {{
               isChangeAccess
-                ? `Do you want to change access right of "${username}" to "${accessSelect}"`
-                : `Do you want to remove "${username}" from the board?`
+                ? `Do you want to change access right of "${chooseCollab.name}" to "${accessSelect}"`
+                : chooseCollab?.isPending
+                ? `Do you want to cancel the invitation to "${chooseCollab.name}"?`
+                : `Do you want to remove "${chooseCollab.name}" from the board?`
             }}
           </span>
         </template>

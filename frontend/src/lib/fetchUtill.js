@@ -588,13 +588,13 @@ async function deleteCollabs(boardId, collabId) {
   }
 }
 
-async function responseInvite() {
+async function responseInvite(boardId, action) {
   let res;
   const userStore = useUserStore();
   const token = userStore.encodeToken;
   try {
-    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/invitations`, {
-      method: "POST",
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/collabs/invitations?action=${action}`, {
+      method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
