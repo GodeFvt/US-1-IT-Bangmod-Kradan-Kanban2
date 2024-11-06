@@ -5,6 +5,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sit.us1.backend.dtos.boardsDTO.AllBoardResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
@@ -21,6 +22,7 @@ import sit.us1.backend.repositories.taskboard.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static sit.us1.backend.entities.taskboard.Board.Visibility.*;
 
@@ -67,11 +69,26 @@ public class BoardService {
     }
 
 
+//    public List<SimpleBoardDTO> getAllBoardByOid() {
+//        try {
+//            String Oid = SecurityUtil.getCurrentUserDetails().getOid();
+//            return listMapper.mapList(boardRepository.findAllByOwnerOrCollaborationOrderByCreatedOn(Oid), SimpleBoardDTO.class, mapper);
+//        } catch (Exception e) {
+//            throw new BadRequestException("the specified board does not exist");
+//        }
+//    }
 
-    public List<SimpleBoardDTO> getAllBoardByOid() {
+    public AllBoardResponseDTO getAllBoardByOid() {
         try {
             String Oid = SecurityUtil.getCurrentUserDetails().getOid();
-            return listMapper.mapList(boardRepository.findAllByOwnerOrCollaborationOrderByCreatedOn(Oid), SimpleBoardDTO.class, mapper);
+            List<Board> ownerBoards = boardRepository.findAllOwnerBoards(Oid);
+            List<Board> collabBoards = boardRepository.findAllCollaboratorBoards(Oid);
+            List<Board> pendingBoards = boardRepository.findAllPendingBoards(Oid);
+            return new AllBoardResponseDTO(
+                    listMapper.mapList(ownerBoards, SimpleBoardDTO.class, mapper),
+                    listMapper.mapList(collabBoards, SimpleBoardDTO.class, mapper),
+                    listMapper.mapList(pendingBoards, SimpleBoardDTO.class, mapper)
+            );
         } catch (Exception e) {
             throw new BadRequestException("the specified board does not exist");
         }
