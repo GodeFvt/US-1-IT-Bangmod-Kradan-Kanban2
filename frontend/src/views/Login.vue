@@ -81,7 +81,7 @@ async function signInOnClick(userLogin) {
       userStore.setAuthToken(res.access_token);
       const resBoard = await getAllBoards();
       userStore.setAllBoard(resBoard);
-      if (resBoard.length === 1) {
+      if (userStore.boards.length === 1) {
         router.push({
           name: "task",
           params: { boardId: userStore.boards[0].id },

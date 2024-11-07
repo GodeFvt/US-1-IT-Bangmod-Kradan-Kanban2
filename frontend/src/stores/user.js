@@ -70,7 +70,10 @@ export const useUserStore = defineStore("userStore", {
       this.boards.splice(index, 1);
     },
     setAllBoard(newAllBoard) {
-      this.boards = [...newAllBoard];
+      this.boards = [...newAllBoard.boards, ...newAllBoard.collab , ...newAllBoard.invited]; //invited เดี๋ยวเอาออกเพื่อความง่ายในการ dev
+    },
+    clearBoards() {
+      this.boards = [];
     },
     findBoardById(id) {
       return this.boards.find((board) => board.id === id);

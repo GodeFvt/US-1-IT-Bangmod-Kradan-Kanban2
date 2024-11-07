@@ -6,7 +6,7 @@ import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useUserStore } from "../../stores/user.js";
 
-const boardStore = useUserStore();
+
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
   board: {
@@ -29,12 +29,13 @@ const duplicateBoard = ref({});
 const editMode = ref(props.isEdit);
 const validate = ref({ name: {}, description: {} });
 const allBoard = ref([]);
-
+const userStore = useUserStore();
+const boardStore = useUserStore();
 
 watch(
   () => props.board,
   (newBoard) => {
-    allBoard.value = boardStore.boards;
+    allBoard.value = userStore.boards;
     for (const key in newBoard) {
       if (newBoard[key] === null) {
         newBoard[key] = "";
