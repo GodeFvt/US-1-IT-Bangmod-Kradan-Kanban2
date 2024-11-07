@@ -37,15 +37,15 @@ onMounted(async () => {
   else{
     const res = await getAllBoards();
     if(typeof res === "object"){
-      console.log(res);
-      
       boardStore.setAllBoard(res);
-      const collaborator = res.invited.collaborators.find(collab => collab.oid === userStore.authToken.oid);
-      if(collaborator.isPending === true){
-        message.value = `${res.invited.owner.name} has invited you to collaborate with ${collaborator.accessRight} access right on ${res.invited.name} board`;
-      }
-      else{
+      const board = res.invited.find(board => board.id === boardId.value);
+      if(board === undefined){
         message.value = "Sorry, we couldn't find your active invitation to this board.";
+        return
+      }
+      const collaborator = board.collaborators.find(collab => collab.oid === userStore.authToken?.oid);
+      if(collaborator.isPending === true){
+        message.value = `${board.owner.name} has invited you to collaborate with ${collaborator.accessRight} access right on ${board.name} board`;
       }
     }
 
@@ -127,7 +127,7 @@ async function declineInvitation(){
       </p>
     </template>
     <template #button>
-      <router-link :to="{ name: 'Login' }">
+      <router-link :to="{ name: 'Login', query: { redirectTo: $route.fullPath } }">
         <button
           class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded"
         >

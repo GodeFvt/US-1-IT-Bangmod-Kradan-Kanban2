@@ -81,12 +81,17 @@ async function signInOnClick(userLogin) {
       userStore.setAuthToken(res.access_token);
       const resBoard = await getAllBoards();
       userStore.setAllBoard(resBoard);
+      const redirectTo = router.currentRoute.value.query.redirectTo;
       if (userStore.boards.length === 1) {
         router.push({
           name: "task",
           params: { boardId: userStore.boards[0].id },
         });
+      } else if (redirectTo) {
+        // ถ้ามี redirectTo ให้ไปที่หน้านั้น
+        router.push(redirectTo);
       } else {
+        // ถ้าไม่มี redirectTo ให้ไปหน้าหลัก
         router.push({ name: "board" });
       }
     } else if (res === 400 || res === 401) {
