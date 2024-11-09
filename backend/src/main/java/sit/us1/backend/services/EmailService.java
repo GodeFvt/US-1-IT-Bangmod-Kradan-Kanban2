@@ -32,7 +32,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendInvitationEmail(String inviterName, String recipientEmail, String boardName, Collaboration.Access accessRole, String boardId) throws MessagingException, IOException {
+    public void sendInvitationEmail(String inviterName, String recipientEmail, String boardName, Collaboration.Access access, String boardId) throws MessagingException, IOException {
         String subject = inviterName + " has invited you to collaborate";
         String invitationLink = "https://" + hostName  + "/board/" + boardId + "/collab/invitations";
 
@@ -43,7 +43,7 @@ public class EmailService {
         // แทนที่ตัวแปรใน HTML template
         content = content.replace("{{inviterName}}", inviterName)
                 .replace("{{boardName}}", boardName)
-                .replace("{{accessRole}}", accessRole.toString())
+                .replace("{{access}}", access.toString())
                 .replace("{{invitationLink}}", invitationLink);
 
         // สร้างและส่งอีเมล

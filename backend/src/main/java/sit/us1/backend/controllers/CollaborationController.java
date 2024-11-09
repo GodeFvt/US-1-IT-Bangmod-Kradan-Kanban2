@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import sit.us1.backend.dtos.boardsDTO.CollaboratorResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
 import sit.us1.backend.validations.ValidationUtil;
 import sit.us1.backend.services.CollaborationService;
@@ -30,32 +31,32 @@ public class CollaborationController {
     }
 
     @GetMapping("/collabs")
-    public ResponseEntity<List<SimpleCollaboratorDTO>> getCollaborator(@PathVariable String boardId) {
+    public ResponseEntity<List<CollaboratorResponseDTO>> getCollaborator(@PathVariable String boardId) {
         return ResponseEntity.ok(collabService.getCollaborator(boardId));
     }
 
     @GetMapping("/collabs/{collabId}")
-    public ResponseEntity<SimpleCollaboratorDTO> getCollaboratorById(@PathVariable String boardId, @PathVariable String collabId) {
+    public ResponseEntity<CollaboratorResponseDTO> getCollaboratorById(@PathVariable String boardId, @PathVariable String collabId) {
         return ResponseEntity.ok(collabService.getCollaboratorById(boardId, collabId));
     }
 
     @PostMapping("/collabs")
-    public ResponseEntity<SimpleCollaboratorDTO> addCollaborator(@PathVariable String boardId, @Validated({ValidationGroups.OnCreate.class, Default.class}) @RequestBody SimpleCollaboratorDTO newCollab) {
+    public ResponseEntity<CollaboratorResponseDTO> addCollaborator(@PathVariable String boardId, @Validated({ValidationGroups.OnCreate.class, Default.class}) @RequestBody SimpleCollaboratorDTO newCollab) {
         return ResponseEntity.status(HttpStatus.CREATED).body(collabService.addCollaborator(boardId, newCollab));
     }
 
     @PatchMapping("/collabs/{collabId}")
-    public ResponseEntity<SimpleCollaboratorDTO> updateCollaborator(@PathVariable String boardId, @PathVariable String collabId, @Validated({ValidationGroups.OnUpdate.class, Default.class}) @RequestBody SimpleCollaboratorDTO collab) {
+    public ResponseEntity<CollaboratorResponseDTO> updateCollaborator(@PathVariable String boardId, @PathVariable String collabId, @Validated({ValidationGroups.OnUpdate.class, Default.class}) @RequestBody SimpleCollaboratorDTO collab) {
         return ResponseEntity.ok(collabService.updateCollaborator(boardId, collabId, collab));
     }
 
     @DeleteMapping("/collabs/{collabId}")
-    public ResponseEntity<SimpleCollaboratorDTO> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
+    public ResponseEntity<CollaboratorResponseDTO> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
         return ResponseEntity.ok(collabService.deleteCollaborator(boardId, collabId));
     }
 
     @PatchMapping("/collabs/invitations")
-    public ResponseEntity<SimpleCollaboratorDTO> acceptCollaborator(@PathVariable String boardId, @NotBlank @Pattern(regexp = "accept|decline") @RequestParam String action) {
+    public ResponseEntity<CollaboratorResponseDTO> acceptCollaborator(@PathVariable String boardId, @NotBlank @Pattern(regexp = "accept|decline") @RequestParam String action) {
         return ResponseEntity.ok(collabService.acceptCollaborator(boardId, action));
     }
 }

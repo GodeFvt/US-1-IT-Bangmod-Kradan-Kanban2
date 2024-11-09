@@ -100,15 +100,13 @@ public class BoardService {
 
     @Transactional
     public SimpleBoardDTO createBoard(BoardRequestDTO newBoard) {
-        String Oid = SecurityUtil.getCurrentUserDetails().getOid();
-        CustomUserDetails userDetails = SecurityUtil.getCurrentUserDetails();
+        BoardUser owner = new BoardUser();
+        owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
+        owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
+        owner.setName(SecurityUtil.getCurrentUserDetails().getName());
         try {
-            if (boardUserRepository.findById(Oid).isEmpty()) {
-                BoardUser user = new BoardUser();
-                user.setId(userDetails.getOid());
-                user.setUsername(userDetails.getUsername());
-                user.setName(userDetails.getName());
-                boardUserRepository.save(user);
+            if (boardUserRepository.findById(owner.getId()).isEmpty()) {
+                boardUserRepository.save(owner);
             }
         } catch (Exception e) {
             throw new BadRequestException("Cannot create user");
@@ -120,9 +118,6 @@ public class BoardService {
                 boardId = NanoIdUtils.randomNanoId(10);
             } while (boardRepository.existsById(boardId));
             board.setId(boardId);
-            BoardUser owner = new BoardUser();
-            owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
-            owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
             board.setOwner(owner);
             board.setIsCustomStatus(false);
             board.setVisibility(PRIVATE);

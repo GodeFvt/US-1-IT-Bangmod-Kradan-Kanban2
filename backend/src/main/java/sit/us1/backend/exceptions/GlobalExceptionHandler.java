@@ -157,6 +157,13 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(exception, exception.getMessage(), HttpStatus.CONFLICT, request);
     }
 
+    // ดัก exception UnavailableException
+    @ExceptionHandler(UnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ResponseEntity<ErrorResponse> handleUnavailableException(UnavailableException exception, WebRequest request) {
+        return buildErrorResponse(exception, exception.getMessage(), HttpStatus.SERVICE_UNAVAILABLE, request);
+    }
+
     // ดัก exception ที่ไม่ได้ระบุไว้ในที่อื่น
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
