@@ -2,12 +2,16 @@
 import { computed, ref, watch } from "vue";
 import { toFormatDate } from "../../lib/utill";
 import EditTaskIcon from "../icon/EditTaskIcon.vue";
+import DeleteIcon from "../icon/DeleteIcon.vue";
 import CloseIcon from "../icon/CloseIcon.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { useRouter } from "vue-router";
-import { validateSizeInput } from "../../lib/utill.js";
+import {
+  validateSizeInput,
+  previewBinary,
+  removeURL,
+} from "../../lib/utill.js";
 import { useUserStore } from "../../stores/user.js";
-
 const router = useRouter();
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
@@ -25,6 +29,12 @@ const props = defineProps({
   allTaskLimit: {
     type: Array,
   },
+  fileURL: {
+    type: Array,
+  },
+  // fileURL2: {
+  //   type: Object,
+  // },
 });
 const statusStore = useStatusStore();
 const duplicateTask = ref({});
@@ -34,6 +44,12 @@ const allTaskLimit = ref(props.allTaskLimit);
 const maximumTask = computed(() => statusStore.maximumTask);
 const noOftask = computed(() => statusStore.noOftask);
 const userStore = useUserStore();
+const isEditPage = ref(true);
+let fileChange = false;
+
+console.log(props.task);
+const fileURL = ref(props.fileURL);
+// const fileURL2 = ref(props.fileURL2)
 
 watch(
   () => props.task,
@@ -46,6 +62,21 @@ watch(
     }
     duplicateTask.value = { ...newTask };
     duplicateTask.value.status = { ...newTask.status };
+    //  fileURL.value.forEach((file,i)=>{
+    //   fileURL.value[i].url =  previewBinary(file.url)
+    //   console.log( file.url);
+    //  })
+    // fileURL.value[0].url=previewBinary( fileURL.value[0].url)
+    // console.log(fileURL[0].value);
+    // console.log(typeof fileURL.value[0].url);
+    // console.log(fileURL.value);
+    // for (let file of fileURL.value) {
+    //   file.url  = previewBinary(file.url)
+    //   console.log(file.url);
+    // }
+    // // fileURL2.value=previewBinary(fileURL2.value)
+    console.log(fileURL.value);
+    isEditPage.value = editMode.value && duplicateTask.value.id !== undefined;
   },
   { immediate: true }
 );
@@ -71,7 +102,87 @@ const countAssignees = computed(() => {
   return duplicateTask.value.assignees?.trim()?.length;
 });
 
+
+
 const validate = ref({ title: {}, description: {}, assignees: {} });
+const previewImagesURL = ref([]);
+const fileDetete = ref([]);
+const fileCanPreview = (fileName) => { return (/\.(png|jpeg|jpg|gif|bmp|svg)$/g).test(fileName)}
+console.log(previewImagesURL.value.length === 0);
+// console.log(uploadFileName.value);
+const preview = (event) => {
+  // previewDocURL.value = [];
+  //  previewImagesURL.value = ''
+  // uploadFileName.value = event.target.files[0].name;
+  console.log(previewImagesURL.value.length);
+  console.log(event.target.files[0].name);
+
+  // console.log(previewImagesURL.value.find((file)=>file.name===event.target.files[0].name ) );
+  // console.log(fileURL.value);
+  // console.log(fileURL.value[0].name === event.target.files[0].name);
+  // console.log(fileURL.value.find((file)=>file.name === event.target.files[0].name ) );
+  // console.log(event.target.files[0].size);
+
+ 
+     // let file;
+    //ได้เป็น preview รูป
+    // previewImagesURL.value =
+    console.log(event.target.files[0]);
+    console.log(typeof event.target.files[0]);
+
+    previewImagesURL.value.push({
+      name: event.target.files[0].name,
+      url: event.target.files[0],
+    });
+    console.log( previewImagesURL.value.find(e=>e.name===event.target.files[0].name));
+    console.log(previewImagesURL.value.filter((file)=>file.name===event.target.files[0].name ).length);
+  //  previewImagesURL.value[previewImagesURL.value.length-1]   ถ้าเป็นตัวที่ 0 ละ
+    console.log(previewImagesURL.value.filter((file)=>file.name===event.target.files[0].name ).length > 1);
+    if (event.target.files[0].size > (20*1024*1024)) {
+      // console.log(event.target.files[0].size);
+      previewImagesURL.value.find(e=>e.name===event.target.files[0].name)['invalid']={msg:'Each file cannot be larger than 20 MB. The following files are not added' , boolean:true};
+      //   previewImagesURL.value.find(e=>e.name===event.target.files[0].name).invalid =  {
+      //   msg:'Each file cannot be larger than 20 MB. The following files are not added' ,
+      //   boolean:true
+      // }
+  
+
+    // fileMsg.value.msgFileSize = 'Each file cannot be larger than 20 MB. The following files are not added'
+    // fileMsg.value.boolFileSize = true
+    // disabledSave.value = true
+  } else if (previewImagesURL.value.length>=10 || fileURL.value.length>=10 || (previewImagesURL.value.length + fileURL.value.length )>10) {
+    // fileMsg.value.msgMaxFile = 'Each task can have at most 10 files. The following files are not added'
+    // fileMsg.value.boolMaxFile = true
+
+    // disabledSave.value = true
+    previewImagesURL.value.find(e=>e.name===event.target.files[0].name)['invalid']={msg:'Each task can have at most 10 files. The following files are not added' , boolean:true};
+
+    // previewImagesURL.value.find(e=>e.name===event.target.files[0].name).invalid = {
+    //     msg:'Each task can have at most 10 files. The following files are not added' ,   boolean:true
+    //   }
+  
+  }
+  else if (previewImagesURL.value.filter((file)=>file.name===event.target.files[0].name ).length > 1 || fileURL.value.filter((file)=>file.name === event.target.files[0].name ).length >= 1 ) {
+    // !== undefined คือ มีตัวซ้ำ
+    console.log("ซ้ำ");
+    // console.log(previewImagesURL.value.find((file)=>file.name===event.target.files[0].name ) !== undefined || fileURL.value.find((file)=>file.name === event.target.files[0].name ) !== undefined );
+    // fileMsg.value.msgFileName = 'File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file.'
+    // fileMsg.value.boolFileName = true
+    previewImagesURL.value.find(e=>e.name===event.target.files[0].name)['invalid']={msg:'File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file.' ,   boolean:true};
+    console.log(previewImagesURL.value );
+
+   
+    // disabledSave.value = true
+  }
+
+
+  console.log(previewImagesURL.value);
+  // console.log(uploadFileName.value);
+
+  // console.log(file);
+};
+
+
 
 const disabledSave = computed(() => {
   const arrStyle = validateSizeInput(
@@ -83,25 +194,74 @@ const disabledSave = computed(() => {
   validate.value.title = arrStyle[0];
   validate.value.description = arrStyle[1];
   validate.value.assignees = arrStyle[2];
-
-  if (
-    isTaskChanged.value ||
+  console.log(previewImagesURL.value.length);
+  console.log(previewImagesURL.value.length === 0);
+  console.log(fileURL.value.length , props.fileURL.length);
+  console.log(fileChange);
+  if (isTaskChanged.value && previewImagesURL.value.length === 0 && fileChange===false) {
+    console.log("isTaskChanged.value && previewImagesURL.value.length === 0");
+    return true;
+  }
+  else if (previewImagesURL.value.some(e=>e.invalid)) {
+    console.log("previewImagesURL.value.some(e=>e.invalid)");
+    return true;
+  }
+  else if (fileChange) {
+    console.log("fileChange ===false ");
+    return false;
+  } else if (
     duplicateTask.value.title === null ||
     countTitle.value <= 0
   ) {
+    console.log("2");
     return true;
   } else if (
     validate.value.title.boolean ||
     validate.value.description.boolean ||
     validate.value.assignees.boolean
   ) {
+    console.log("3");
     return true;
   } else if (limitThisTask.value) {
+    console.log("4");
     return true;
-  } else {
+  }
+  else {
+    console.log("else");
+    //save กดได้
     return false;
   }
 });
+
+function deleteFile(imgUrlObject, index,type,fileName) {
+  // fileNotBinary.value.splice(fileNotBinary.value.findIndex((a,i) => a=previewImagesURL[index].value.url) , 1);
+  // console.log(index);
+  // console.log(previewImagesURL.value);
+  // console.log(fileNotBinary.value);
+  // console.log(fileNotBinary.value.findIndex((a,i) => a===previewImagesURL.value[index].url));
+  // console.log(fileNotBinary.value[fileNotBinary.value.findIndex((a,i) => a=previewImagesURL.value[index].url)]);
+  //  fileNotBinary.value.splice(index, 1);
+  if (type==="fileDelete") {
+    fileChange = true
+    fileURL.value.splice(index, 1);
+    fileDetete.value.push(fileName)
+    removeURL(imgUrlObject);
+  } else {
+    // boolFileSize ? fileMsg.value.boolFileSize = false : boolFileSize
+    // boolMaxFile ? fileMsg.value.boolMaxFile = false : boolMaxFile
+    // boolFileName ? fileMsg.value.boolFileName = false : boolFileName
+    previewImagesURL.value.splice(index, 1);
+    console.log("Revoke URL called for:", imgUrlObject);
+    removeURL(imgUrlObject);
+  }
+
+  // console.log("URL has been revoked:", imgUrlObject);
+
+  // setTimeout(() => {
+  //          removePreview(imgUrlObject);
+  //           console.log("URL has been revoked:");
+  //       }, 1000)
+}
 
 function textShow(text) {
   if (text === null) {
@@ -114,6 +274,7 @@ function edit(taskId) {
     router.push({ name: "EditTask", params: { taskId: taskId } });
   }
 }
+
 const limitThisTask = computed(() => {
   if (isLimit.value) {
     if (
@@ -229,7 +390,7 @@ const limitThisTask = computed(() => {
               >
                 <div class="font-bold text-sm">Description</div>
                 <textarea
-                  class="itbkk-description read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none text-black"
+                  class="itbkk-description read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-[50%] resize-none text-black"
                   :class="
                     (editMode ? validate.description.style : 'border-b',
                     textShow(duplicateTask.description))
@@ -366,6 +527,82 @@ const limitThisTask = computed(() => {
           </div>
         </div>
 
+        <div class="flex">
+          <div v-for="file in fileURL">
+            <!-- <img :src="file.url" alt="previewImagesURL" />  -->
+            <img
+              v-if="fileCanPreview(file.name)"
+              :src="file.url"
+              alt="previewImagesURL"
+              class="h-10 w-10"
+            />
+            <a v-else :href="file.url" target="_blank">icon</a>
+            <p>{{ file.name }}</p>
+
+            <div
+              :class="isEditPage ? 'block' : 'hidden'"
+              @click="deleteFile(file.url, index, 'fileDelete', file.name)"
+              class="cursor-pointer"
+            >
+              <DeleteIcon />
+            </div>
+          </div>
+          <!-- <img :src="fileURL2" alt="previewImagesURwade" /> -->
+        </div>
+
+        <div :class="isEditPage ? 'block ' : 'hidden'">
+          <div>
+            choose your file :
+            <input type="file" @change="preview" />
+          </div>
+
+          <div
+            v-for="(file, index) in [...previewImagesURL]"
+            v-show="previewImagesURL"
+            :key="index"
+          >
+            <div>
+              <!-- เปิดมาหน้า edit ต้องมี file ที่เคย add แล้ว ปุ่ม ลบ revorkurl ส่วนลบ file name ให้ส่งเป็น object [filename]  ควรใช้ตัวแปร uploadfile -->
+              <p>{{ file.name }}</p>
+              <img
+                v-if="fileCanPreview(file.name)"
+                :src="previewBinary(file.url)"
+                alt="previewImagesURL"
+              />
+              <a v-else :href="file.url" target="_blank">icon</a>
+              <div
+                :class="isEditPage ? 'block' : 'hidden'"
+                class="cursor-pointer"
+                @click="
+                  deleteFile(
+                    file.url,
+                    index,
+                    'selectFile',
+                  )
+                "
+              >
+                <CloseIcon />
+              </div>
+            </div>
+            <span
+              :class="file.invalid !== undefined ? 'text-red-500' : 'hidden'"
+              >{{ file?.invalid?.msg }}</span
+            >
+          </div>
+        </div>
+
+        <!-- <div v-else v-for="(file, index) in [...previewImagesURL]" >
+                <a :href="file.url" target="_blank" >{{
+              file.name
+            }}</a>
+            <div
+              :class="isEditPage ? 'block' : 'hidden'"
+              class="cursor-pointer"
+              @click="deleteFile(img.url, index ,'preview')"
+            >
+              <CloseIcon />
+            </div>
+            </div> -->
         <!-- Save Buttons, Close Buttons -->
         <div
           class="w-full flex justify-end mb-5"
@@ -381,7 +618,8 @@ const limitThisTask = computed(() => {
                   : 'cursor-pointer bg-green-700 hover:bg-green-800 focus:ring-green-300'
               "
               @click="
-                $emit('userAction', false), $emit('addEdit', duplicateTask)
+                $emit('userAction', false),
+                  $emit('addEdit', duplicateTask, previewImagesURL, fileDetete)
               "
             >
               SAVE

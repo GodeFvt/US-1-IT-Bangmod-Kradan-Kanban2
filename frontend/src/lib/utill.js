@@ -102,6 +102,15 @@ function tokenIsNull(token) {
   };
 }
 
+const previewBinary = (binaryObject)=>{
+  return URL.createObjectURL(binaryObject);
+}
+
+const removeURL = (binaryObject)=>{
+  console.log('removePreview');
+  return URL.revokeObjectURL(binaryObject);
+}
+
 export {
   convertString,
   toFormatDate,
@@ -109,5 +118,7 @@ export {
   isTokenValid,
   tokenIsNull,
   isNotDisable,
+  previewBinary,
+  removeURL,
   refreshTokenAndReturn,
 };
