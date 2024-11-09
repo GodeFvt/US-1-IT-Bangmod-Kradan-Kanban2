@@ -47,7 +47,7 @@ const showConfirmModal = ref(false);
 const isChangeAccess = ref(false);
 const showPopUp = ref(false);
 const showLoading = ref(true);
-const chooseCollab = ref(null);
+const chooseCollab = ref({});
 const errorMSG = ref("");
 const usernameId = ref(null); // ตั้งค่าเริ่มต้นเป็น null
 
@@ -116,6 +116,9 @@ onMounted(async () => {
   showLoading.value = false;
 });
 
+
+//หากส่งemail ไม่สำเร็จ "We could not send e-mail to <<PENDING collaborator name>>, he/she can accept the invitation at << link to /board/:id/collab/invitations >>
+  // แก้เรื่องต้องรอ be response กลับมาก่อนถึงจะadd นานเกิน,404 409 ต้องไม่ปิด addModal"
 async function addCollaborator(collab) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
@@ -128,35 +131,53 @@ async function addCollaborator(collab) {
   } else {
     collab.email = collab.email.trim();
     collab.accessRight = collab.accessRight?.toUpperCase();
+ 
+    
+    boardStore.addCollab(collab);
+    const collabIndex = boardStore.collabs.findIndex(
+        (collaborator) => collaborator.email === collab.email
+      ); 
+    isShowAddCollab.value = false;
     const res = await addCollabs(boardId.value, collab);
     if (typeof res === "object") {
-      typeToast.value = "success";
-      // taskStore.addTask(res);
-      messageToast.value = `Collaborator "${res.email}" added successfully.`;
-      boardStore.addCollab(res);
-      isShowAddCollab.value = false;
+      if(res.emailStatus === 'Failed to send email'){
+        typeToast.value = "warning";
+        messageToast.value = `We could not send e-mail to "${collab.email}", he/she can accept the invitation at 
+         /board/${boardId.value}/collab/invitations`;
+      }
+      else{
+        console.log(res);
+        typeToast.value = "success";
+        messageToast.value = `Collaborator "${res.email}" added successfully.`;
+      }
+      boardStore.updateCollabs(collabIndex,res);
       showToast.value = true;
-    } else if (res === 404) {
+    }
+    else if (res === 404) {
       //The user "${collab.email}" does not exists. ที่ addModal
-      typeToast.value = "warning";
-      errorMSG.value = `The user "${collab.email}" does not exists.`;
-      showToast.value = false;
+      typeToast.value = "danger";
+      messageToast.value = `The user "${collab.email}" does not exists.`;
+      showToast.value = true;
+      boardStore.removeCollab(collabIndex);
     } else if (res === 401) {
       handleResponseError(res);
+      boardStore.removeCollab(collabIndex);
     } else if (res === 403) {
-      typeToast.value = "warning";
+      typeToast.value = "danger";
       messageToast.value = `You do not have permission to add collaborator.`;
-      isShowAddCollab.value = false;
       showToast.value = true;
+      boardStore.removeCollab(collabIndex);
     } else if (res === 409) {
       // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
-      errorMSG.value = `The user "${collab.email}" is already the collaborator or pending collaborator of this board.`;
-      showToast.value = false;
-    } else {
       typeToast.value = "danger";
+      messageToast.value = `The user "${collab.email}" is already the collaborator or pending collaborator of this board.`;
+      showToast.value = false;
+      boardStore.removeCollab(collabIndex);
+    } else {
+      typeToast.value = "warning";
       messageToast.value = `There is a problem please try again later.`;
-      isShowAddCollab.value = false;
       showToast.value = true;
+      boardStore.removeCollab(collabIndex);
     }
   }
 }
@@ -176,17 +197,17 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
         messageToast.value = `Access right of "${collab.name}" changed to "${collab.accessRight}" successfully.`;
         boardStore.updateAccessCollab(usernameId.value, res.accessRight);
       } else if (res === 404) {
-        typeToast.value = "warning";
+        typeToast.value = "danger";
         messageToast.value = `The user "${collab.name}" is not the collaborator of this board.`;
         boardStore.removeCollab(usernameId.value); //ลบ user ออกจาก boardถ้าไม่กดแล้วไม่เจอ เช่นโดนลบออกจาก board โดยเจ้าของ ณ ตอนนั้น
       } else if (res === 401) {
         handleResponseError(res);
       } else if (res === 403) {
-        typeToast.value = "warning";
+        typeToast.value = "danger";
         messageToast.value = `You do not have permission to change collaborator access right.`;
         collab.accessRight = oldAccess.value;
       } else {
-        typeToast.value = "danger";
+        typeToast.value = "warning";
         messageToast.value = `There is a problem please try again.`;
       }
       showToast.value = true;
@@ -207,14 +228,14 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
         }" removed successfully.`;
         boardStore.removeCollab(usernameId.value);
       } else if (res === 404) {
-        typeToast.value = "warning";
+        typeToast.value = "danger";
         messageToast.value = `The user "${
           boardStore.collabs[usernameId.value].name
         }" is not the collaborator of this board.`;
       } else if (res === 401 || res === 403) {
         handleResponseError(res);
       } else {
-        typeToast.value = "danger";
+        typeToast.value = "warning";
         messageToast.value = `There is a problem please try again.`;
       }
       showToast.value = true;
@@ -377,13 +398,21 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                     >
                       <span class="itbkk-collab-name">{{ collab.name }}</span>
 
-                      <!-- Pending -->
+                      <!--Loading, Pending -->
                       <span
-                        v-if="collab.isPending"
-                        class="ml-2 px-2 py-1 text-xs font-bold text-yellow-800 bg-yellow-200 rounded"
-                      >
-                        Pending
-                      </span>
+      v-if="!collab.isPending"
+      class="ml-2 px-2 py-1 text-xs font-bold text-gray-700 bg-gray-300 rounded"
+    >
+      Processing...
+    </span>
+
+    <!-- Show "Pending" if the collaborator is still waiting for confirmation -->
+    <span
+      v-else
+      class="ml-2 px-2 py-1 text-xs font-bold text-yellow-800 bg-yellow-200 rounded"
+    >
+      Pending
+    </span>
                     </div>
                   </td>
 
@@ -455,7 +484,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                           data-tip="You need to be board owner to perform this action."
                         >
                           <div
-                            v-if="!collab.isPending"
+                            v-if="collab.isPending === false"
                             class="itbkk-collab-remove text-white fill-rose-300"
                             @click="
                               (isChangeAccess = false),

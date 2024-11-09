@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router';
 import LoginPopUp from '../modal/PopUp.vue';
 import { getAllBoards, responseInvite } from '../../lib/fetchUtill.js';
 import AuthzPopup from "../AuthzPopup.vue";
+import { isTokenValid } from "../../lib/utill";
 
 const route = useRoute();
 const router = useRouter();
@@ -31,7 +32,7 @@ function handleResponseError(responseCode) {
 }
 
 onMounted(async () => {
-  if(userStore.authToken === null) {
+  if (!(await isTokenValid(userStore.encodeToken))) {
     showLoginPopup.value = true;
   }
   else{
@@ -58,6 +59,10 @@ onMounted(async () => {
 });
 
 async function acceptInvitation(){
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showLoginPopup.value = true;
+    return;
+  }
   const res = await responseInvite(boardId.value, "accept");
   if(res === 200){
     router.push({ name: "task", params: { boardId: boardId.value } });
@@ -69,6 +74,10 @@ async function acceptInvitation(){
 }
 
 async function declineInvitation(){
+  if (!(await isTokenValid(userStore.encodeToken))) {
+    showLoginPopup.value = true;
+    return;
+  }
   const res = await responseInvite(boardId.value, "decline");
   if(res === 200){
     router.push({ name: "board" });

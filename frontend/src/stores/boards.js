@@ -42,6 +42,9 @@ export const useBoardStore = defineStore("useBoard", {
       setCollabs(collab){
         this.collabs = collab;
       },
+      updateCollabs(index,collab){
+        this.collabs[index] = collab;
+      },
       addCollab(collab){
         this.collabs.push(collab);
       },
