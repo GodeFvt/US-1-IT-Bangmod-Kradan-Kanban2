@@ -1,5 +1,5 @@
 import { useUserStore } from "../stores/user.js";
-import { tokenIsNull } from "./utill.js";
+import { tokenIsNull ,previewBinary} from "./utill.js";
 
 const BASE_URL = import.meta.env.VITE_API_ROOT;
 

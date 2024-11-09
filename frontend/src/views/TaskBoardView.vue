@@ -507,15 +507,19 @@ async function editTask(editedTask ,files,fileName) {
     } else if (res === 401 || res === 403) {
       handleResponseError(res);
     } else {
-      typeToast.value = "success";
          const indexToUpdate = allTask.value.findIndex(
         (task) => task.id === editedTask.id
         );
         taskStore.editTask(indexToUpdate, res);
         statusStore.setNoOftask(countStatus.value);
-
-      messageToast.value = `Task "${editedTask.title}" updated successfully`;
-    }
+        if (res.filesErrors.length!==0) {
+          typeToast.value = "warning";
+          messageToast.value = `An error occurred, and the file update was unsuccessful`;
+        } else {
+          typeToast.value = "success";
+           messageToast.value = `Task "${editedTask.title}" updated successfully`;
+        }
+    } 
     showToast.value = true;
   }
 }
@@ -773,7 +777,7 @@ async function removeTask(index, confirmDelete = false) {
         :isEdit="isEdit"
         :showLoading="showLoading"
         :allTaskLimit="allTaskLimit"
-        :fileURL="fileURL"
+        :fileUrl="fileURL"
       >
       </TaskDetail>
 

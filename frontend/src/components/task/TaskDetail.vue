@@ -29,7 +29,7 @@ const props = defineProps({
   allTaskLimit: {
     type: Array,
   },
-  fileURL: {
+  fileUrl: {
     type: Array,
   },
   // fileURL2: {
@@ -45,10 +45,10 @@ const maximumTask = computed(() => statusStore.maximumTask);
 const noOftask = computed(() => statusStore.noOftask);
 const userStore = useUserStore();
 const isEditPage = ref(true);
-let fileChange = false;
+const fileChange =  ref(false);
 
 console.log(props.task);
-const fileURL = ref(props.fileURL);
+const fileURL = ref(props.fileUrl);
 // const fileURL2 = ref(props.fileURL2)
 
 watch(
@@ -196,9 +196,9 @@ const disabledSave = computed(() => {
   validate.value.assignees = arrStyle[2];
   console.log(previewImagesURL.value.length);
   console.log(previewImagesURL.value.length === 0);
-  console.log(fileURL.value.length , props.fileURL.length);
-  console.log(fileChange);
-  if (isTaskChanged.value && previewImagesURL.value.length === 0 && fileChange===false) {
+  // console.log(fileURL.value.length , props.fileURL.length);
+  console.log(fileChange.value);
+  if (isTaskChanged.value && previewImagesURL.value.length === 0 && fileChange.value===false ) {
     console.log("isTaskChanged.value && previewImagesURL.value.length === 0");
     return true;
   }
@@ -206,7 +206,7 @@ const disabledSave = computed(() => {
     console.log("previewImagesURL.value.some(e=>e.invalid)");
     return true;
   }
-  else if (fileChange) {
+  else if (fileChange.value) {
     console.log("fileChange ===false ");
     return false;
   } else if (
@@ -242,7 +242,8 @@ function deleteFile(imgUrlObject, index,type,fileName) {
   // console.log(fileNotBinary.value[fileNotBinary.value.findIndex((a,i) => a=previewImagesURL.value[index].url)]);
   //  fileNotBinary.value.splice(index, 1);
   if (type==="fileDelete") {
-    fileChange = true
+    fileChange.value = true
+    console.log(index , fileName);
     fileURL.value.splice(index, 1);
     fileDetete.value.push(fileName)
     removeURL(imgUrlObject);
@@ -250,6 +251,7 @@ function deleteFile(imgUrlObject, index,type,fileName) {
     // boolFileSize ? fileMsg.value.boolFileSize = false : boolFileSize
     // boolMaxFile ? fileMsg.value.boolMaxFile = false : boolMaxFile
     // boolFileName ? fileMsg.value.boolFileName = false : boolFileName
+
     previewImagesURL.value.splice(index, 1);
     console.log("Revoke URL called for:", imgUrlObject);
     removeURL(imgUrlObject);
@@ -528,7 +530,7 @@ const limitThisTask = computed(() => {
         </div>
 
         <div class="flex">
-          <div v-for="file in fileURL">
+          <div v-for="(file ,index) in fileURL" :key="index" v-show="fileURL">
             <!-- <img :src="file.url" alt="previewImagesURL" />  -->
             <img
               v-if="fileCanPreview(file.name)"
