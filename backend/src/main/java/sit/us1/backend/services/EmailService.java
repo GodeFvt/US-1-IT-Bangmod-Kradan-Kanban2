@@ -33,8 +33,8 @@ public class EmailService {
     }
 
     public void sendInvitationEmail(String inviterName, String recipientEmail, String boardName, Collaboration.Access access, String boardId) throws MessagingException, IOException {
-        String subject = inviterName + " has invited you to collaborate";
-        String invitationLink = "https://" + hostName  + "/board/" + boardId + "/collab/invitations";
+        String subject = inviterName + " has invited you to collaborate with " + access.toString() + " access right on board " + boardName;
+        String invitationLink = "https://" + hostName  + "us1/board/" + boardId + "/collab/invitations";
 
         // โหลดไฟล์ HTML template
         Path templatePath = Paths.get(new ClassPathResource("templates/invitation_email_template.html").getURI());

@@ -2,6 +2,7 @@ package sit.us1.backend.services;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sit.us1.backend.dtos.boardsDTO.CollaboratorResponseDTO;
@@ -87,12 +88,14 @@ public class CollaborationService {
 
     @Transactional
     public CollaboratorResponseDTO addCollaborator(String id, SimpleCollaboratorDTO newCollab) {
-        Board board = boardRepository.findById(id).orElseThrow(() -> new NotFoundException("the specified board does not exist"));
+        //Pessimistic Lock บล็อกการเข้าถึงจากคำขออื่น
+        Board board = boardRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new NotFoundException("The specified board does not exist"));
         CollaboratorResponseDTO collaboratorResponseDTO = mapper.map(newCollab, CollaboratorResponseDTO.class);
 
         User user = userRepository.findByEmail(newCollab.getEmail());
         if (user == null) {
-            throw new NotFoundException("the specified user does not exist");
+            throw new NotFoundException("The specified user does not exist");
         }
         if (user.getOid().equals(SecurityUtil.getCurrentUserDetails().getOid())) {
             throw new ConflictException("Cannot add yourself as collaborator");
@@ -103,14 +106,13 @@ public class CollaborationService {
         }
 
         try {
-            Optional<BoardUser> boardUser = boardUserRepository.findById(user.getOid());
-            if (boardUser.isEmpty()) {
+            boardUserRepository.findById(user.getOid()).orElseGet(() -> {
                 BoardUser newUser = new BoardUser();
                 newUser.setId(user.getOid());
                 newUser.setUsername(user.getUsername());
                 newUser.setName(user.getName());
-                boardUserRepository.save(newUser);
-            }
+                return boardUserRepository.save(newUser);
+            });
 
             Collaboration collaboration = new Collaboration();
             collaboration.setBoardId(id);
@@ -124,6 +126,8 @@ public class CollaborationService {
             collaboratorResponseDTO.setIsPending(newCol.getIsPending());
             collaboratorResponseDTO.setAddedOn(newCol.getAddedOn());
 
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("User already exists");
         } catch (Exception e) {
             throw new BadRequestException(e.getMessage());
         }
@@ -137,6 +141,7 @@ public class CollaborationService {
 
         return collaboratorResponseDTO;
     }
+
 
     @Transactional
     public CollaboratorResponseDTO updateCollaborator(String id, String oid, SimpleCollaboratorDTO newCollab) {
