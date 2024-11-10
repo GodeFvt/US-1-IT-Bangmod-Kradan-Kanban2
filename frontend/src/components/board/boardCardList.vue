@@ -87,6 +87,7 @@ function getCollaborator(board) {
       <h3 class="itbkk-board-name slide-right text-lg font-semibold">
         {{ board.name }}
       </h3>
+      
     </template>
     <!-- <template #content>
               <p class="slide-right text-sm text-muted-foreground">{{ board.description }}</p>
@@ -105,7 +106,7 @@ function getCollaborator(board) {
           v-if="getCollaborator(board)?.isPending"
           class="bg-yellow-200 text-yellow-800 text-xs font-bold py-1 px-2 rounded mt-1"
         >
-          Pending
+          Pending Invite
         </div>
       </div>
     </template>

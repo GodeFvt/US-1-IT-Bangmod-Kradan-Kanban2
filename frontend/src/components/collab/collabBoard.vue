@@ -116,9 +116,8 @@ onMounted(async () => {
   showLoading.value = false;
 });
 
-
 //หากส่งemail ไม่สำเร็จ "We could not send e-mail to <<PENDING collaborator name>>, he/she can accept the invitation at << link to /board/:id/collab/invitations >>
-  // แก้เรื่องต้องรอ be response กลับมาก่อนถึงจะadd นานเกิน,404 409 ต้องไม่ปิด addModal"
+// แก้เรื่องต้องรอ be response กลับมาก่อนถึงจะadd นานเกิน,404 409 ต้องไม่ปิด addModal"
 async function addCollaborator(collab) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
@@ -131,29 +130,26 @@ async function addCollaborator(collab) {
   } else {
     collab.email = collab.email.trim();
     collab.accessRight = collab.accessRight?.toUpperCase();
- 
-    
+
     boardStore.addCollab(collab);
-    const collabIndex = boardStore.collabs.findIndex(
-        (collaborator) => collaborator.email === collab.email
-      ); 
+    const collabIndex = boardStore.collabs.findIndex((collaborator) => {
+      return collaborator.email === collab.email && !collaborator.oid;
+    });
     isShowAddCollab.value = false;
     const res = await addCollabs(boardId.value, collab);
     if (typeof res === "object") {
-      if(res.emailStatus === 'Failed to send email'){
+      if (res.emailStatus === "Failed to send email") {
         typeToast.value = "warning";
         messageToast.value = `We could not send e-mail to "${collab.email}", he/she can accept the invitation at 
          /board/${boardId.value}/collab/invitations`;
-      }
-      else{
+      } else {
         console.log(res);
         typeToast.value = "success";
         messageToast.value = `Collaborator "${res.email}" added successfully.`;
       }
-      boardStore.updateCollabs(collabIndex,res);
+      boardStore.updateCollabs(collabIndex, res);
       showToast.value = true;
-    }
-    else if (res === 404) {
+    } else if (res === 404) {
       //The user "${collab.email}" does not exists. ที่ addModal
       typeToast.value = "danger";
       messageToast.value = `The user "${collab.email}" does not exists.`;
@@ -171,7 +167,7 @@ async function addCollaborator(collab) {
       // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
       typeToast.value = "danger";
       messageToast.value = `The user "${collab.email}" is already the collaborator or pending collaborator of this board.`;
-      showToast.value = false;
+      showToast.value = true;
       boardStore.removeCollab(collabIndex);
     } else {
       typeToast.value = "warning";
@@ -400,19 +396,18 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
 
                       <!--Loading, Pending -->
                       <span
-      v-if="!collab.isPending"
-      class="ml-2 px-2 py-1 text-xs font-bold text-gray-700 bg-gray-300 rounded"
-    >
-      Processing...
-    </span>
+                        v-if="!collab.oid"
+                        class="ml-2 px-2 py-1 text-xs font-bold text-gray-700 bg-gray-300 rounded"
+                      >
+                        Processing...
+                      </span>
 
-    <!-- Show "Pending" if the collaborator is still waiting for confirmation -->
-    <span
-      v-else
-      class="ml-2 px-2 py-1 text-xs font-bold text-yellow-800 bg-yellow-200 rounded"
-    >
-      Pending
-    </span>
+                      <span
+                        v-else-if="collab.isPending"
+                        class="ml-2 px-2 py-1 text-xs font-bold text-yellow-800 bg-yellow-200 rounded"
+                      >
+                        Pending Invite
+                      </span>
                     </div>
                   </td>
 
@@ -509,14 +504,14 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                               :class="
                                 userStore.currentBoard.owner.id ===
                                 userStore.authToken?.oid
-                                  ? ' hover:fill-rose-400'
+                                  ? ' hover:fill-red-500'
                                   : ' hover:fill-rose-300'
                               "
                             />
                           </div>
                           <div
                             v-else
-                            class="bg-red-500 text-white px-2 py-1 rounded cursor-pointer"
+                            class="bg-red-300 text-white px-2 py-1 rounded cursor-pointer"
                             @click="
                               (isChangeAccess = false),
                                 (usernameId = index),
@@ -532,8 +527,8 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                             :class="
                               userStore.currentBoard.owner.id ===
                               userStore.authToken?.oid
-                                ? 'cursor-pointer'
-                                : 'cursor-not-allowed disabled'
+                                ? 'cursor-pointer hover:bg-red-500'
+                                : 'cursor-not-allowed disabled hover:bg-rose-300'
                             "
                           >
                             Cancel
