@@ -232,7 +232,7 @@ watch(
     boardName.value = userStore.currentBoard.name;
     fetchData();
     countStatuses();
-    console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
+    // console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
   }
 );
 
@@ -255,7 +255,7 @@ watch(
           task.value = res;
           task.value.attachments.forEach(async (file) => {
              const resFile = await downloadfile(boardId.value,newId, file.filename)
-             console.log(resFile);
+            //  console.log(resFile);
             fileURL.value.push({"name":file.filename,"url":resFile}); 
 
           })
@@ -265,7 +265,7 @@ watch(
           // fileURL2.value = resFile2
           if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
             isEdit.value = true;
-            console.log(isEdit.value);
+            // console.log(isEdit.value);
           } else {
             isEdit.value = false;
           }
@@ -339,11 +339,11 @@ async function confirmLimit(action) {
 }
 
 async function confirmVisibility(action) {
-  console.log(
-    "bafore fetch",
-    toggleVisibleActive.value,
-    userStore.visibilityPublic
-  );
+  // console.log(
+  //   "bafore fetch",
+  //   toggleVisibleActive.value,
+  //   userStore.visibilityPublic
+  // );
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
@@ -357,7 +357,7 @@ async function confirmVisibility(action) {
         ? { visibility: "PUBLIC" }
         : { visibility: "PRIVATE" };
       const res = await toggleVisibility(boardId.value, visibility);
-      console.log(res);
+      // console.log(res);
       // console.log( "after fetch",toggleVisibleActive.value);
 
       if (res === 400 || res === 404) {
@@ -375,7 +375,7 @@ async function confirmVisibility(action) {
       } else if (res === 401) {
         handleResponseError(res);
       } else {
-        console.log(res.visibility);
+        // console.log(res.visibility);
         // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
         userStore.updatevIsibilityPublic(
           res.visibility === "PUBLIC" ? true : false
@@ -426,7 +426,7 @@ function ClickAdd() {
 }
 
 function openChageThemes() {
-  console.log("openChageThemes");
+  // console.log("openChageThemes");
   showChangeThemes.value = true;
 }
 
@@ -436,11 +436,11 @@ async function addEditTask(newTask,file,fileName) {
   );
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
-    console.log("edit T");
-    console.log(file);
+    // console.log("edit T");
+    // console.log(file);
     await editTask(newTask,file,fileName);
   } else {
-    console.log("add T");
+    // console.log("add T");
     await addTask(newTask);
   }
 }
@@ -482,12 +482,12 @@ async function editTask(editedTask ,files,fileName) {
     showPopUp.value = true;
     return;
   } else {
-    console.log(taskId.value);
-    console.log(editedTask);
+    // console.log(taskId.value);
+    // console.log(editedTask);
     // console.log(file);
     
    
-    console.log(123);
+    // console.log(123);
     // res= await addAttachments(boardId.value,taskId.value,files) 
     // } else {
 
@@ -495,9 +495,10 @@ async function editTask(editedTask ,files,fileName) {
 
      //เอาแค่ [{url}]
       // console.log(files.filter((e)=> Object.keys(e).find("url")));
-      console.log(files.map((e)=>e.url));
+    //   console.log(files.map((e)=>e.url));
 
-    console.log(files);
+    // console.log(files);
+      
       const  res  = await updateTask(boardId.value, editedTask,files.map((e)=>e.url),fileName);
     // }
    

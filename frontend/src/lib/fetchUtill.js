@@ -661,7 +661,7 @@ async function downloadfile(boardId,taskId, filename) {
       }
     );
     if (res.status === 200) {
-      console.log(res);
+      // console.log(res);
       // const str = res.url
       // const blob = new Blob([str], { type : 'plain/text' });
       const blob = await res.blob();

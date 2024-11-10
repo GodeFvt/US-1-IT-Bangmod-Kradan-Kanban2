@@ -220,7 +220,7 @@ onUnmounted(() => {
           >
           
            <span class="itbkk-attachments">{{  task.attachments === null || task.attachments?.length === 0
-                  ? "0"
+                  ? "-"
                   : task.attachments?.length }}</span>
      
           </td>

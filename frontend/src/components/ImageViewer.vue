@@ -11,6 +11,7 @@
 
       <!-- Image -->
       <img
+        v-if="imageType == 'image'"
         :src="imageSrc"
         alt="Large preview"
         class="max-w-full max-h-[80vh] object-contain cursor-pointer transition-transform duration-200"
@@ -18,6 +19,12 @@
         @wheel="handleScroll"
       />
     </div>
+    <embed
+      v-if="imageType == 'embed'"
+      :src="imageSrc"
+      type="application/pdf"
+      class="h-[80%] w-[80%] bg-white"
+    />
   </div>
 </template>
 
@@ -27,11 +34,14 @@ import { ref, watch } from "vue";
 const props = defineProps({
   imageSrc: {
     type: String,
-    required: true,
   },
   visible: {
     type: Boolean,
     default: false,
+  },
+  imageType: {
+    type: String,
+    default: "image",
   },
 });
 

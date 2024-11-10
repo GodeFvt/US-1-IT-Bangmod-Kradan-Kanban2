@@ -47,9 +47,8 @@ const userStore = useUserStore();
 const isEditPage = ref(true);
 const fileChange = ref(false);
 
-console.log(props.task);
 const fileURL = ref(props.fileUrl);
-// const fileURL2 = ref(props.fileURL2)
+
 
 watch(
   () => props.task,
@@ -62,20 +61,6 @@ watch(
     }
     duplicateTask.value = { ...newTask };
     duplicateTask.value.status = { ...newTask.status };
-    //  fileURL.value.forEach((file,i)=>{
-    //   fileURL.value[i].url =  previewBinary(file.url)
-    //   console.log( file.url);
-    //  })
-    // fileURL.value[0].url=previewBinary( fileURL.value[0].url)
-    // console.log(fileURL[0].value);
-    // console.log(typeof fileURL.value[0].url);
-    // console.log(fileURL.value);
-    // for (let file of fileURL.value) {
-    //   file.url  = previewBinary(file.url)
-    //   console.log(file.url);
-    // }
-    // // fileURL2.value=previewBinary(fileURL2.value)
-    console.log(fileURL.value);
     isEditPage.value = editMode.value && duplicateTask.value.id !== undefined;
   },
   { immediate: true }
@@ -83,12 +68,24 @@ watch(
 
 const selectedImage = ref(null);
 const showImageModal = ref(false);
-
-function openImageModal(file) {
-  selectedImage.value = file;
-  showImageModal.value = true;
+const imageType = ref("pdf");
+function openImageModal(file, fileType) {
+  if (getFileType(fileType).match(/(pdf|txt)/g)) {
+    imageType.value = "embed";
+      showImageModal.value = true;
+      selectedImage.value = file;
+  } else if (getFileType(fileType).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
+    imageType.value = "image"; 
+    showImageModal.value = true;
+    selectedImage.value = file;
+  } else {
+    showImageModal.value = false;
+  }
 }
 
+function getFileType(fileName) {
+  return fileName.split(".").pop();
+}
 const isTaskChanged = computed(() => {
   return JSON.stringify(props.task) === JSON.stringify(duplicateTask.value);
 });
@@ -113,110 +110,69 @@ const countAssignees = computed(() => {
 const validate = ref({ title: {}, description: {}, assignees: {} });
 const previewImagesURL = ref([]);
 const fileDetete = ref([]);
+
 const fileCanPreview = (fileName) => {
-  return /\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(fileName);
-};
-console.log(previewImagesURL.value.length === 0);
-// console.log(uploadFileName.value);
-const preview = (event) => {
-  // previewDocURL.value = [];
-  //  previewImagesURL.value = ''
-  // uploadFileName.value = event.target.files[0].name;
-  console.log(previewImagesURL.value.length);
-  console.log(event.target.files[0].name);
-
-  // console.log(previewImagesURL.value.find((file)=>file.name===event.target.files[0].name ) );
-  // console.log(fileURL.value);
-  // console.log(fileURL.value[0].name === event.target.files[0].name);
-  // console.log(fileURL.value.find((file)=>file.name === event.target.files[0].name ) );
-  // console.log(event.target.files[0].size);
-
-  // let file;
-  //ได้เป็น preview รูป
-  // previewImagesURL.value =
-  console.log(event.target.files[0]);
-  console.log(typeof event.target.files[0]);
-
-  previewImagesURL.value.push({
-    name: event.target.files[0].name,
-    url: event.target.files[0],
-  });
-  console.log(
-    previewImagesURL.value.find((e) => e.name === event.target.files[0].name)
-  );
-  console.log(
-    previewImagesURL.value.filter(
-      (file) => file.name === event.target.files[0].name
-    ).length
-  );
-  //  previewImagesURL.value[previewImagesURL.value.length-1]   ถ้าเป็นตัวที่ 0 ละ
-  console.log(
-    previewImagesURL.value.filter(
-      (file) => file.name === event.target.files[0].name
-    ).length > 1
-  );
-  if (event.target.files[0].size > 20 * 1024 * 1024) {
-    // console.log(event.target.files[0].size);
-    previewImagesURL.value.find((e) => e.name === event.target.files[0].name)[
-      "invalid"
-    ] = {
-      msg: "Each file cannot be larger than 20 MB. The following files are not added",
-      boolean: true,
-    };
-    //   previewImagesURL.value.find(e=>e.name===event.target.files[0].name).invalid =  {
-    //   msg:'Each file cannot be larger than 20 MB. The following files are not added' ,
-    //   boolean:true
-    // }
-
-    // fileMsg.value.msgFileSize = 'Each file cannot be larger than 20 MB. The following files are not added'
-    // fileMsg.value.boolFileSize = true
-    // disabledSave.value = true
-  } else if (
-    previewImagesURL.value.length >= 10 ||
-    fileURL.value.length >= 10 ||
-    previewImagesURL.value.length + fileURL.value.length > 10
-  ) {
-    // fileMsg.value.msgMaxFile = 'Each task can have at most 10 files. The following files are not added'
-    // fileMsg.value.boolMaxFile = true
-
-    // disabledSave.value = true
-    previewImagesURL.value.find((e) => e.name === event.target.files[0].name)[
-      "invalid"
-    ] = {
-      msg: "Each task can have at most 10 files. The following files are not added",
-      boolean: true,
-    };
-
-    // previewImagesURL.value.find(e=>e.name===event.target.files[0].name).invalid = {
-    //     msg:'Each task can have at most 10 files. The following files are not added' ,   boolean:true
-    //   }
-  } else if (
-    previewImagesURL.value.filter(
-      (file) => file.name === event.target.files[0].name
-    ).length > 1 ||
-    fileURL.value.filter((file) => file.name === event.target.files[0].name)
-      .length >= 1
-  ) {
-    // !== undefined คือ มีตัวซ้ำ
-    console.log("ซ้ำ");
-    // console.log(previewImagesURL.value.find((file)=>file.name===event.target.files[0].name ) !== undefined || fileURL.value.find((file)=>file.name === event.target.files[0].name ) !== undefined );
-    // fileMsg.value.msgFileName = 'File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file.'
-    // fileMsg.value.boolFileName = true
-    previewImagesURL.value.find((e) => e.name === event.target.files[0].name)[
-      "invalid"
-    ] = {
-      msg: "File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file.",
-      boolean: true,
-    };
-    console.log(previewImagesURL.value);
-
-    // disabledSave.value = true
+  if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(fileName)) {
+    return "img";
+  } else if (/\.(txt|pdf)$/g.test(fileName)) {
+      return "embed";
+  }  else {
+    return 'any'
   }
 
-  console.log(previewImagesURL.value);
-  // console.log(uploadFileName.value);
+};
 
-  // console.log(file);
+console.log(previewImagesURL.value.length === 0);
+
+const invalidFile = ref({
+  maxSize: {
+    msg: "Each file cannot be larger than 20 MB. The following files are not added",
+    filename: [],
+  },
+  maxFile: {
+    msg: "Each task can have at most 10 files. The following files are not added",
+    filename: [],
+  },
+  dupFile: {
+    msg: "File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file",
+    filename: [],
+  },
+});
+
+const disabledInput = ref(false);
+const preview = (event) => {
+  event.target.files.length >= 10
+    ? (disabledInput.value = true)
+    : (disabledInput.value = false);
+  invalidFile.value.maxSize.filename = [];
+  invalidFile.value.maxFile.filename = [];
+  invalidFile.value.dupFile.filename = [];
+  let countElement = 1;
+  [...event.target.files].forEach((element, index) => {
+    if (element.size > 20 * 1024 * 1024) {
+      invalidFile.value?.maxSize.filename.push(element.name);
+      return;
+    } else if (
+      fileURL.value.length >= 10 ||
+      countElement + fileURL.value.length > 10
+    ) {
+      invalidFile.value?.maxFile.filename.push(element.name);
+      return;
+    } else if (
+      fileURL.value.filter((e) => e.name === element.name).length >= 1 ||
+      previewImagesURL.value.filter((e) => e.name === element.name).length >= 1
+    ) {
+      invalidFile.value?.dupFile.filename.push(element.name);
+      return;
+    } else {
+      previewImagesURL.value.push({
+        name: element.name,
+        url: element,
+      });
+      countElement++;
+    }
+  });
+
 };
 
 const disabledSave = computed(() => {
@@ -234,66 +190,52 @@ const disabledSave = computed(() => {
     previewImagesURL.value.length === 0 &&
     fileChange.value === false
   ) {
-    console.log("isTaskChanged.value && previewImagesURL.value.length === 0");
+    // console.log("isTaskChanged.value && previewImagesURL.value.length === 0");
     return true;
-  } else if (previewImagesURL.value.some((e) => e.invalid)) {
-    console.log("previewImagesURL.value.some(e=>e.invalid)");
+  } else if (
+    invalidFile.value.maxSize.filename > 0 ||
+    invalidFile.value.maxFile.filename > 0 ||
+    invalidFile.value.dupFile.filename > 0
+  ) {
+    // console.log("previewImagesURL.value.some(e=>e.invalid)");
     return true;
   } else if (fileChange.value) {
-    console.log("fileChange ===false ");
+    // console.log("fileChange ===false ");
     return false;
   } else if (duplicateTask.value.title === null || countTitle.value <= 0) {
-    console.log("2");
+    // console.log("2");
     return true;
   } else if (
     validate.value.title.boolean ||
     validate.value.description.boolean ||
     validate.value.assignees.boolean
   ) {
-    console.log("3");
+    // console.log("3");
     return true;
   } else if (limitThisTask.value) {
-    console.log("4");
+    // console.log("4");
     return true;
   } else {
-    console.log("else");
+    // console.log("else");
     //save กดได้
     return false;
   }
 });
 const fileInput = ref(null);
 function deleteFile(imgUrlObject, index, type, fileName) {
-  // fileNotBinary.value.splice(fileNotBinary.value.findIndex((a,i) => a=previewImagesURL[index].value.url) , 1);
-  // console.log(index);
-  // console.log(previewImagesURL.value);
-  // console.log(fileNotBinary.value);
-  // console.log(fileNotBinary.value.findIndex((a,i) => a===previewImagesURL.value[index].url));
-  // console.log(fileNotBinary.value[fileNotBinary.value.findIndex((a,i) => a=previewImagesURL.value[index].url)]);
-  //  fileNotBinary.value.splice(index, 1);
   if (type === "fileDelete") {
     fileChange.value = true;
     fileURL.value.splice(index, 1);
     fileDetete.value.push(fileName);
     removeURL(imgUrlObject);
   } else {
-    // boolFileSize ? fileMsg.value.boolFileSize = false : boolFileSize
-    // boolMaxFile ? fileMsg.value.boolMaxFile = false : boolMaxFile
-    // boolFileName ? fileMsg.value.boolFileName = false : boolFileName
     previewImagesURL.value.splice(index, 1);
-    console.log("Revoke URL called for:", imgUrlObject);
     removeURL(imgUrlObject);
   }
 
   if (fileInput.value) {
     fileInput.value.value = null; // Clear file input
-  }
-
-  // console.log("URL has been revoked:", imgUrlObject);
-
-  // setTimeout(() => {
-  //          removePreview(imgUrlObject);
-  //           console.log("URL has been revoked:");
-  //       }, 1000)
+  } 
 }
 
 function textShow(text) {
@@ -343,8 +285,25 @@ const limitThisTask = computed(() => {
   >
     <div class="itbkk-modal-task flex h-full items-center justify-center">
       <div
-        class="flex flex-col justify-start rounded-s-md bg-white h-[80%] w-[70rem] shadow-md overflow-y-auto overflow-x-hidden"
+        class="flex flex-col justify-start bg-white h-[80%] shadow-md overflow-y-auto overflow-x-hidden"
+        :class="
+          !editMode || isEditPage
+            ? 'w-[70rem] rounded-s-md'
+            : ' rounded-s-md rounded-e-md w-[81rem]'
+        "
       >
+        <!-- Close Button Container with sticky positioning -->
+        <div
+          class="w-full flex justify-end sticky top-0 z-10 mb-2"
+          :class="!editMode || isEditPage ? 'hidden' : ''"
+        >
+          <div
+            class="cursor-pointer text-error text-2xl pt-5 pr-5"
+            @click="$emit('userAction', false)"
+          >
+            <CloseIcon />
+          </div>
+        </div>
         <div class="pl-10 pr-5 mt-10">
           <div class="flex flex-row gap-5 items-end w-full rounded-b-lg">
             <textarea
@@ -374,7 +333,7 @@ const limitThisTask = computed(() => {
               "
               data-tip="You need to be board owner to perform this action."
             >
-              <div
+              <!-- <div
                 v-show="$route.path !== '/task/add'"
                 class="text-2xl hover:bg-gray-200 rounded-full"
                 :class="
@@ -385,7 +344,7 @@ const limitThisTask = computed(() => {
                 @click="edit(task.id)"
               >
                 <EditTaskIcon />
-              </div>
+              </div> -->
             </div>
             <div class="flex flex-col justify-center items-center">
               <p class="font-bold text-sm">Limit</p>
@@ -526,15 +485,66 @@ const limitThisTask = computed(() => {
             id="file_input"
             ref="fileInput"
             class="mt-2 file-input file-input-bordered file-input-sm w-full max-w-xs"
+            :class="
+              disabledInput ||
+              fileURL.length >= 10 ||
+              fileURL.length + previewImagesURL.length >= 10
+                ? 'bg-gray-500 cursor-not-allowed'
+                : ''
+            "
+            :disabled="
+              disabledInput ||
+              fileURL.length >= 10 ||
+              fileURL.length + previewImagesURL.length >= 10
+            "
             @change="preview"
+            multiple
           />
-
+          <div>
+            <div
+              class="text-red-500 text-sm mt-1 font-medium"
+              v-if="invalidFile?.maxSize?.filename?.length > 0"
+            >
+              {{ invalidFile?.maxSize?.msg }} :
+              <span
+                class="font-normal"
+                v-for="(name, index) in invalidFile?.maxSize?.filename"
+                :key="index"
+                >{{ name }}
+              </span>
+            </div>
+            <div
+              class="text-red-500 text-sm mt-1 font-medium"
+              v-if="invalidFile?.maxFile?.filename?.length > 0"
+            >
+              {{ invalidFile?.maxFile?.msg }} :
+              <span
+                class="font-normal"
+                v-for="(name, index) in invalidFile?.maxFile?.filename"
+                :key="index"
+                >{{ name }}
+              </span>
+            </div>
+            <div
+              class="text-red-500 mt-1 text-sm font-medium"
+              v-if="invalidFile?.dupFile?.filename?.length > 0"
+            >
+              {{ invalidFile?.dupFile?.msg }} :
+              <span
+                class="font-normal"
+                v-for="(name, index) in invalidFile?.dupFile?.filename"
+                :key="index"
+                >{{ name }}
+              </span>
+            </div>
+          </div>
           <!-- Preview Images Section -->
           <div class="flex flex-wrap gap-4 mt-4">
             <div
-              v-for="(file, index) in previewImagesURL"
+              v-for="(file, index) in [...previewImagesURL]"
               :key="index"
               class="relative flex flex-col items-center border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
+              @click="openImageModal(previewBinary(file.url), file.name)"
             >
               <!-- Delete Button Positioned at Top Right -->
               <div
@@ -543,32 +553,33 @@ const limitThisTask = computed(() => {
               >
                 <CloseIcon />
               </div>
+              <div>
+                <img
+                  v-if="fileCanPreview(file.name) === 'img'"
+                  :src="previewBinary(file.url)"
+                  alt="previewImagesURL"
+                  class="h-10 w-10 mt-1"
+                />
+                <embed
+                  v-else-if="fileCanPreview(file.name) === 'embed'"
+                  :src="previewBinary(file.url)"
+                  alt="previewImagesURL"
+                  class="h-10 w-10 mt-1"
+                />
+                <a
+                  v-else
+                  :href="file.url"
+                  target="_blank"
+                  class="text-blue-500 underline"
+                  ><FileIcon class="h-10 w-10 fill-gray-800 mt-1"
+                /></a>
 
-              <img
-                v-if="fileCanPreview(file.name)"
-                :src="previewBinary(file.url)"
-                @click="openImageModal(previewBinary(file.url))"
-                alt="previewImagesURL"
-                class="h-10 w-10 mt-1"
-              />
-              <a
-                v-else
-                :href="file.url"
-                target="_blank"
-                class="text-blue-500 underline"
-                ><FileIcon class="h-10 w-10 fill-gray-800 mt-1"
-              /></a>
+                <!-- Truncated File Name -->
 
-              <!-- Truncated File Name -->
-              <p class="text-xs text-center truncate w-full mt-1">
-                {{ file.name }}
-              </p>
-
-              <span
-                :class="file.invalid ? 'text-red-500 text-xs mt-1' : 'hidden'"
-              >
-                {{ file?.invalid?.msg }}
-              </span>
+                <p class="text-xs text-center truncate w-full mt-1">
+                  {{ file.name }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -625,7 +636,8 @@ const limitThisTask = computed(() => {
       </div>
 
       <div
-        class="itbkk-modal-task bg-gray-100 rounded-e-md h-[80%] w-[8rem] shadow-md overflow-y-auto border-l"
+        class="itbkk-modal-task bg-gray-100 rounded-e-md h-[80%] w-[11rem] shadow-md overflow-y-auto border-l"
+        :class="!editMode || isEditPage ? '' : 'hidden'"
       >
         <!-- Close Button Container with sticky positioning -->
         <div class="w-full flex justify-end sticky top-0 z-10 mb-2">
@@ -636,7 +648,7 @@ const limitThisTask = computed(() => {
             <CloseIcon />
           </div>
         </div>
-        <div class="font-bold text-sm pl-2 mt-3">Files</div>
+        <div class="font-bold text-sm pl-2 mt-3">Attachments</div>
         <!-- Scrollable Content Area -->
         <div class=" ">
           <div
@@ -644,13 +656,19 @@ const limitThisTask = computed(() => {
             :key="index"
             v-show="fileURL"
             class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2 relative"
+            @click="openImageModal(file.url, file.name)"
           >
             <img
-              v-if="fileCanPreview(file.name)"
+              v-if="fileCanPreview(file.name) === 'img'"
               :src="file.url"
               alt="previewImagesURL"
-              class="h-10 w-10"
-              @click="openImageModal(file.url)"
+              class="h-10 w-10 mt-1"
+            />
+            <embed
+              v-else-if="fileCanPreview(file.name) === 'embed'"
+              :src="file.url"
+              alt="previewImagesURL"
+              class="h-10 w-10 mt-1"
             />
             <a v-else :href="file.url" target="_blank"
               ><FileIcon class="h-10 w-10 fill-gray-800" />
@@ -674,6 +692,7 @@ const limitThisTask = computed(() => {
   <ImageViewer
     :imageSrc="selectedImage"
     :visible="showImageModal"
+    :imageType="imageType"
     @close="showImageModal = false"
   />
 </template>
