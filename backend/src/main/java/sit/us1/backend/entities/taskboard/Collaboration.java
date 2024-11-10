@@ -26,6 +26,8 @@ public class Collaboration {
     @Column(name = "access")
     @Enumerated(EnumType.STRING)
     private Access accessRight;
+    @Column(name = "isPending",nullable = false, columnDefinition = "TINYINT", length = 1)
+    private Boolean isPending;
     @Column(name = "addedOn", updatable = false, insertable = false)
     private ZonedDateTime addedOn;
 

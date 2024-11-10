@@ -8,6 +8,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.ParameterValidationResult;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import sit.us1.backend.validations.ValidBoardExists;
@@ -73,10 +75,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(errorResponse);
     }
 
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ExceptionHandler({HttpRequestMethodNotSupportedException.class, HttpMediaTypeNotSupportedException.class, MultipartException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex,WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(Exception ex,WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request.getDescription(false));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(errorResponse);
     }
@@ -153,6 +155,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<ErrorResponse> handleConflictException(ConflictException exception, WebRequest request) {
         return buildErrorResponse(exception, exception.getMessage(), HttpStatus.CONFLICT, request);
+    }
+
+    // ดัก exception UnavailableException
+    @ExceptionHandler(UnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ResponseEntity<ErrorResponse> handleUnavailableException(UnavailableException exception, WebRequest request) {
+        return buildErrorResponse(exception, exception.getMessage(), HttpStatus.SERVICE_UNAVAILABLE, request);
     }
 
     // ดัก exception ที่ไม่ได้ระบุไว้ในที่อื่น

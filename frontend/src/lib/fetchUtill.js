@@ -1,5 +1,5 @@
 import { useUserStore } from "../stores/user.js";
-import { tokenIsNull } from "./utill.js";
+import { tokenIsNull ,previewBinary} from "./utill.js";
 
 const BASE_URL = import.meta.env.VITE_API_ROOT;
 
@@ -147,29 +147,45 @@ async function createTask(boardId, task) {
   }
 }
 
-async function updateTask(boardId, task) {
-  let res;
-  const userStore = useUserStore();
-  const token = userStore.encodeToken;
-  try {
-    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${task.id}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(task),
+async function updateTask(boardId, task , files ,fileNameToDelete ="") {
+    let res;
+    const userStore = useUserStore();
+    const token = userStore.encodeToken;
+    const formData = new FormData();
+    console.log(files ,fileNameToDelete ,"5");
+  
+    if (files.length>0) {
+      files.forEach((file) => {
+      formData.append("files", file);//file array 
     });
-    if (res.status === 200) {
-      const task = await res.json();
-      return task;
-    } else {
-      return res.status;
     }
-  } catch (error) {
-    return undefined;
+    const taskBlob = new Blob([JSON.stringify(task)], { type: "application/json" });
+      formData.append("task", taskBlob);
+
+    if (fileNameToDelete.length>0) {
+      formData.append("filesToDelete", fileNameToDelete);
+    }
+  
+    try {
+      res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${task.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData
+      });
+      if (res.status === 200) {
+        const task = await res.json();
+        return task;
+      } else {
+        return res.status;
+      }
+    } catch (error) {
+      return undefined;
+    }
   }
-}
+  
+  
 
 async function deleteTask(boardId, taskId) {
   let res;
@@ -588,6 +604,76 @@ async function deleteCollabs(boardId, collabId) {
   }
 }
 
+async function responseInvite(boardId, action) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/collabs/invitations?action=${action}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function addAttachments(boardId,taskId,files) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files", file);//file array 
+   
+  });
+
+  try {
+    res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}/attachments`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+     body: formData,
+    });
+    return res.status;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+// download
+async function downloadfile(boardId,taskId, filename) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  // let result
+  try {
+    res = await fetch(
+      `${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}/attachments/${filename}?disposition=inline`,
+      {
+        method: "GET",
+        headers: tokenIsNull(token),
+      }
+    );
+    if (res.status === 200) {
+      // console.log(res);
+      // const str = res.url
+      // const blob = new Blob([str], { type : 'plain/text' });
+      const blob = await res.blob();
+      return  previewBinary(blob)
+    
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return "error";
+  }
+}
 
 export {
   getTaskByStatus,
@@ -616,4 +702,7 @@ export {
   addCollabs,
   updateCollabs,
   deleteCollabs,
+  responseInvite,
+  addAttachments,
+  downloadfile,
 };

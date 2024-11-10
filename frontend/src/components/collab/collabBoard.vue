@@ -47,9 +47,10 @@ const showConfirmModal = ref(false);
 const isChangeAccess = ref(false);
 const showPopUp = ref(false);
 const showLoading = ref(true);
+const chooseCollab = ref({});
 const errorMSG = ref("");
-const username = ref(""); // เปลี่ยนเป็น ref เพื่อให้ตอบสนองต่อการเปลี่ยนแปลง
 const usernameId = ref(null); // ตั้งค่าเริ่มต้นเป็น null
+
 
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
@@ -80,8 +81,6 @@ watch(
 watch(
   () => accessSelect.value,
   (newSelect, oldSelect) => {
-    console.log("wdw", newSelect);
-    console.log("wdw2", oldSelect);
     if (newSelect !== oldSelect) {
       isChangeAccess.value = true;
       oldAccess.value = oldSelect;
@@ -99,7 +98,7 @@ onMounted(async () => {
     }
   }
   if (userStore.authToken !== null) {
-    if (userStore.boards.length === 0) {
+    if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       console.log(resBoard);
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
@@ -118,6 +117,16 @@ onMounted(async () => {
   showLoading.value = false;
 });
 
+
+function removeCollabByEmail(collab) {
+  const collabIndex = boardStore.collabs.findIndex((collaborator) => {
+    return collaborator.email === collab.email && !collaborator.oid;
+  });
+  if (collabIndex !== -1) {
+    boardStore.removeCollab(collabIndex);
+  }
+}
+//ส่งชื่อเดิมไปสองครั้งระหว่างprocessing แล้ว 500
 async function addCollaborator(collab) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
@@ -130,36 +139,52 @@ async function addCollaborator(collab) {
   } else {
     collab.email = collab.email.trim();
     collab.accessRight = collab.accessRight?.toUpperCase();
+
+    boardStore.addCollab(collab);
+    isShowAddCollab.value = false;
     const res = await addCollabs(boardId.value, collab);
     if (typeof res === "object") {
-      typeToast.value = "success";
-      // taskStore.addTask(res);
-      messageToast.value = `Collaborator "${res.email}" added successfully.`;
-      boardStore.addCollab(res);
-      isShowAddCollab.value = false;
-      showToast.value = true;
-    } else if (res === 404) {
-      //The user "${collab.email}" does not exists. ที่ addModal
-      typeToast.value = "warning";
-      errorMSG.value = `The user "${collab.email}" does not exists.`;
-      showToast.value = false;
-    } else if (res === 401) {
-      handleResponseError(res);
-    } else if (res === 403) {
-      typeToast.value = "warning";
-      messageToast.value = `You do not have permission to add collaborator.`;
-      isShowAddCollab.value = false;
+      if (res.emailStatus === "Failed to send email") {
+        typeToast.value = "warning";
+        messageToast.value = `We could not send e-mail to "${collab.email}", he/she can accept the invitation at 
+         /board/${boardId.value}/collab/invitations`;
+      } else {
+        console.log(res);
+        typeToast.value = "success";
+        messageToast.value = `Collaborator "${res.email}" added successfully.`;
+      }
+      const collabIndex = boardStore.collabs.findIndex((collaborator) => {
+        return collaborator.email === collab.email && !collaborator.oid;
+      });
+      boardStore.updateCollabs(collabIndex, res);
       showToast.value = true;
 
+      removeCollabByEmail(collab)
+    } else if (res === 404) {
+      //The user "${collab.email}" does not exists. ที่ addModal
+      typeToast.value = "danger";
+      messageToast.value = `The user "${collab.email}" does not exists.`;
+      showToast.value = true;
+      removeCollabByEmail(collab)
+    } else if (res === 401) {
+      handleResponseError(res);
+      removeCollabByEmail(collab)
+    } else if (res === 403) {
+      typeToast.value = "danger";
+      messageToast.value = `You do not have permission to add collaborator.`;
+      showToast.value = true;
+      removeCollabByEmail(collab)
     } else if (res === 409) {
       // The user "${collab.email}" is already the collaborator of this board. ที่ addModal
-      errorMSG.value = `The user "${collab.email}" is already the collaborator of this board.`;
-      showToast.value = false;
-    } else {
       typeToast.value = "danger";
-      messageToast.value = `There is a problem please try again later.`;
-      isShowAddCollab.value = false;
+      messageToast.value = `The user "${collab.email}" is already the collaborator or pending collaborator of this board.`;
       showToast.value = true;
+      removeCollabByEmail(collab)
+    } else {
+      typeToast.value = "warning";
+      messageToast.value = `There is a problem please try again later.`;
+      showToast.value = true;
+      removeCollabByEmail(collab)
     }
   }
 }
@@ -179,17 +204,17 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
         messageToast.value = `Access right of "${collab.name}" changed to "${collab.accessRight}" successfully.`;
         boardStore.updateAccessCollab(usernameId.value, res.accessRight);
       } else if (res === 404) {
-        typeToast.value = "warning";
+        typeToast.value = "danger";
         messageToast.value = `The user "${collab.name}" is not the collaborator of this board.`;
         boardStore.removeCollab(usernameId.value); //ลบ user ออกจาก boardถ้าไม่กดแล้วไม่เจอ เช่นโดนลบออกจาก board โดยเจ้าของ ณ ตอนนั้น
       } else if (res === 401) {
         handleResponseError(res);
       } else if (res === 403) {
-        typeToast.value = "warning";
+        typeToast.value = "danger";
         messageToast.value = `You do not have permission to change collaborator access right.`;
         collab.accessRight = oldAccess.value;
       } else {
-        typeToast.value = "danger";
+        typeToast.value = "warning";
         messageToast.value = `There is a problem please try again.`;
       }
       showToast.value = true;
@@ -210,14 +235,14 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
         }" removed successfully.`;
         boardStore.removeCollab(usernameId.value);
       } else if (res === 404) {
-        typeToast.value = "warning";
+        typeToast.value = "danger";
         messageToast.value = `The user "${
           boardStore.collabs[usernameId.value].name
         }" is not the collaborator of this board.`;
       } else if (res === 401 || res === 403) {
         handleResponseError(res);
       } else {
-        typeToast.value = "danger";
+        typeToast.value = "warning";
         messageToast.value = `There is a problem please try again.`;
       }
       showToast.value = true;
@@ -364,7 +389,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                   :key="index"
                   :class="{ 'slide-in': isVisible[index] }"
                   @click="
-                    username = collab.name;
+                    chooseCollab = collab;
                     usernameId = index;
                   "
                 >
@@ -378,7 +403,22 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                     <div
                       class="cursor-pointer h-full w-full items-center flex break-all"
                     >
-                      <span class="itbkk-collab-name"> {{ collab.name }} </span>
+                      <span class="itbkk-collab-name">{{ collab.name }}</span>
+
+                      <!--Loading, Pending -->
+                      <span
+                        v-if="!collab.oid"
+                        class="ml-2 px-2 py-1 text-xs font-bold text-gray-700 bg-gray-300 rounded"
+                      >
+                        Processing...
+                      </span>
+
+                      <span
+                        v-else-if="collab.isPending"
+                        class="ml-2 px-2 py-1 text-xs font-bold text-yellow-800 bg-yellow-200 rounded"
+                      >
+                        Pending Invite
+                      </span>
                     </div>
                   </td>
 
@@ -417,9 +457,13 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                               (usernameId = index),
                               console.log(accessSelect)
                           "
-                          :disabled="userStore.currentBoard.owner.id !== userStore.authToken?.oid"
+                          :disabled="
+                            userStore.currentBoard.owner.id !==
+                            userStore.authToken?.oid
+                          "
                           :class="
-                             userStore.currentBoard.owner.id === userStore.authToken?.oid
+                            userStore.currentBoard.owner.id ===
+                            userStore.authToken?.oid
                               ? 'cursor-pointer'
                               : 'cursor-not-allowed disabled'
                           "
@@ -446,28 +490,59 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                           data-tip="You need to be board owner to perform this action."
                         >
                           <div
+                            v-if="collab.isPending === false"
                             class="itbkk-collab-remove text-white fill-rose-300"
                             @click="
                               (isChangeAccess = false),
                                 (usernameId = index),
-                                userStore.currentBoard.owner.id === userStore.authToken?.oid
+                                userStore.currentBoard.owner.id ===
+                                userStore.authToken?.oid
                                   ? (showConfirmModal = true)
                                   : (showConfirmModal = false)
                             "
-                            :disabled="userStore.currentBoard.owner.id !== userStore.authToken?.oid"
+                            :disabled="
+                              userStore.currentBoard.owner.id !==
+                              userStore.authToken?.oid
+                            "
                             :class="
-                              userStore.currentBoard.owner.id === userStore.authToken?.oid
+                              userStore.currentBoard.owner.id ===
+                              userStore.authToken?.oid
                                 ? 'cursor-pointer'
                                 : 'cursor-not-allowed disabled'
                             "
                           >
                             <DeleteIcon
                               :class="
-                                userStore.currentBoard.owner.id === userStore.authToken?.oid
-                                  ? ' hover:fill-rose-400'
+                                userStore.currentBoard.owner.id ===
+                                userStore.authToken?.oid
+                                  ? ' hover:fill-red-500'
                                   : ' hover:fill-rose-300'
                               "
                             />
+                          </div>
+                          <div
+                            v-else
+                            class="bg-red-300 text-white px-2 py-1 rounded cursor-pointer"
+                            @click="
+                              (isChangeAccess = false),
+                                (usernameId = index),
+                                userStore.currentBoard.owner.id ===
+                                userStore.authToken?.oid
+                                  ? (showConfirmModal = true)
+                                  : (showConfirmModal = false)
+                            "
+                            :disabled="
+                              userStore.currentBoard.owner.id !==
+                              userStore.authToken?.oid
+                            "
+                            :class="
+                              userStore.currentBoard.owner.id ===
+                              userStore.authToken?.oid
+                                ? 'cursor-pointer hover:bg-red-500'
+                                : 'cursor-not-allowed disabled hover:bg-rose-300'
+                            "
+                          >
+                            Cancel
                           </div>
                         </div>
                       </div>
@@ -535,8 +610,10 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
           <span class="itbkk-message">
             {{
               isChangeAccess
-                ? `Do you want to change access right of "${username}" to "${accessSelect}"`
-                : `Do you want to remove "${username}" from the board?`
+                ? `Do you want to change access right of "${chooseCollab.name}" to "${accessSelect}"`
+                : chooseCollab?.isPending
+                ? `Do you want to cancel the invitation to "${chooseCollab.name}"?`
+                : `Do you want to remove "${chooseCollab.name}" from the board?`
             }}
           </span>
         </template>

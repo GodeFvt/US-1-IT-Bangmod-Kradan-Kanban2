@@ -73,10 +73,16 @@ async function isTokenValid(token) {
   }
 }
 
-function isNotDisable(isPublic, user, owner,collaBorator) {
+function isNotDisable(isPublic, user, owner, collaBorator) {
   //isPublic ถ้า True จะเป็น public
   if (isPublic) {
-    if (user !== undefined && (user === owner || (user === collaBorator?.oid && collaBorator?.accessRight === "WRITE"))) {
+    if (
+      user !== undefined &&
+      (user === owner ||
+        (user === collaBorator?.oid &&
+          collaBorator?.accessRight === "WRITE" &&
+          collaBorator?.isPending === false))
+    ) {
       //ถ้า เป็น public แต้ owner = user ก็แก้ไข
       return true;
     } else {
@@ -84,7 +90,13 @@ function isNotDisable(isPublic, user, owner,collaBorator) {
       return false;
     }
   } else {
-    if (user !== undefined && (user === owner || (user === collaBorator?.oid && collaBorator?.accessRight === "WRITE"))) {
+    if (
+      user !== undefined &&
+      (user === owner ||
+        (user === collaBorator?.oid &&
+          collaBorator?.accessRight === "WRITE" &&
+          collaBorator?.isPending === false))
+    ) {
       //ถ้า เป็น private แต้ owner = user ก็แก้ไข
       return true;
     } else {
@@ -102,6 +114,42 @@ function tokenIsNull(token) {
   };
 }
 
+const previewBinary = (binaryObject) => {
+  return URL.createObjectURL(binaryObject);
+};
+
+const removeURL = (binaryObject) => {
+  console.log("removePreview");
+  return URL.revokeObjectURL(binaryObject);
+};
+
+function validateFile(file , fileURL  ,index) {
+  let result = {
+    maxSize: { msg: '', filename: [] },
+    maxFile: { msg: '', filename: [] },
+    dupFile: { msg: '', filename: [] },
+  };
+  if (file.size > 20 * 1024 * 1024) {
+    result.maxSize.msg = 'Each file cannot be larger than 20 MB. The following files are not added: '
+    result.maxSize.filename.push(file.name) ;
+  } 
+   if (
+    fileURL.length >= 10 ||
+    index + fileURL.length > 10) {
+      result.maxFile.msg =  'Each task can have at most 10 files. The following files are not added: '
+      result.maxFile.filename.push(file.name) ;
+  } 
+    if (
+    fileURL.filter((e) => e.name === file.name)
+      .length >= 1
+  ) {
+    result.dupFile.msg =  'File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file: '
+    result.dupFile.filename.push(file.name) ;
+
+  }
+  return  result 
+}
+
 export {
   convertString,
   toFormatDate,
@@ -109,5 +157,8 @@ export {
   isTokenValid,
   tokenIsNull,
   isNotDisable,
+  previewBinary,
+  removeURL,
   refreshTokenAndReturn,
+  validateFile,
 };

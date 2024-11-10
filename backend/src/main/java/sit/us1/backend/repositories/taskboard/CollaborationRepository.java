@@ -11,4 +11,6 @@ public interface CollaborationRepository extends JpaRepository<Collaboration, Co
     List<Collaboration> findAllByBoardId (String boardId);
 
     boolean existsByOid(String oid);
+
+    boolean existsByOidAndBoardIdAndIsPendingFalse(String oid, String boardId);
 }

@@ -22,7 +22,7 @@ export const useBoardStore = defineStore("useBoard", {
         this.boards.splice(index, 1);
       },
       setAllBoard(newAllBoard) {
-        this.boards = [...newAllBoard];
+        this.boards = [...newAllBoard.boards, ...newAllBoard.collab];
       },
       findBoardById(id) {
         return this.boards.find((board) => board.id === id);
@@ -41,6 +41,9 @@ export const useBoardStore = defineStore("useBoard", {
       } ,
       setCollabs(collab){
         this.collabs = collab;
+      },
+      updateCollabs(index,collab){
+        this.collabs[index] = collab;
       },
       addCollab(collab){
         this.collabs.push(collab);

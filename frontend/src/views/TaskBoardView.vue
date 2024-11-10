@@ -13,6 +13,8 @@ import {
   getBoardsById,
   toggleVisibility,
   getAllBoards,
+  downloadfile,
+  addAttachments,
 } from "../lib/fetchUtill.js";
 // import router
 import { useRoute, useRouter } from "vue-router";
@@ -65,10 +67,13 @@ const showChangeThemes = ref(false);
 // const authorizAccess = ref(false);
 
 const boardId = ref(route.params.boardId);
+const taskId = ref(1);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
 const toggleVisibleActive = ref(false);
 const boardName = ref(userStore.currentBoard.name);
+const fileURL=ref([])
+
 
 const allTaskLimit = ref([]); // allTask อันที่เกิน
 const countStatus = computed(() => {
@@ -97,7 +102,7 @@ async function fetchData() {
   if (userStore.authToken !== null) {
     if (userStore.boards.length === 0) {
       const resBoard = await getAllBoards();
-
+      
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
         handleResponseError(resBoard);
       } else {
@@ -227,7 +232,7 @@ watch(
     boardName.value = userStore.currentBoard.name;
     fetchData();
     countStatuses();
-    console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
+    // console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
   }
 );
 
@@ -246,11 +251,21 @@ watch(
         const res = await getTaskById(boardId.value, newId);
         if (typeof res !== "object") {
           handleResponseError(res);
-        } else {
+        } else {  
           task.value = res;
+          task.value.attachments.forEach(async (file) => {
+             const resFile = await downloadfile(boardId.value,newId, file.filename)
+            //  console.log(resFile);
+            fileURL.value.push({"name":file.filename,"url":resFile}); 
+
+          })
+
+          // const resFile2 = await downloadfile(boardId.value,newId, task.value.attachments[0].filename)
+          // console.log(fileURL2.value);
+          // fileURL2.value = resFile2
           if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
             isEdit.value = true;
-            console.log(isEdit.value);
+            // console.log(isEdit.value);
           } else {
             isEdit.value = false;
           }
@@ -324,11 +339,11 @@ async function confirmLimit(action) {
 }
 
 async function confirmVisibility(action) {
-  console.log(
-    "bafore fetch",
-    toggleVisibleActive.value,
-    userStore.visibilityPublic
-  );
+  // console.log(
+  //   "bafore fetch",
+  //   toggleVisibleActive.value,
+  //   userStore.visibilityPublic
+  // );
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
@@ -342,7 +357,7 @@ async function confirmVisibility(action) {
         ? { visibility: "PUBLIC" }
         : { visibility: "PRIVATE" };
       const res = await toggleVisibility(boardId.value, visibility);
-      console.log(res);
+      // console.log(res);
       // console.log( "after fetch",toggleVisibleActive.value);
 
       if (res === 400 || res === 404) {
@@ -360,7 +375,7 @@ async function confirmVisibility(action) {
       } else if (res === 401) {
         handleResponseError(res);
       } else {
-        console.log(res.visibility);
+        // console.log(res.visibility);
         // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
         userStore.updatevIsibilityPublic(
           res.visibility === "PUBLIC" ? true : false
@@ -395,6 +410,7 @@ function closeTask(action) {
   showDetail.value = action;
   showAddModal.value = action;
   router.push({ name: "task" });
+  fileURL.value=[]
 }
 
 function ClickAdd() {
@@ -410,20 +426,21 @@ function ClickAdd() {
 }
 
 function openChageThemes() {
-  console.log("openChageThemes");
+  // console.log("openChageThemes");
   showChangeThemes.value = true;
 }
 
-async function addEditTask(newTask) {
+async function addEditTask(newTask,file,fileName) {
   const indexToCheck = allTask.value.findIndex(
     (task) => task.id === newTask.id
   );
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
-    console.log("edit T");
-    await editTask(newTask);
+    // console.log("edit T");
+    // console.log(file);
+    await editTask(newTask,file,fileName);
   } else {
-    console.log("add T");
+    // console.log("add T");
     await addTask(newTask);
   }
 }
@@ -460,27 +477,50 @@ async function addTask(newTask) {
   }
 }
 
-async function editTask(editedTask) {
+async function editTask(editedTask ,files,fileName) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
-    editedTask.status = editedTask.status.name;
-    const res = await updateTask(boardId.value, editedTask);
+    // console.log(taskId.value);
+    // console.log(editedTask);
+    // console.log(file);
+    
+   
+    // console.log(123);
+    // res= await addAttachments(boardId.value,taskId.value,files) 
+    // } else {
+
+      editedTask.status = editedTask.status.name;
+
+     //เอาแค่ [{url}]
+      // console.log(files.filter((e)=> Object.keys(e).find("url")));
+    //   console.log(files.map((e)=>e.url));
+
+    // console.log(files);
+      
+      const  res  = await updateTask(boardId.value, editedTask,files.map((e)=>e.url),fileName);
+    // }
+   
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred updating the task "${editedTask.title}"`;
     } else if (res === 401 || res === 403) {
       handleResponseError(res);
     } else {
-      typeToast.value = "success";
-      const indexToUpdate = allTask.value.findIndex(
+         const indexToUpdate = allTask.value.findIndex(
         (task) => task.id === editedTask.id
-      );
-      taskStore.editTask(indexToUpdate, res);
-      statusStore.setNoOftask(countStatus.value);
-      messageToast.value = `Task "${editedTask.title}" updated successfully`;
-    }
+        );
+        taskStore.editTask(indexToUpdate, res);
+        statusStore.setNoOftask(countStatus.value);
+        if (res.filesErrors.length!==0) {
+          typeToast.value = "warning";
+          messageToast.value = `An error occurred, and the file update was unsuccessful`;
+        } else {
+          typeToast.value = "success";
+           messageToast.value = `Task "${editedTask.title}" updated successfully`;
+        }
+    } 
     showToast.value = true;
   }
 }
@@ -738,6 +778,7 @@ async function removeTask(index, confirmDelete = false) {
         :isEdit="isEdit"
         :showLoading="showLoading"
         :allTaskLimit="allTaskLimit"
+        :fileUrl="fileURL"
       >
       </TaskDetail>
 

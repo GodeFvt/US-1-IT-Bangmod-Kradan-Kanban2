@@ -12,12 +12,17 @@
             No.
           </th>
           <th
-            class="px-6 py-4 w-[40%] max-md:w-[65%] max-md:px-2 max-md:py-3 max-md:border-l-4 max-md:rounded-t-md"
+            class="px-6 py-4 w-[30%] max-md:w-[65%] max-md:px-2 max-md:py-3 max-md:border-l-4 max-md:rounded-t-md"
           >
             Title
           </th>
-          <th class="px-6 py-4 w-[25%] max-md:w-[40%] max-md:px-2 max-md:py-3">
+          <th class="px-6 py-4 w-[20%] max-md:w-[40%] max-md:px-2 max-md:py-3">
             Assignees
+          </th>
+          <th
+            class="px-4 py-4 w-[20%] max-md:w-[30%] max-md:px-2 max-md:py-3 rounded-tr-md"
+          >
+            Attachments
           </th>
           <th
             class="px-2 py-4 w-[10%] max-md:hidden cursor-pointer flex items-center justify-center"

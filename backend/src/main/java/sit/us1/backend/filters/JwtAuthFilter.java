@@ -43,7 +43,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             boolean isTokenValid = false;
             String tokenError = null;
 
-            if (request.getRequestURI().equals("/login") || request.getRequestURI().equals("/token")) {
+            if (AuthWhitelistPaths.isWhitelisted(request.getRequestURI())) {
                 chain.doFilter(request, response);
                 return;
             }

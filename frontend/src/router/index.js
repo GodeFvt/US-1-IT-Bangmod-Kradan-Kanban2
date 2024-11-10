@@ -8,6 +8,7 @@ import { useUserStore } from "../stores/user.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
 import ManageCollab from "../views/ManageCollab.vue"
+import Invitations from "../views/Invitations.vue"
 const routes = [
   {
     path: "/",
@@ -88,6 +89,11 @@ const routes = [
     name: "ManageCollab",
     component: ManageCollab,
   },
+  {
+    path: "/board/:boardId/collab/invitations",
+    name: "Invitations",
+    component: Invitations,
+  },
 ];
 
 const router = createRouter({
@@ -156,6 +162,7 @@ router.beforeEach(async (to, from, next) => {
       "TaskDetail",
       "StatusDetail",
       "ManageCollab",
+     
     ].includes(to.name)
   ) {
     const board = await cachedGetBoardsById(boardId);
@@ -201,7 +208,7 @@ router.beforeEach(async (to, from, next) => {
         "AddStatus",
       ].includes(to.name);
 
-      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction) ) {
+      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction && collaBorator?.isPending === true) ) {
         return next({
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
@@ -211,7 +218,8 @@ router.beforeEach(async (to, from, next) => {
       if (
         board.visibility === "PRIVATE" &&
         (
-          ((!isOwner && !collaBorator) || !userStore.authToken ) || ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction)
+          ((!isOwner && !collaBorator) || !userStore.authToken || collaBorator?.isPending === true ) || 
+          ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction) || (collaBorator?.isPending === true && isEditAction)
 
         )
       ) {
@@ -220,6 +228,7 @@ router.beforeEach(async (to, from, next) => {
           params: { boardId, page: "authorizAccess" },
         });
       }
+
     }
   }
 

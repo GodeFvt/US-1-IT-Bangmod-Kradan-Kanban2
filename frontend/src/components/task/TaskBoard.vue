@@ -77,6 +77,7 @@ watch(
   async ([statusFilter, allTask]) => {
     if (statusFilter.length === 0) {
       taskFiltered.value = allTask;
+      console.log(taskFiltered.value);
     } else {
       const res = await getFilteredTask(route.params.boardId, statusFilter);
       if (res === 401) {
@@ -183,7 +184,7 @@ onUnmounted(() => {
           </td>
 
           <td
-            class="h-full w-[40%] px-6 py-4 max-md:w-[65%] max-md:px-2 max-md:py-3 hover:bg-neutral-100"
+            class="h-full w-[30%] px-6 py-4 max-md:w-[65%] max-md:px-2 max-md:py-3 hover:bg-neutral-100"
           >
             <router-link
               :to="{ name: 'TaskDetail', params: { taskId: task.id } }"
@@ -198,7 +199,7 @@ onUnmounted(() => {
             </router-link>
           </td>
           <td
-            class="w-[25%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3"
+            class="w-[20%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3 text-center"
             :class="
               task.assignees === null || task.assignees?.length === 0
                 ? 'italic text-gray-600'
@@ -213,6 +214,17 @@ onUnmounted(() => {
               }}
             </span>
           </td>
+
+          <td
+            class="w-[20%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3 text-center"
+          >
+          
+           <span class="itbkk-attachments">{{  task.attachments === null || task.attachments?.length === 0
+                  ? "-"
+                  : task.attachments?.length }}</span>
+     
+          </td>
+
           <td class="w-[10%] px-2 py-4 max-md:hidden break-all">
             <div
               class="text-slate-50 rounded-md p-[0.1rem] text-center"

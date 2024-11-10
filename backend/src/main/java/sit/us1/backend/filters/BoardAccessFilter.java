@@ -34,10 +34,12 @@ public class BoardAccessFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         String uri = request.getRequestURI();
-        if (uri.equals("/login") || uri.equals("/token")) {
+
+        if (AuthWhitelistPaths.isWhitelisted(uri)) {
             chain.doFilter(request, response);
             return;
         }
+
         try {
             boolean isTokenValid = (boolean) request.getAttribute("isTokenValid");
             String tokenError = request.getAttribute("tokenError") != null ? (String) request.getAttribute("tokenError") : "JWT Token is required";
@@ -77,17 +79,27 @@ public class BoardAccessFilter extends OncePerRequestFilter {
         int uriLength = uriParts.length;
 
         if (user != null) {
-            boolean isCollab = collabService.isCollaborator(boardId, user.getOid());
+            boolean isCollab = false;
+            boolean collabExists = collabService.collaboratorExists(user.getOid());
+
+            if(collabExists){
+                isCollab = collabService.isCollaborator(boardId, user.getOid());
+            }
+
+            if (uriLength > 5 && uriParts[4].equals("collabs") && uriParts[5].equals("invitations") && collabExists) {
+                return;
+            }
+
             if (!isOwner && !isTokenValid && !isGetMethod) {
                 throw new UnauthorizedException(tokenError);
             } else if ((!isOwner && !isCollab) && (!isPublicBoard || !isGetMethod)) {
                 throw new AccessDeniedException("You are not the owner of this board");
             } else if (!isGetMethod) {
                 if(isCollab){
+                    Collaboration collab = collabService.getCollaboration(boardId, user.getOid());
 //                    if(uriLength >= 6 && !collabService.collaboratorExists(uriParts[5]) && uriParts[4].equals("collabs")){
 //                        throw new NotFoundException("Collaborator not found");
 //                    }
-                    Collaboration collab = collabService.getCollaboration(boardId, user.getOid());
                     if (uriLength <= 4 || collab.getAccessRight().equals(Collaboration.Access.READ) && !uriParts[4].equals("collabs")) {
                         throw new AccessDeniedException("You do not have permission to modify this board");
                     } else if (uriParts[4].equals("collabs") && !method.equals("DELETE")) {

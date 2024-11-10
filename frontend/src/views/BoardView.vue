@@ -38,7 +38,8 @@ const showToast = ref(false);
 const showDeleteModal = ref(false);
 const showLeaveModal = ref(false);
 // console.log(userStore.authToken.name);
-
+// const personalBoard = ref([]);
+// const collabBoard = ref([]);
 
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
@@ -63,8 +64,12 @@ onMounted(async () => {
       const resBoard = await getAllBoards();
       if (resBoard === 401 || resBoard === 404) {
         handleResponseError(resBoard);
-      } else {
+      } else { 
+        // personalBoard.value = [...resBoard.boards]
+        // collabBoard.value = [...resBoard.collab, ...resBoard.invited]
         userStore.setAllBoard(resBoard);
+     
+
       }
     //}
   }
@@ -83,6 +88,7 @@ const personalBoard = computed(() => {
     (board) => board.owner.id === userStore.authToken.oid
   );
 });
+
 watch(
   () => route.path,
   (newPath, oldPath) => {
@@ -272,7 +278,9 @@ function openBoard(boardId) {
   router.push({ name: "task", params: { boardId: boardId } });
 }
 
-
+function invitation(boardId) {
+  router.push({ name: "Invitations", params: { boardId: boardId } });
+}
 
 
 </script>
@@ -323,6 +331,7 @@ function openBoard(boardId) {
             boardType="collab"
             @leaveBoard="leaveBoard"
             @openBoard="openBoard"
+            @invitation="invitation"
           >
           </boardCardList>
         </div>

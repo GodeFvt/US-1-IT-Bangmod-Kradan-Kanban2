@@ -5,6 +5,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sit.us1.backend.dtos.boardsDTO.AllBoardResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
@@ -21,6 +22,7 @@ import sit.us1.backend.repositories.taskboard.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static sit.us1.backend.entities.taskboard.Board.Visibility.*;
 
@@ -67,11 +69,26 @@ public class BoardService {
     }
 
 
+//    public List<SimpleBoardDTO> getAllBoardByOid() {
+//        try {
+//            String Oid = SecurityUtil.getCurrentUserDetails().getOid();
+//            return listMapper.mapList(boardRepository.findAllByOwnerOrCollaborationOrderByCreatedOn(Oid), SimpleBoardDTO.class, mapper);
+//        } catch (Exception e) {
+//            throw new BadRequestException("the specified board does not exist");
+//        }
+//    }
 
-    public List<SimpleBoardDTO> getAllBoardByOid() {
+    public AllBoardResponseDTO getAllBoardByOid() {
         try {
             String Oid = SecurityUtil.getCurrentUserDetails().getOid();
-            return listMapper.mapList(boardRepository.findAllByOwnerOrCollaborationOrderByCreatedOn(Oid), SimpleBoardDTO.class, mapper);
+            List<Board> ownerBoards = boardRepository.findAllOwnerBoards(Oid);
+            List<Board> collabBoards = boardRepository.findAllCollaboratorBoards(Oid);
+            List<Board> pendingBoards = boardRepository.findAllPendingBoards(Oid);
+            return new AllBoardResponseDTO(
+                    listMapper.mapList(ownerBoards, SimpleBoardDTO.class, mapper),
+                    listMapper.mapList(collabBoards, SimpleBoardDTO.class, mapper),
+                    listMapper.mapList(pendingBoards, SimpleBoardDTO.class, mapper)
+            );
         } catch (Exception e) {
             throw new BadRequestException("the specified board does not exist");
         }
@@ -83,15 +100,13 @@ public class BoardService {
 
     @Transactional
     public SimpleBoardDTO createBoard(BoardRequestDTO newBoard) {
-        String Oid = SecurityUtil.getCurrentUserDetails().getOid();
-        CustomUserDetails userDetails = SecurityUtil.getCurrentUserDetails();
+        BoardUser owner = new BoardUser();
+        owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
+        owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
+        owner.setName(SecurityUtil.getCurrentUserDetails().getName());
         try {
-            if (boardUserRepository.findById(Oid).isEmpty()) {
-                BoardUser user = new BoardUser();
-                user.setId(userDetails.getOid());
-                user.setUsername(userDetails.getUsername());
-                user.setName(userDetails.getName());
-                boardUserRepository.save(user);
+            if (boardUserRepository.findById(owner.getId()).isEmpty()) {
+                boardUserRepository.save(owner);
             }
         } catch (Exception e) {
             throw new BadRequestException("Cannot create user");
@@ -103,9 +118,6 @@ public class BoardService {
                 boardId = NanoIdUtils.randomNanoId(10);
             } while (boardRepository.existsById(boardId));
             board.setId(boardId);
-            BoardUser owner = new BoardUser();
-            owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
-            owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
             board.setOwner(owner);
             board.setIsCustomStatus(false);
             board.setVisibility(PRIVATE);

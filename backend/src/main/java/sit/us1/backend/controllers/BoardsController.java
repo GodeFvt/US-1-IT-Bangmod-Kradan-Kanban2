@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sit.us1.backend.dtos.boardsDTO.AllBoardResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.validations.ValidationUtil;
@@ -28,7 +29,7 @@ public class BoardsController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SimpleBoardDTO>> getBoard() {
+    public ResponseEntity<AllBoardResponseDTO> getBoard() {
         return ResponseEntity.ok(boardService.getAllBoardByOid());
     }
 
