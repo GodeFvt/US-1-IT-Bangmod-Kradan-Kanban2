@@ -45,6 +45,10 @@ services:
       - JWT_SECRET=${SECRET}
       - JWT_SECRET_REFRESH=${SECRET_REFRESH}
       - JWT_ISSUER=${ISSUER}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     build:
       context: backend
     depends_on:
@@ -76,12 +80,13 @@ configs:
     file: proxy/private.conf
   proxyPublic_config:
     file: proxy/public.conf
-  cerssl: 
+  cerssl:
     file: ../ssl/fullchain.pem
-  keyssl: 
+  keyssl:
     file: ../ssl/privkey.pem
 volumes:
   db-vol:
+
 
 networks:
   mysql-net:
