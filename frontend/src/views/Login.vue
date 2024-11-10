@@ -85,7 +85,7 @@ async function signInOnClick(userLogin) {
       if (redirectTo) {
         // ถ้ามี redirectTo ให้ไปที่หน้านั้น
         router.push(redirectTo);
-      } else if(userStore.boards.length === 1) {
+      } else if(userStore.boards.length === 1 && userStore.boards[0].owner.id === userStore.authToken.oid) {
         router.push({
           name: "task",
           params: { boardId: userStore.boards[0].id },

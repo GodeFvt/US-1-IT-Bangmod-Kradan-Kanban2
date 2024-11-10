@@ -122,6 +122,15 @@ async function declineInvitation(){
   </button>
 
   </div> 
+  <div v-else>
+    <router-link :to="{ name: 'board' }">
+      <button
+        class="mt-4 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded"
+      >
+        Go to Board
+      </button>
+    </router-link>
+  </div>
 </div>
 
 <LoginPopUp v-if="showLoginPopup === true">
