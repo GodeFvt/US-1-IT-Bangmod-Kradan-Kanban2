@@ -33,6 +33,8 @@ public class BoardService {
     @Autowired
     private TaskLimitRepository taskLimitRepository;
     @Autowired
+    private TaskAttachmentRepository taskAttachmentRepository;
+    @Autowired
     private TaskStatusRepository taskStatusRepository;
     @Autowired
     private TaskListRepository taskListRepository;
@@ -42,6 +44,8 @@ public class BoardService {
     private CollaborationRepository collaborationRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    TaskAttachmentService fileService;
     @Autowired
     private ListMapper listMapper;
     @Autowired
@@ -137,8 +141,15 @@ public class BoardService {
     public SimpleBoardDTO deleteBoardById(String id) {
         List<TaskList> allTask = taskListRepository.findAllByBoard_Id(id);
         List<Collaboration> allCollaboration = collaborationRepository.findAllByBoardId(id);
+
         TaskLimit taskLimits = taskLimitRepository.findByBoardId(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
         try {
+            for (TaskList taskList : allTask) {
+                List<TaskAttachment> taskAttachments = taskAttachmentRepository.findAllByTaskId(taskList.getId());
+                fileService.removeAllTaskResource(taskList.getId());
+                taskAttachmentRepository.deleteAll(taskAttachments);
+            }
+
             collaborationRepository.deleteAll(allCollaboration);
             taskListRepository.deleteAll(allTask);
             Board board = boardRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified board does not exist"));
@@ -153,7 +164,6 @@ public class BoardService {
         } catch (Exception e) {
             throw new BadRequestException("the specified board does not exist");
         }
-
     }
 
     @Transactional
