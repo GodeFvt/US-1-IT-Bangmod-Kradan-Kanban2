@@ -540,7 +540,7 @@ const limitThisTask = computed(() => {
             <div
               v-for="(file, index) in [...previewImagesURL]"
               :key="index"
-              class="relative flex flex-col  border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
+              class="relative flex flex-col border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
               @click="openImageModal(previewBinary(file.url), file.name)"
             >
               <!-- Delete Button Positioned at Top Right -->
@@ -652,32 +652,34 @@ const limitThisTask = computed(() => {
             v-for="(file, index) in fileURL"
             :key="index"
             v-show="fileURL"
-            class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2 relative"
-            @click="openImageModal(file.url, file.name)"
+            class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2"
+            
           >
-            <img
-              v-if="fileCanPreview(file.name) === 'img'"
-              :src="file.url"
-              alt="previewImagesURL"
-              class="h-10 w-10 mt-1"
-            />
-            <embed
-              v-else-if="fileCanPreview(file.name) === 'embed'"
-              :src="file.url"
-              alt="previewImagesURL"
-              class="h-10 w-10 mt-1"
-            />
-            <a v-else :href="file.url" :download="file.name" target="_blank"
-              ><FileIcon class="h-10 w-10 fill-gray-800" />
-            </a>
-            <p class="text-xs text-center truncate w-full mt-1">
-              {{ file.name }}
-            </p>
-
+            <div class="flex flex-col items-center justify-between w-full "
+            @click="openImageModal(file.url, file.name)">
+              <img
+                v-if="fileCanPreview(file.name) === 'img'"
+                :src="file.url"
+                alt="previewImagesURL"
+                class="h-10 w-10 mt-1"
+              />
+              <embed
+                v-else-if="fileCanPreview(file.name) === 'embed'"
+                :src="file.url"
+                alt="previewImagesURL"
+                class="h-10 w-10 mt-1"
+              />
+              <a v-else :href="file.url" :download="file.name" target="_blank"
+                ><FileIcon class="h-10 w-10 fill-gray-800" />
+              </a>
+              <p class="text-xs text-center truncate w-full mt-1">
+                {{ file.name }}
+              </p>
+            </div>
             <div
               :class="isEditPage ? 'block' : 'hidden'"
               @click="deleteFile(file.url, index, 'fileDelete', file.name)"
-              class="absolute bottom-1 right-1 cursor-pointer fill-rose-300 text-sm"
+              class="bottom-1 right-1 cursor-pointer fill-rose-300 text-sm"
             >
               <DeleteIcon class="h-7 w-7" />
             </div>
