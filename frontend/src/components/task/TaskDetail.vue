@@ -49,7 +49,6 @@ const fileChange = ref(false);
 
 const fileURL = ref(props.fileUrl);
 
-
 watch(
   () => props.task,
   (newTask) => {
@@ -72,10 +71,10 @@ const imageType = ref("pdf");
 function openImageModal(file, fileType) {
   if (getFileType(fileType).match(/(pdf|txt)/g)) {
     imageType.value = "embed";
-      showImageModal.value = true;
-      selectedImage.value = file;
+    showImageModal.value = true;
+    selectedImage.value = file;
   } else if (getFileType(fileType).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
-    imageType.value = "image"; 
+    imageType.value = "image";
     showImageModal.value = true;
     selectedImage.value = file;
   } else {
@@ -115,11 +114,10 @@ const fileCanPreview = (fileName) => {
   if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(fileName)) {
     return "img";
   } else if (/\.(txt|pdf)$/g.test(fileName)) {
-      return "embed";
-  }  else {
-    return 'any'
+    return "embed";
+  } else {
+    return "any";
   }
-
 };
 
 console.log(previewImagesURL.value.length === 0);
@@ -172,7 +170,6 @@ const preview = (event) => {
       countElement++;
     }
   });
-
 };
 
 const disabledSave = computed(() => {
@@ -235,7 +232,7 @@ function deleteFile(imgUrlObject, index, type, fileName) {
 
   if (fileInput.value) {
     fileInput.value.value = null; // Clear file input
-  } 
+  }
 }
 
 function textShow(text) {
@@ -543,7 +540,7 @@ const limitThisTask = computed(() => {
             <div
               v-for="(file, index) in [...previewImagesURL]"
               :key="index"
-              class="relative flex flex-col items-center border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
+              class="relative flex flex-col  border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
               @click="openImageModal(previewBinary(file.url), file.name)"
             >
               <!-- Delete Button Positioned at Top Right -->
@@ -553,7 +550,7 @@ const limitThisTask = computed(() => {
               >
                 <CloseIcon />
               </div>
-              <div>
+              <div class="flex flex-col items-center">
                 <img
                   v-if="fileCanPreview(file.name) === 'img'"
                   :src="previewBinary(file.url)"
@@ -670,7 +667,7 @@ const limitThisTask = computed(() => {
               alt="previewImagesURL"
               class="h-10 w-10 mt-1"
             />
-            <a v-else :href="file.url" target="_blank"
+            <a v-else :href="file.url" :download="file.name" target="_blank"
               ><FileIcon class="h-10 w-10 fill-gray-800" />
             </a>
             <p class="text-xs text-center truncate w-full mt-1">
