@@ -99,7 +99,7 @@ public class TaskAttachmentService {
         long totalSize = files.stream().mapToLong(MultipartFile::getSize).sum();
         if (totalSize > MAX_TOTAL_SIZE) {
             errorMessages.add(new ErrorAttachmentDTO("Total file size exceeds " + MAX_TOTAL_SIZE / (1024 * 1024) + " MB", null, null));
-            return new AttachmentResponseDTO(errorMessages);
+            return new AttachmentResponseDTO(errorMessages,addedFiles);
         }
 
         List<TaskAttachment> existingAttachments = taskAttachmentRepository.findAllByTaskId(taskId);
@@ -107,12 +107,14 @@ public class TaskAttachmentService {
         // ตรวจสอบจำนวนไฟล์สูงสุดต่อ Task
         if (existingAttachments.size() >= maxFilePerTask) {
             errorMessages.add(new ErrorAttachmentDTO("Max " + maxFilePerTask + " files allowed per task", null, null));
-            return new AttachmentResponseDTO(errorMessages);
+            return new AttachmentResponseDTO(errorMessages,addedFiles);
         }
+
 
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
-
+            System.out.println(MAX_FILE_SIZE);
+            System.out.println(file.getSize());
             // ตรวจสอบขนาดของแต่ละไฟล์
             if (file.getSize() > MAX_FILE_SIZE) {
                 errorMessages.add(new ErrorAttachmentDTO("File exceeds " + maxFileSize + " MB", fileName, file.getContentType()));
