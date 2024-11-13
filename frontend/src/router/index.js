@@ -208,7 +208,8 @@ router.beforeEach(async (to, from, next) => {
         "AddStatus",
       ].includes(to.name);
 
-      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction && collaBorator?.isPending === true) ) {
+        //ไม่ใช่ทั้ง owner และ collaborator และไม่ได้เป็น write หรือมี pending และเข้าไปใน edit actionให้ 403
+      if (board.visibility === "PUBLIC" && ((collaBorator?.accessRight !== "WRITE" || collaBorator?.isPending === true) && !isOwner) && isEditAction) {
         return next({
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },
@@ -218,7 +219,7 @@ router.beforeEach(async (to, from, next) => {
       if (
         board.visibility === "PRIVATE" &&
         (
-          ((!isOwner && !collaBorator) || !userStore.authToken || collaBorator?.isPending === true ) || 
+          ((!isOwner || !collaBorator) || !userStore.authToken || collaBorator?.isPending === true ) || 
           ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction) || (collaBorator?.isPending === true && isEditAction)
 
         )
