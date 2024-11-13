@@ -219,7 +219,7 @@ router.beforeEach(async (to, from, next) => {
       if (
         board.visibility === "PRIVATE" &&
         (
-          ((!isOwner || !collaBorator) || !userStore.authToken || collaBorator?.isPending === true ) || 
+          ((!isOwner && !collaBorator) || !userStore.authToken || collaBorator?.isPending === true ) || 
           ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction) || (collaBorator?.isPending === true && isEditAction)
 
         )
