@@ -67,7 +67,7 @@ onMounted(async () => {
       } else { 
         // personalBoard.value = [...resBoard.boards]
         // collabBoard.value = [...resBoard.collab, ...resBoard.invited]
-        userStore.setAllBoard(resBoard);
+        boardStore.setAllBoard(resBoard);
      
 
       }
@@ -77,14 +77,14 @@ onMounted(async () => {
 
 const collabBoard = computed(() => {
   if (!userStore.authToken) return []; // ถ้า authToken เป็น null ให้คืนค่าเป็น array ว่าง เกิดปัญหา logout แล้วหาauthToken ไม่ได้
-  return userStore.boards.filter(
+  return boardStore.boards.filter(
     (board) => board.owner.id !== userStore.authToken.oid
   );
 });
 
 const personalBoard = computed(() => {
   if (!userStore.authToken) return [];
-  return userStore.boards.filter(
+  return boardStore.boards.filter(
     (board) => board.owner.id === userStore.authToken.oid
   );
 });
@@ -118,7 +118,7 @@ watch(
         } else {
           if (route.path === `/board/${newId}/edit`) {
             console.log("edit eiei");
-            board.value = userStore.boards.find((board) => board.id === newId);
+            board.value = boardStore.boards.find((board) => board.id === newId);
 
             showBoardModal.value = true;
             isEdit.value = true;
@@ -145,7 +145,7 @@ function ClickAdd() {
 }
 
 async function addEditBoard(newBoard) {
-  const indexToCheck = userStore.boards.findIndex(
+  const indexToCheck = boardStore.boards.findIndex(
     (board) => board.id === newBoard.id
   );
   console.log(newBoard);
@@ -178,7 +178,7 @@ async function addBoard(newBoard) {
       } else {
         // if res.status = 200
         typeToast.value = "success";
-        userStore.addBoard(res);
+        boardStore.addBoard(res);
         messageToast.value = `The board has been added`;
       }
       showToast.value = true;
@@ -199,10 +199,10 @@ async function editBoard(boardId, editedBoard) {
       handleResponseError(res);
     } else {
       typeToast.value = "success";
-      const indexToUpdate = userStore.boards.findIndex(
+      const indexToUpdate = boardStore.boards.findIndex(
         (board) => board.id === editedBoard.id
       );
-      userStore.editBoard(indexToUpdate, res);
+      boardStore.editBoard(indexToUpdate, res);
       messageToast.value = `The board has been updated`;
     }
     showToast.value = true;
@@ -223,7 +223,7 @@ async function removeBoard(boardId, confirmDelete = false) {
     console.log(typeof boardId);
     if (typeof boardId === "string") {
       boardIdForDelete.value = boardId;
-      board.value = userStore.boards.find((board) => board.id === boardId);
+      board.value = boardStore.boards.find((board) => board.id === boardId);
     }
     if (confirmDelete) {
       const res = await deleteBoard(boardIdForDelete.value);
@@ -235,7 +235,7 @@ async function removeBoard(boardId, confirmDelete = false) {
       } else {
         // if res.status = 200
         typeToast.value = "success";
-        userStore.deleteBoard(boardId);
+        boardStore.deleteBoard(boardId);
         messageToast.value = `The board has been deleted`;
       }
       showDeleteModal.value = false;
@@ -252,13 +252,13 @@ async function leaveBoard(boardId, confirmLeave = false) {
   showLeaveModal.value = true;
   if (typeof boardId === "string") {
       boardIdForDelete.value = boardId;
-      board.value = userStore.boards.find((board) => board.id === boardId);  
+      board.value = boardStore.boards.find((board) => board.id === boardId);  
     }
   if (confirmLeave === true) {
     const res = await deleteCollabs(boardIdForDelete.value, userStore.authToken.oid);
       if (res === 200) {
         typeToast.value = "success";
-        userStore.deleteBoard(boardId);
+        boardStore.deleteBoard(boardId);
         messageToast.value = `You have left the board`;
        
       } else if (res === 401) {
@@ -365,7 +365,7 @@ function invitation(boardId) {
     @user-action="showDeleteModal = false"
     @confirm="removeBoard"
     :index="
-      userStore.boards.findIndex((board) => board.id === boardIdForDelete)
+      boardStore.boards.findIndex((board) => board.id === boardIdForDelete)
     "
     class="z-50"
     width="w-[42vh]"
@@ -390,7 +390,7 @@ function invitation(boardId) {
     @user-action="showLeaveModal = false"
     @confirm="leaveBoard"
     :index="
-      userStore.boards.findIndex((board) => board.id === boardIdForDelete)
+      boardStore.boards.findIndex((board) => board.id === boardIdForDelete)
     "
     class="z-50"
     width="w-[42vh]"

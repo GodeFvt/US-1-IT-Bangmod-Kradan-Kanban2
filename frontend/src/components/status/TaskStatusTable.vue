@@ -1,7 +1,7 @@
 <script setup>
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
-import { useUserStore } from "../../stores/user.js";
+import { useBoardStore } from "../../stores/boards.js";
 import { useRoute, useRouter } from "vue-router";
 
 import { ref, watch } from "vue";
@@ -24,7 +24,7 @@ const props = defineProps({
 });
 
 const statusStore = useStatusStore();
-const userStore = useUserStore();
+const boardStore = useBoardStore();
 const router = useRouter();
 
 const isVisible = ref([]);
@@ -41,8 +41,8 @@ watch(
 );
 
 function editStatus(id, name) {
-  console.log(userStore.isCanEdit);
-  if (userStore.isCanEdit) {
+  console.log(boardStore.isCanEdit);
+  if (boardStore.isCanEdit) {
     // ***
     console.log("e");
     console.log(name);
@@ -145,14 +145,14 @@ function editStatus(id, name) {
             >
               <div
                 :class="
-                  userStore.isCanEdit ? '' : 'tooltip tooltip-top tooltip-hover'
+                  boardStore.isCanEdit ? '' : 'tooltip tooltip-top tooltip-hover'
                 "
                 data-tip="You need to be board owner to perform this action."
               >
                 <div
                   class="itbkk-button-edit"
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? 'cursor-pointer'
                       : 'cursor-not-allowed disabled'
                   "
@@ -161,7 +161,7 @@ function editStatus(id, name) {
                   <EditIcon
                     class="fill-zinc-500"
                     :class="
-                      userStore.isCanEdit
+                      boardStore.isCanEdit
                         ? ' hover:fill-zinc-700'
                         : ' hover:fill-zinc-500'
                     "
@@ -170,7 +170,7 @@ function editStatus(id, name) {
               </div>
               <div
                 :class="
-                  userStore.isCanEdit ? '' : 'tooltip tooltip-top tooltip-hover'
+                  boardStore.isCanEdit ? '' : 'tooltip tooltip-top tooltip-hover'
                 "
                 data-tip="You need to be board owner to perform this action."
               >
@@ -178,14 +178,14 @@ function editStatus(id, name) {
                   class="itbkk-button-delete text-white fill-rose-300"
                   @click="$emit('removeStatus', index)"
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? 'cursor-pointer'
                       : 'cursor-not-allowed disabled'
                   "
                 >
                   <DeleteIcon
                     :class="
-                      userStore.isCanEdit
+                      boardStore.isCanEdit
                         ? ' hover:fill-rose-400'
                         : ' hover:fill-rose-300'
                     "

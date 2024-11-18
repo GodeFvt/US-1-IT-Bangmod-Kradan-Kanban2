@@ -1,6 +1,7 @@
 <script setup>
 import { loginAccount } from "../lib/fetchUtill.js";
 import { useUserStore } from "../stores/user.js";
+import { useBoardStore } from "../stores/boards.js";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import SettingIcon from "../components/icon/SettingIcon.vue";
@@ -27,6 +28,9 @@ const initialize = async () => {
 onMounted(async () => {
   await initialize();
   await handleRedirect();
+  if (userStore.authToken !== null) {
+
+  }
 });
 const toggleIcon = ref(false);
 const user = ref({
@@ -34,6 +38,7 @@ const user = ref({
   password: "",
 });
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const showMessage = ref(false);
 const router = useRouter();
 const cardAnimate = ref("");
@@ -100,18 +105,18 @@ async function signInOnClick(userLogin) {
       localStorage.setItem("refresh_token", res.refresh_token);
       userStore.setAuthToken(res.access_token);
       const resBoard = await getAllBoards();
-      userStore.setAllBoard(resBoard);
+      boardStore.setAllBoard(resBoard);
       const redirectTo = router.currentRoute.value.query.redirectTo;
       if (redirectTo) {
         // ถ้ามี redirectTo ให้ไปที่หน้านั้น
         router.push(redirectTo);
       } else if (
-        userStore.boards.length === 1 &&
-        userStore.boards[0].owner.id === userStore.authToken.oid
+        boardStore.boards.length === 1 &&
+        boardStore.boards[0].owner.id === userStore.authToken.oid
       ) {
         router.push({
           name: "task",
-          params: { boardId: userStore.boards[0].id },
+          params: { boardId: boardStore.boards[0].id },
         });
       } else {
         router.push({ name: "board" });
@@ -125,6 +130,7 @@ async function signInOnClick(userLogin) {
     }
   }
 }
+
 </script>
 
 <template>

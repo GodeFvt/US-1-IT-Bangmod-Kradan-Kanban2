@@ -92,7 +92,7 @@ watch(
 
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
-    if (userStore.visibilityPublic === false) {
+    if (boardStore.visibilityPublic === false) {
       showPopUp.value = true;
       return;
     }
@@ -104,7 +104,7 @@ onMounted(async () => {
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
         handleResponseError(resBoard);
       } else {
-        userStore.setAllBoard(resBoard);
+        boardStore.setAllBoard(resBoard);
       }
     }
   }
@@ -151,7 +151,7 @@ async function addCollaborator(collab) {
       } else {
         console.log(res);
         typeToast.value = "success";
-        messageToast.value = `Collaborator "${res.email}" added successfully.`;
+        messageToast.value = `Collaborator "${  res.email}" added successfully.`;
       }
       const collabIndex = boardStore.collabs.findIndex((collaborator) => {
         return collaborator.email === collab.email && !collaborator.oid;
@@ -266,9 +266,9 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
           <router-link :to="{ name: 'task' }">
             <div class="itbkk-board-name text-gray-600 text-[1.5rem] font-bold">
               {{
-                userStore.currentBoard.owner.id === userStore.authToken?.oid
-                  ? userStore.currentBoard.name + " Personal's Board"
-                  : userStore.currentBoard.name + "Collaborate's Board"
+                boardStore.currentBoard.owner.id === userStore.authToken?.oid
+                  ? boardStore.currentBoard.name + " Personal's Board"
+                  : boardStore.currentBoard.name + "Collaborate's Board"
               }}
             </div>
           </router-link>
@@ -313,7 +313,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
           >
             <div
               :class="
-                userStore.currentBoard.owner.id === userStore.authToken?.oid
+                boardStore.currentBoard.owner.id === userStore.authToken?.oid
                   ? ''
                   : 'tooltip tooltip-bottom tooltip-hover'
               "
@@ -322,10 +322,10 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
               <button
                 class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
                 :disabled="
-                  userStore.currentBoard.owner.id !== userStore.authToken?.oid
+                  boardStore.currentBoard.owner.id !== userStore.authToken?.oid
                 "
                 :class="
-                  userStore.currentBoard.owner.id === userStore.authToken?.oid
+                  boardStore.currentBoard.owner.id === userStore.authToken?.oid
                     ? 'cursor-pointer'
                     : 'cursor-not-allowed'
                 "
@@ -439,7 +439,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                   >
                     <div
                       :class="
-                        userStore.currentBoard.owner.id ===
+                        boardStore.currentBoard.owner.id ===
                         userStore.authToken?.oid
                           ? ''
                           : 'tooltip tooltip-bottom tooltip-hover'
@@ -458,11 +458,11 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                               console.log(accessSelect)
                           "
                           :disabled="
-                            userStore.currentBoard.owner.id !==
+                            boardStore.currentBoard.owner.id !==
                             userStore.authToken?.oid
                           "
                           :class="
-                            userStore.currentBoard.owner.id ===
+                            boardStore.currentBoard.owner.id ===
                             userStore.authToken?.oid
                               ? 'cursor-pointer'
                               : 'cursor-not-allowed disabled'
@@ -482,7 +482,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                       <div>
                         <div
                           :class="
-                            userStore.currentBoard.owner.id ===
+                            boardStore.currentBoard.owner.id ===
                             userStore.authToken?.oid
                               ? ''
                               : 'tooltip tooltip-bottom tooltip-hover'
@@ -495,17 +495,17 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                             @click="
                               (isChangeAccess = false),
                                 (usernameId = index),
-                                userStore.currentBoard.owner.id ===
+                                boardStore.currentBoard.owner.id ===
                                 userStore.authToken?.oid
                                   ? (showConfirmModal = true)
                                   : (showConfirmModal = false)
                             "
                             :disabled="
-                              userStore.currentBoard.owner.id !==
+                              boardStore.currentBoard.owner.id !==
                               userStore.authToken?.oid
                             "
                             :class="
-                              userStore.currentBoard.owner.id ===
+                              boardStore.currentBoard.owner.id ===
                               userStore.authToken?.oid
                                 ? 'cursor-pointer'
                                 : 'cursor-not-allowed disabled'
@@ -513,7 +513,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                           >
                             <DeleteIcon
                               :class="
-                                userStore.currentBoard.owner.id ===
+                                boardStore.currentBoard.owner.id ===
                                 userStore.authToken?.oid
                                   ? ' hover:fill-red-500'
                                   : ' hover:fill-rose-300'
@@ -526,17 +526,17 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                             @click="
                               (isChangeAccess = false),
                                 (usernameId = index),
-                                userStore.currentBoard.owner.id ===
+                                boardStore.currentBoard.owner.id ===
                                 userStore.authToken?.oid
                                   ? (showConfirmModal = true)
                                   : (showConfirmModal = false)
                             "
                             :disabled="
-                              userStore.currentBoard.owner.id !==
+                              boardStore.currentBoard.owner.id !==
                               userStore.authToken?.oid
                             "
                             :class="
-                              userStore.currentBoard.owner.id ===
+                              boardStore.currentBoard.owner.id ===
                               userStore.authToken?.oid
                                 ? 'cursor-pointer hover:bg-red-500'
                                 : 'cursor-not-allowed disabled hover:bg-rose-300'

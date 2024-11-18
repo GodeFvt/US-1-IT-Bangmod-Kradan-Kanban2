@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { getAllBoards } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
+import { useBoardStore } from "../stores/boards.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { isTokenValid } from "../lib/utill.js";
 import {
@@ -19,16 +20,21 @@ import { msalService } from "../config/useAuth.js";
 const { logout } = msalService();
 
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const route = useRoute();
 const router = useRouter();
 const showPopUp = ref(false);
 const countBoard = computed(() => {
-  return userStore.boards.length;
+  return boardStore.boards.length;
 });
 
 const handleLogout = () => {
+const sessionData = sessionStorage.getItem("msal.account.keys") || "{}"; 
+  if (sessionData?.includes("login.windows.net")){  //เช็คว่ามาจาก microsoft ไหม
+    logout();
+  }
   userStore.clearAuthToken();
-  logout();
+  router.push({ name: "Login" });
 };
 
 const initialize = async () => {
@@ -42,7 +48,7 @@ onMounted(async () => {
   await initialize();
 });
 
-function signOut() {
+async function signOut() {
   userStore.clearAuthToken();
   // userStore.updateIsAuthen(false);
 

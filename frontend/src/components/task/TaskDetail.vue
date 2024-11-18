@@ -241,7 +241,7 @@ function textShow(text) {
   }
 }
 function edit(taskId) {
-  if (userStore.isCanEdit) {
+  if (boardStore.isCanEdit) {
     editMode.value = true;
     router.push({ name: "EditTask", params: { taskId: taskId } });
   }
@@ -324,7 +324,7 @@ const limitThisTask = computed(() => {
             </textarea>
             <div
               :class="
-                userStore.isCanEdit
+                boardStore.isCanEdit
                   ? ''
                   : 'tooltip tooltip-bottom tooltip-hover '
               "

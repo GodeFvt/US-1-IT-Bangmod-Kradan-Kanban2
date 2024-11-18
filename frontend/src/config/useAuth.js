@@ -1,6 +1,9 @@
 import { msalInstance, state, loginRequest } from "./msalConfig";
 import { useUserStore } from "../stores/user.js";
+import { useRouter, useRoute } from "vue-router";
 
+const router = useRouter();
+const route = useRoute();
 export function msalService() {
   const initialize = async () => {
     try {
@@ -31,7 +34,7 @@ export function msalService() {
       );
     }
     msalInstance.logoutRedirect(loginRequest);
-    state.isAuthenticated = false;
+   state.isAuthenticated = false;
     state.user = null;
   };
 
@@ -42,7 +45,11 @@ export function msalService() {
       state.isAuthenticated = msalInstance.getAllAccounts().length > 0;
       state.user = msalInstance.getAllAccounts()[0];
       if (res) {
+        console.log(res);
+        localStorage.setItem("authToken", res.accessToken);
+        localStorage.setItem("refresh_token", res.refreshToken);
         userStore.setAuthToken(res.accessToken);
+        
       }
     } catch (error) {
       console.error("Redirect error:", error);

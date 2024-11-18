@@ -1,8 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { useUserStore } from "../stores/user.js";
-const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 const timeCount = ref(3);

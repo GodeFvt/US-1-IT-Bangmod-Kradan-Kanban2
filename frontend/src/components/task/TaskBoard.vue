@@ -5,6 +5,7 @@ import SortIcon from "../icon/SortIcon.vue";
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { useUserStore } from "../../stores/user.js";
+import { useBoardStore } from "../../stores/boards.js";
 import { getFilteredTask } from "../../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import AuthzPopup from "../AuthzPopup.vue";
@@ -45,6 +46,7 @@ const windowWidth = ref(window.innerWidth);
 const showPopUp = ref(false);
 const isVisible = ref([]);
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 
 watch(
   () => props.allTask,
@@ -135,7 +137,7 @@ function updateBorderStyle(name) {
 }
 
 function editTask(id) {
-  if (userStore.isCanEdit) {
+  if (boardStore.isCanEdit) {
     router.push({ name: "EditTask", params: { taskId: id } });
   }
 }
@@ -250,7 +252,7 @@ onUnmounted(() => {
             >
               <div
                 :class="
-                  userStore.isCanEdit
+                  boardStore.isCanEdit
                     ? ''
                     : 'tooltip tooltip-bottom tooltip-hover'
                 "
@@ -259,7 +261,7 @@ onUnmounted(() => {
                 <div
                   class="itbkk-button-edit"
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? 'cursor-pointer'
                       : 'cursor-not-allowed disabled'
                   "
@@ -268,7 +270,7 @@ onUnmounted(() => {
                   <EditIcon
                     class="fill-zinc-500"
                     :class="
-                      userStore.isCanEdit
+                      boardStore.isCanEdit
                         ? ' hover:fill-zinc-700'
                         : ' hover:fill-zinc-500'
                     "
@@ -277,7 +279,7 @@ onUnmounted(() => {
               </div>
               <div
                 :class="
-                  userStore.isCanEdit
+                  boardStore.isCanEdit
                     ? ''
                     : 'tooltip tooltip-bottom tooltip-hover'
                 "
@@ -287,7 +289,7 @@ onUnmounted(() => {
                   class="itbkk-button-delete"
                   @click="$emit('removeTask', index)"
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? 'cursor-pointer'
                       : 'cursor-not-allowed disabled'
                   "
@@ -295,7 +297,7 @@ onUnmounted(() => {
                   <DeleteIcon
                     class="fill-rose-300"
                     :class="
-                      userStore.isCanEdit
+                      boardStore.isCanEdit
                         ? ' hover:fill-rose-400'
                         : ' hover:fill-rose-300'
                     "

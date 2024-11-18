@@ -35,7 +35,7 @@ const boardStore = useUserStore();
 watch(
   () => props.board,
   (newBoard) => {
-    allBoard.value = userStore.boards;
+    allBoard.value = boardStore.boards;
     for (const key in newBoard) {
       if (newBoard[key] === null) {
         newBoard[key] = "";

@@ -32,12 +32,14 @@ import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
+import { useBoardStore } from "../stores/boards.js";
 import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
 import Themes from "../components/icon/Themes.vue";
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
 const router = useRouter();
@@ -71,7 +73,7 @@ const taskId = ref(1);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
 const toggleVisibleActive = ref(false);
-const boardName = ref(userStore.currentBoard.name);
+const boardName = ref(boardStore.currentBoard.name);
 const fileURL=ref([])
 
 
@@ -110,7 +112,7 @@ async function fetchData() {
       }
     }
   }
-  toggleVisibleActive.value = userStore.visibilityPublic;
+  toggleVisibleActive.value = boardStore.visibilityPublic;
 
   // boardName.value = userStore.findBoardById(boardId).name;
   // watch(
@@ -209,7 +211,7 @@ onMounted(async () => {
   
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail();
-    if (userStore.visibilityPublic === false) {
+    if (boardStore.visibilityPublic === false) {
       showPopUp.value = true;
       return;
     } else {
@@ -229,7 +231,7 @@ watch(
   (newBoardId, oldBoardId) => {
     boardId.value = newBoardId;
     // handleBoardDetail();
-    boardName.value = userStore.currentBoard.name;
+    boardName.value = boardStore.currentBoard.name;
     fetchData();
     countStatuses();
     // console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
@@ -243,7 +245,7 @@ watch(
     if (newId !== undefined) {
       if (
         !(await isTokenValid(userStore.encodeToken)) &&
-        userStore.visibilityPublic === false
+        boardStore.visibilityPublic === false
       ) {
         showPopUp.value = true;
         return;
@@ -351,7 +353,7 @@ async function confirmVisibility(action) {
     toggleVisibleActive.value = !toggleVisibleActive.value;
     if (action === false) {
       showVisibilityModal.value = false;
-      toggleVisibleActive.value = userStore.visibilityPublic;
+      toggleVisibleActive.value = boardStore.visibilityPublic;
     } else if (action) {
       let visibility = toggleVisibleActive.value
         ? { visibility: "PUBLIC" }
@@ -377,14 +379,14 @@ async function confirmVisibility(action) {
       } else {
         // console.log(res.visibility);
         // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
-        userStore.updatevIsibilityPublic(
+        boardStore.updatevIsibilityPublic(
           res.visibility === "PUBLIC" ? true : false
         );
-        toggleVisibleActive.value = userStore.visibilityPublic;
+        toggleVisibleActive.value = boardStore.visibilityPublic;
         if (res.visibility === "PUBLIC") {
           navigator.clipboard.writeText(window.location.href);
         }
-        userStore.setIsVisibilityCurrentBoard(res.visibility);
+        boardStore.setIsVisibilityCurrentBoard(res.visibility);
         // console.log("200 fetch", toggleVisibleActive.value);
 
         // typeToast.value = "success";
@@ -528,12 +530,12 @@ async function editTask(editedTask ,files,fileName) {
 async function removeTask(index, confirmDelete = false) {
   if (
     !(await isTokenValid(userStore.encodeToken)) &&
-    userStore.isCanEdit === true
+    boardStore.isCanEdit === true
   ) {
     showPopUp.value = true;
     return;
   } else {
-    userStore.isCanEdit
+    boardStore.isCanEdit
       ? (showDeleteModal.value = true)
       : (showDeleteModal.value = false);
     task.value = allTask.value[index];
@@ -595,9 +597,9 @@ async function removeTask(index, confirmDelete = false) {
           </router-link>
           <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold">
             {{
-              userStore.currentBoard.owner.id === userStore.authToken?.oid
-                ? userStore.currentBoard.name + " Personal's Board"
-                : userStore.currentBoard.name + "Collaborate's Board"
+              boardStore.currentBoard.owner.id === userStore.authToken?.oid
+                ? boardStore.currentBoard.name + " Personal's Board"
+                : boardStore.currentBoard.name + "Collaborate's Board"
             }}
           </div>
         </div>
@@ -607,26 +609,26 @@ async function removeTask(index, confirmDelete = false) {
             <div
               class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2 disabled"
               @click="
-                userStore.currentBoard.owner.id === userStore.authToken?.oid
+                boardStore.currentBoard.owner.id === userStore.authToken?.oid
                   ? (showVisibilityModal = true)
                   : (showVisibilityModal = false)
               "
             >
               <div
                 :class="
-                userStore.currentBoard.owner.id === userStore.authToken?.oid                   
+                boardStore.currentBoard.owner.id === userStore.authToken?.oid                   
                  ? ''
                     : 'tooltip tooltip-bottom tooltip-hover'
                 "
                 data-tip="You need to be board owner to perform this action"
               >
                 <span class="font-bold visibility">
-                  {{ userStore.visibilityPublic ? "Public" : "Private" }}</span
+                  {{ boardStore.visibilityPublic ? "Public" : "Private" }}</span
                 >
                 <Toggle
                   :toggleActive="toggleVisibleActive"
                   :class="
-                  userStore.currentBoard.owner.id === userStore.authToken?.oid                      
+                  boardStore.currentBoard.owner.id === userStore.authToken?.oid                      
                   ? 'cursor-pointer'
                       : 'cursor-not-allowed'
                   "
@@ -639,7 +641,7 @@ async function removeTask(index, confirmDelete = false) {
               <router-link :to="{ name: 'AddTask' }">
                 <div
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? ''
                       : 'tooltip tooltip-bottom tooltip-hover'
                   "
@@ -647,9 +649,9 @@ async function removeTask(index, confirmDelete = false) {
                 >
                   <button
                     class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                    :disabled="!userStore.isCanEdit"
+                    :disabled="!boardStore.isCanEdit"
                     :class="
-                      userStore.isCanEdit
+                      boardStore.isCanEdit
                         ? 'cursor-pointer'
                         : 'cursor-not-allowed disabled'
                     "
@@ -867,7 +869,7 @@ async function removeTask(index, confirmDelete = false) {
         v-if="showSettingModal"
         @user-action="confirmLimit"
         :width="'w-[60vh]'"
-        :canEdit="userStore.isCanEdit"
+        :canEdit="boardStore.isCanEdit"
         :disabled="maximumTask > 30 || maximumTask <= 0"
         class="itbkk-modal-setting z-50"
       >

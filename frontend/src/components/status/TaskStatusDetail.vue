@@ -5,7 +5,7 @@ import CloseIcon from "../icon/CloseIcon.vue";
 import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useStatusStore } from "../../stores/statuses.js";
-import { useUserStore } from "../../stores/user.js";
+import { useBoardStore } from "../../stores/boards.js";
 
 const statusStore = useStatusStore();
 defineEmits(["userAction", "addEdit"]);
@@ -27,7 +27,7 @@ const duplicateStatus = ref({});
 const editMode = ref(props.isEdit);
 const validate = ref({ name: {}, description: {} });
 const alltask = ref([]);
-const userStore = useUserStore();
+const boardStore = useBoardStore();
 
 watch(
   () => props.status,
@@ -62,9 +62,9 @@ function textShow(text) {
 }
 function edit(statusId) {
   console.log(props.status.name);
-  console.log(userStore.isCanEdit);
+  console.log(boardStore.isCanEdit);
 
-  if (userStore.isCanEdit) {
+  if (boardStore.isCanEdit) {
     // ***
     if (props.status.name !== "No Status" && props.status.name !== "Done") {
       editMode.value = !editMode.value;
@@ -143,7 +143,7 @@ const disabledSave = computed(() => {
               </div>
               <div
                 :class="
-                  userStore.isCanEdit
+                  boardStore.isCanEdit
                     ? ''
                     : 'tooltip tooltip-bottom tooltip-hover '
                 "
@@ -154,7 +154,7 @@ const disabledSave = computed(() => {
                   @click="edit(status.id)"
                   class="ml-1"
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? 'cursor-pointer'
                       : 'cursor-not-allowed disabled'
                   "

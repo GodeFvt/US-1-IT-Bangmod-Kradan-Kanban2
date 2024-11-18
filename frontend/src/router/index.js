@@ -5,6 +5,7 @@ import TaskStatusView from "../views/TaskStatusView.vue";
 import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
+import {useBoardStore } from "../stores/boards.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
 import ManageCollab from "../views/ManageCollab.vue"
@@ -103,10 +104,11 @@ const router = createRouter({
 
 const cachedGetBoardsById = async (boardId) => {
   const userStore = useUserStore();
+  const boardStore = useBoardStore();
   if (!boardId) return null;
 
-  if (userStore.currentBoard?.id === boardId) {
-    return userStore.currentBoard;
+  if (boardStore.currentBoard?.id === boardId) {
+    return boardStore.currentBoard;
   }
 
   console.log("Fetching board by id:", boardId);
@@ -131,13 +133,14 @@ const cachedGetBoardsById = async (boardId) => {
     console.log(`Error: ${board}`);
     return board;
   } else {
-    userStore.setCurrentBoard(board);
+    boardStore.setCurrentBoard(board);
     return board;
   }
 };
 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
+  const boardStore = useBoardStore();
   const boardId = to.params.boardId;
 
   // ถ้าไปที่หน้า Login และมี token อยู่แล้ว ให้ไปที่หน้า board
@@ -191,13 +194,13 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (typeof board === "object") {
-      userStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
+      boardStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
       const oidByGet = board.owner.id;
       const oidByToken = userStore.authToken?.oid;
       const collaBorator = board.collaborators.find(c => c.oid === userStore.authToken?.oid);
-      userStore.setCurrentBoard(board);
-      userStore.updatevIsCanEdit(
-        isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet,collaBorator)
+      boardStore.setCurrentBoard(board);
+      boardStore.updatevIsCanEdit(
+        isNotDisable(boardStore.visibilityPublic, oidByToken, oidByGet,collaBorator)
       );
 
       const isOwner = userStore.authToken?.oid === board.owner.id;
