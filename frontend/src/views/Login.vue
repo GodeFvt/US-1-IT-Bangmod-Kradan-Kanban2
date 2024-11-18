@@ -8,6 +8,26 @@ import TaskStatusCard from "../components/status/TaskStatusCard.vue";
 import HeaderView from "./HeaderView.vue";
 import { getAllBoards } from "../lib/fetchUtill.js";
 
+import { msalService } from "../config/useAuth.js";
+import { msalInstance, state } from "../config/msalConfig.js";
+
+const { login, handleRedirect, getToken } = msalService();
+
+const handleLogin = async () => {
+  await login();
+};
+
+const initialize = async () => {
+  try {
+    await msalInstance.initialize();
+  } catch (error) {
+    console.log("Initialization error", error);
+  }
+};
+onMounted(async () => {
+  await initialize();
+  await handleRedirect();
+});
 const toggleIcon = ref(false);
 const user = ref({
   userName: "",
@@ -85,13 +105,15 @@ async function signInOnClick(userLogin) {
       if (redirectTo) {
         // ถ้ามี redirectTo ให้ไปที่หน้านั้น
         router.push(redirectTo);
-      } else if(userStore.boards.length === 1 && userStore.boards[0].owner.id === userStore.authToken.oid) {
+      } else if (
+        userStore.boards.length === 1 &&
+        userStore.boards[0].owner.id === userStore.authToken.oid
+      ) {
         router.push({
           name: "task",
           params: { boardId: userStore.boards[0].id },
         });
-      } 
-      else {
+      } else {
         router.push({ name: "board" });
       }
     } else if (res === 400 || res === 401) {
@@ -232,11 +254,13 @@ async function signInOnClick(userLogin) {
                     Sign in
                   </button>
                   <button
+                    @click="handleLogin"
                     type="submit"
                     class="w-full text-gray-900 font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:outline-none bg-white hover:bg-gray-100"
                   >
                     Sign in with Microsoft
                   </button>
+
                   <div class="mt-4 text-center text-sm">
                     Don't have an account?
                     <a href="#" class="underline"> Sign up </a>

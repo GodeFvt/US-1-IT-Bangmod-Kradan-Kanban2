@@ -14,6 +14,9 @@ import {
   SharpSortIcon,
   BoardIcon,
 } from "../components/icon";
+import { msalInstance, state } from "../config/msalConfig.js";
+import { msalService } from "../config/useAuth.js";
+const { logout } = msalService();
 
 const userStore = useUserStore();
 const route = useRoute();
@@ -21,6 +24,22 @@ const router = useRouter();
 const showPopUp = ref(false);
 const countBoard = computed(() => {
   return userStore.boards.length;
+});
+
+const handleLogout = () => {
+  userStore.clearAuthToken();
+  logout();
+};
+
+const initialize = async () => {
+  try {
+    await msalInstance.initialize();
+  } catch (error) {
+    console.log("Initialization error", error);
+  }
+};
+onMounted(async () => {
+  await initialize();
 });
 
 function signOut() {
@@ -219,10 +238,10 @@ const open = ref(true);
                       type="submit"
                       class="flex items-center w-full rounded-lg px-4 py-2 text-sm font-medium [text-align:_inherit] hover:bg-gray-100 hover:text-gray-700 text-red-500"
                     >
-                      <span @click="signOut" class="cursor-pointer w-full">
+                      <span @click="handleLogout" class="cursor-pointer w-full">
                         Logout</span
                       >
-                      <span @click="signOut" class="cursor-pointer w-[5%]">
+                      <span @click="handleLogout" class="cursor-pointer w-[5%]">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="14"
@@ -276,7 +295,7 @@ const open = ref(true);
           v-if="open"
           class="itbkk-sign-out w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full"
         >
-          <span @click="signOut" class="cursor-pointer">
+          <span @click="handleLogout" class="cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"
