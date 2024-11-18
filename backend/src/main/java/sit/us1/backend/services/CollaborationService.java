@@ -61,29 +61,29 @@ public class CollaborationService {
 
     public List<CollaboratorResponseDTO> getCollaborator(String id) {
         List<Collaboration> collaborations = collaborationRepository.findAllByBoardIdOrderByAddedOn(id);
-        List<SimpleCollaboratorDTO> simpleCollaboratorDTOS = new ArrayList<>();
-        collaborations.forEach(collaboration -> {
-            String oid = collaboration.getOid();
-            Optional<User> user = userRepository.findById(oid);
-            if (user.isEmpty()) {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn()));
-            } else {
-                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn()));
-            }
-        });
-
-        return listMapper.mapList(simpleCollaboratorDTOS, CollaboratorResponseDTO.class, mapper);
+//        List<SimpleCollaboratorDTO> simpleCollaboratorDTOS = new ArrayList<>();
+//        collaborations.forEach(collaboration -> {
+//            String oid = collaboration.getOid();
+//            Optional<User> user = userRepository.findById(oid);
+//            if (user.isEmpty()) {
+//                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn()));
+//            } else {
+//                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn()));
+//            }
+//        });
+        return listMapper.mapList(collaborations, CollaboratorResponseDTO.class, mapper);
     }
 
     public CollaboratorResponseDTO getCollaboratorById(String id, String oid) {
         Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
-        Optional<User> user = userRepository.findById(collaboration.getOid());
-        if (user.isEmpty()) {
+//        Optional<User> user = userRepository.findById(collaboration.getOid());
+//        if (user.isEmpty()) {
 //            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(),collaboration.getIsPending(), collaboration.getAddedOn());
-            return new CollaboratorResponseDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn(), null);
-        }
+//            return new CollaboratorResponseDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn(), null);
+//        }
 //        return new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(),collaboration.getIsPending(), collaboration.getAddedOn());
-        return new CollaboratorResponseDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn(), null);
+//        return new CollaboratorResponseDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn(), null);
+        return mapper.map(collaboration, CollaboratorResponseDTO.class);
     }
 
     @Transactional
@@ -111,6 +111,7 @@ public class CollaborationService {
                 newUser.setId(user.getOid());
                 newUser.setUsername(user.getUsername());
                 newUser.setName(user.getName());
+                newUser.setEmail(user.getEmail());
                 return boardUserRepository.save(newUser);
             });
 
@@ -146,10 +147,11 @@ public class CollaborationService {
     @Transactional
     public CollaboratorResponseDTO updateCollaborator(String id, String oid, SimpleCollaboratorDTO newCollab) {
         Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
+        System.out.println(newCollab.getAccessRight());
         collaboration.setAccessRight(newCollab.getAccessRight());
         try {
 
-            Optional<User> user = userRepository.findById(collaboration.getOid());
+            Optional<BoardUser> user = boardUserRepository.findById(collaboration.getOid());
             CollaboratorResponseDTO collaboratorResponseDTO = mapper.map(collaboration, CollaboratorResponseDTO.class);
 
             if (user.isEmpty()) {

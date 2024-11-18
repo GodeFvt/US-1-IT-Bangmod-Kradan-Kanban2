@@ -1,28 +1,26 @@
 package sit.us1.backend.services;
 
+
+
 import com.soundicly.jnanoidenhanced.jnanoid.NanoIdUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sit.us1.backend.dtos.boardsDTO.AllBoardResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
-import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
-import sit.us1.backend.dtos.tasksDTO.SimpleTaskDTO;
-import sit.us1.backend.entities.account.CustomUserDetails;
-import sit.us1.backend.entities.account.User;
 import sit.us1.backend.entities.taskboard.*;
 import sit.us1.backend.exceptions.BadRequestException;
-import sit.us1.backend.exceptions.ConflictException;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.repositories.account.UserRepository;
 import sit.us1.backend.repositories.taskboard.*;
 
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+
 
 import static sit.us1.backend.entities.taskboard.Board.Visibility.*;
 
@@ -50,6 +48,9 @@ public class BoardService {
     private ListMapper listMapper;
     @Autowired
     private ModelMapper mapper;
+
+//    @Autowired
+//    private GraphService graphServiceClient;
 
     public List<SimpleBoardDTO> getAllBoard() {
         return listMapper.mapList(boardRepository.findAll(), SimpleBoardDTO.class, mapper);
@@ -84,6 +85,7 @@ public class BoardService {
 
     public AllBoardResponseDTO getAllBoardByOid() {
         try {
+
             String Oid = SecurityUtil.getCurrentUserDetails().getOid();
             List<Board> ownerBoards = boardRepository.findAllOwnerBoards(Oid);
             List<Board> collabBoards = boardRepository.findAllCollaboratorBoards(Oid);
@@ -108,6 +110,7 @@ public class BoardService {
         owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
         owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
         owner.setName(SecurityUtil.getCurrentUserDetails().getName());
+        owner.setEmail(SecurityUtil.getCurrentUserDetails().getEmail());
         try {
             if (boardUserRepository.findById(owner.getId()).isEmpty()) {
                 boardUserRepository.save(owner);
@@ -189,5 +192,12 @@ public class BoardService {
         }
         return mapper.map(board, SimpleBoardDTO.class);
     }
+//    public User getUserByEmail(String email, String accessToken) {
+//        GraphServiceClient graphClient = new GraphServiceClient(accessToken);
+//        return graphClient.users().getByEmail(email);
+//
+//
+//
+//    }
 
 }
