@@ -74,8 +74,7 @@ const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
 const toggleVisibleActive = ref(false);
 const boardName = ref(boardStore.currentBoard.name);
-const fileURL=ref([])
-
+const fileURL = ref([]);
 
 const allTaskLimit = ref([]); // allTask อันที่เกิน
 const countStatus = computed(() => {
@@ -104,7 +103,7 @@ async function fetchData() {
   if (userStore.authToken !== null) {
     if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
-      
+
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
         handleResponseError(resBoard);
       } else {
@@ -208,7 +207,6 @@ function countStatuses() {
 }
 
 onMounted(async () => {
-  
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail();
     if (boardStore.visibilityPublic === false) {
@@ -253,15 +251,26 @@ watch(
         const res = await getTaskById(boardId.value, newId);
         if (typeof res !== "object") {
           handleResponseError(res);
-        } else {  
+        } else {
           task.value = res;
           task.value.attachments.forEach(async (file) => {
-             const resFile = await downloadfile(boardId.value,newId, file.filename)
+            const resFile = await downloadfile(
+              boardId.value,
+              newId,
+              file.filename
+            );
             //  console.log(resFile);
-            fileURL.value.push({"name":file.filename,"url":resFile}); 
-
-          })
-
+            fileURL.value.push({ name: file.filename, url: resFile });
+            if (typeof resFile !== "number") {
+              // notPreview.value=true
+              fileURL.value.push({ name: file.filename, url: resFile });
+            } else {
+              fileURL.value.push({
+                name: file.filename,
+                url: "https://api.iconify.design/ic:baseline-sim-card-alert.svg",
+              });
+            }
+          });
           // const resFile2 = await downloadfile(boardId.value,newId, task.value.attachments[0].filename)
           // console.log(fileURL2.value);
           // fileURL2.value = resFile2
@@ -412,7 +421,7 @@ function closeTask(action) {
   showDetail.value = action;
   showAddModal.value = action;
   router.push({ name: "task" });
-  fileURL.value=[]
+  fileURL.value = [];
 }
 
 function ClickAdd() {
@@ -432,7 +441,7 @@ function openChageThemes() {
   showChangeThemes.value = true;
 }
 
-async function addEditTask(newTask,file,fileName) {
+async function addEditTask(newTask, file, fileName) {
   const indexToCheck = allTask.value.findIndex(
     (task) => task.id === newTask.id
   );
@@ -440,7 +449,7 @@ async function addEditTask(newTask,file,fileName) {
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
     // console.log("edit T");
     // console.log(file);
-    await editTask(newTask,file,fileName);
+    await editTask(newTask, file, fileName);
   } else {
     // console.log("add T");
     await addTask(newTask);
@@ -479,7 +488,7 @@ async function addTask(newTask) {
   }
 }
 
-async function editTask(editedTask ,files,fileName) {
+async function editTask(editedTask, files, fileName) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
@@ -487,42 +496,46 @@ async function editTask(editedTask ,files,fileName) {
     // console.log(taskId.value);
     // console.log(editedTask);
     // console.log(file);
-    
-   
+
     // console.log(123);
-    // res= await addAttachments(boardId.value,taskId.value,files) 
+    // res= await addAttachments(boardId.value,taskId.value,files)
     // } else {
 
-      editedTask.status = editedTask.status.name;
+    editedTask.status = editedTask.status.name;
 
-     //เอาแค่ [{url}]
-      // console.log(files.filter((e)=> Object.keys(e).find("url")));
+    //เอาแค่ [{url}]
+    // console.log(files.filter((e)=> Object.keys(e).find("url")));
     //   console.log(files.map((e)=>e.url));
 
     // console.log(files);
-      
-      const  res  = await updateTask(boardId.value, editedTask,files.map((e)=>e.url),fileName);
+
+    const res = await updateTask(
+      boardId.value,
+      editedTask,
+      files.map((e) => e.url),
+      fileName
+    );
     // }
-   
+
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred updating the task "${editedTask.title}"`;
     } else if (res === 401 || res === 403) {
       handleResponseError(res);
     } else {
-         const indexToUpdate = allTask.value.findIndex(
+      const indexToUpdate = allTask.value.findIndex(
         (task) => task.id === editedTask.id
-        );
-        taskStore.editTask(indexToUpdate, res);
-        statusStore.setNoOftask(countStatus.value);
-        if (res.filesErrors.length!==0) {
-          typeToast.value = "warning";
-          messageToast.value = `An error occurred, and the file update was unsuccessful`;
-        } else {
-          typeToast.value = "success";
-           messageToast.value = `Task "${editedTask.title}" updated successfully`;
-        }
-    } 
+      );
+      taskStore.editTask(indexToUpdate, res);
+      statusStore.setNoOftask(countStatus.value);
+      if (res.filesErrors.length !== 0) {
+        typeToast.value = "warning";
+        messageToast.value = `An error occurred, and the file update was unsuccessful`;
+      } else {
+        typeToast.value = "success";
+        messageToast.value = `Task "${editedTask.title}" updated successfully`;
+      }
+    }
     showToast.value = true;
   }
 }
@@ -616,8 +629,8 @@ async function removeTask(index, confirmDelete = false) {
             >
               <div
                 :class="
-                boardStore.currentBoard.owner.id === userStore.authToken?.oid                   
-                 ? ''
+                  boardStore.currentBoard.owner.id === userStore.authToken?.oid
+                    ? ''
                     : 'tooltip tooltip-bottom tooltip-hover'
                 "
                 data-tip="You need to be board owner to perform this action"
@@ -628,14 +641,14 @@ async function removeTask(index, confirmDelete = false) {
                 <Toggle
                   :toggleActive="toggleVisibleActive"
                   :class="
-                  boardStore.currentBoard.owner.id === userStore.authToken?.oid                      
-                  ? 'cursor-pointer'
+                    boardStore.currentBoard.owner.id ===
+                    userStore.authToken?.oid
+                      ? 'cursor-pointer'
                       : 'cursor-not-allowed'
                   "
                 />
               </div>
             </div>
-
 
             <div class="">
               <router-link :to="{ name: 'AddTask' }">
@@ -821,20 +834,18 @@ async function removeTask(index, confirmDelete = false) {
           </div>
         </template>
         <template #body>
-          <div
-            class="flex justify-center items-center bg-gray-100"
-          >
+          <div class="flex justify-center items-center bg-gray-100">
             <div class="w-full max-w-4xl p-4 bg-white shadow-md rounded-md">
               <!-- Grid Section -->
               <div class="grid grid-cols-2 gap-4">
                 <!-- Left Grid -->
                 <div class="bg-gray-100 p-4">
-                <img src="../../public/table.png" alt="table">
-             </div>
+                  <img src="../../public/table.png" alt="table" />
+                </div>
 
                 <!-- Right Grid -->
                 <div class="grid grid-rows-2 gap-2">
-                  <img src="../../public/card.png" alt="card">
+                  <img src="../../public/card.png" alt="card" />
                 </div>
               </div>
 

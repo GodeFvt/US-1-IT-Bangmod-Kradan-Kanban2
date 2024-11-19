@@ -11,7 +11,8 @@ import {
   previewBinary,
   removeURL,
 } from "../../lib/utill.js";
-import { useUserStore } from "../../stores/user.js";
+import { useBoardStore } from "../../stores/boards.js";
+import AttachmentLoadingVue from "../loading/AttachmentLoading.vue"
 const router = useRouter();
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
@@ -43,7 +44,7 @@ const isLimit = computed(() => statusStore.isLimit);
 const allTaskLimit = ref(props.allTaskLimit);
 const maximumTask = computed(() => statusStore.maximumTask);
 const noOftask = computed(() => statusStore.noOftask);
-const userStore = useUserStore();
+const boardStore = useBoardStore();
 const isEditPage = ref(true);
 const fileChange = ref(false);
 
@@ -410,10 +411,12 @@ const limitThisTask = computed(() => {
           <div class="flex flex-col w-[30%]">
             <label for="category" class="font-bold text-sm">Status</label>
             <select
+              v-show="editMode"
               id="category"
               :disabled="!editMode"
               v-model="duplicateTask.status.name"
-              class="itbkk-status mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block h-[3rem] w-full p-2.5"
+              class="itbkk-status mt-2  border border-gray-300  text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block h-[3rem] w-full p-2.5"
+              :class="editMode? 'bg-gray-50 text-gray-900':'bg-gray-200 text-gray-900'"
             >
               <option
                 v-for="status in statusStore.allStatus"
@@ -426,6 +429,10 @@ const limitThisTask = computed(() => {
                 {{ status.name }}
               </option>
             </select>
+
+            <div v-show="!editMode" class="bg-gray-200 text-gray-900 rounded-lg p-2.5">
+              <p>{{ duplicateTask.status.name }}</p>
+            </div>
           </div>
         </div>
         <div class="text-rose-600 mt-1" v-if="limitThisTask && editMode">
@@ -636,6 +643,7 @@ const limitThisTask = computed(() => {
         class="itbkk-modal-task bg-gray-100 rounded-e-md h-[80%] w-[11rem] shadow-md overflow-y-auto border-l"
         :class="!editMode || isEditPage ? '' : 'hidden'"
       >
+    
         <!-- Close Button Container with sticky positioning -->
         <div class="w-full flex justify-end sticky top-0 z-10 mb-2">
           <div
@@ -645,6 +653,7 @@ const limitThisTask = computed(() => {
             <CloseIcon />
           </div>
         </div>
+         <div v-show="true">
         <div class="font-bold text-sm pl-2 mt-3">Attachments</div>
         <!-- Scrollable Content Area -->
         <div class=" ">
@@ -685,6 +694,12 @@ const limitThisTask = computed(() => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div v-show="false">
+      <AttachmentLoadingVue />
+
+      </div>
       </div>
     </div>
   </div>
