@@ -1,9 +1,6 @@
 import { msalInstance, state, loginRequest } from "./msalConfig";
 import { useUserStore } from "../stores/user.js";
-import { useRouter, useRoute } from "vue-router";
 
-const router = useRouter();
-const route = useRoute();
 export function msalService() {
   const initialize = async () => {
     try {
@@ -38,7 +35,7 @@ export function msalService() {
     state.user = null;
   };
 
-  const handleRedirect = async () => {
+  const handleRedirect = async (router) => {
     const userStore = useUserStore();
     try {
       const res = await msalInstance.handleRedirectPromise();
@@ -47,9 +44,11 @@ export function msalService() {
       if (res) {
         console.log(res);
         localStorage.setItem("authToken", res.accessToken);
-        localStorage.setItem("refresh_token", res.refreshToken);
         userStore.setAuthToken(res.accessToken);
-        
+        router.push({ name: "board" });
+      }
+      if(!state.isAuthenticated){
+        router.push({ name: "Login" });
       }
     } catch (error) {
       console.error("Redirect error:", error);

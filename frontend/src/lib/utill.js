@@ -1,6 +1,7 @@
 import VueJwtDecode from "vue-jwt-decode";
 import { refreshAccessToken } from "./fetchUtill.js";
 import { useUserStore } from "../stores/user.js";
+import { msalService } from "../config/useAuth.js";
 
 function convertString(string) {
   return string
@@ -37,6 +38,17 @@ function validateSizeInput(...properties) {
 
 async function refreshTokenAndReturn() {
   const userStore = useUserStore();
+  if (userStore.isMicroSoftLogin) {
+    // ใช้ getToken เพื่อดึง Access Token ใหม่
+    if (newAccessToken) {
+      userStore.setAuthToken(newAccessToken.accessToken);
+      return true;
+    } else {
+      userStore.setAuthToken(null);
+      return false;
+    }
+  }
+  else{
   const refreshTokenSuccess = await refreshAccessToken();
   if (typeof refreshTokenSuccess !== "object") {
     userStore.setAuthToken(null);
@@ -45,14 +57,22 @@ async function refreshTokenAndReturn() {
     userStore.setAuthToken(refreshTokenSuccess.access_token);
     return true;
   }
+
+}
 }
 
 async function isTokenValid(token) {
   let decodedToken;
+  const userStore = useUserStore();
   const refresh_token = localStorage.getItem("refresh_token");
 
+  if (!token && userStore.isMicroSoftLogin) {
+    console.log('validateToken 1 ');
+    return await refreshTokenAndReturn();
+  }
   // Validate the token format
   if (!token && !refresh_token) {
+    console.log('validateToken 2 ');
     return false;
   }
   try {

@@ -5,12 +5,13 @@ export const useUserStore = defineStore("userStore", {
   state: () => ({
     authToken: null,
     encodeToken: localStorage.getItem("authToken") || null,
+    isMicroSoftLogin: false,
   }),
 
   actions: {
     initializeToken() {
-      const token = localStorage.getItem("authToken");
-      const refresh_Token = localStorage.getItem("refresh_token");
+      const token = localStorage?.getItem("authToken");
+      const refresh_Token = localStorage?.getItem("refresh_token");
       if (token || refresh_Token) {
         try {
           const decodedToken = VueJwtDecode.decode(token);
@@ -23,6 +24,12 @@ export const useUserStore = defineStore("userStore", {
           } else {
             this.authToken = decodedToken;
             this.encodeToken = token;
+            if(this.authToken?.iss.includes("sts.windows.net")){
+              this.isMicroSoftLogin = true;
+            }
+            else{
+              this.isMicroSoftLogin = false;
+            }
           }
         } catch (error) {}
       } else {

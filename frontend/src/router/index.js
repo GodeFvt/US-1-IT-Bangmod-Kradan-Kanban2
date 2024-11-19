@@ -144,7 +144,7 @@ router.beforeEach(async (to, from, next) => {
   const boardId = to.params.boardId;
 
   // ถ้าไปที่หน้า Login และมี token อยู่แล้ว ให้ไปที่หน้า board
-  if (to.name === "Login" && userStore.authToken !== null) {
+  if (to.name === "Login" && userStore.encodeToken !== null) {
     return next({ name: "board" });
   }
 

@@ -17,7 +17,7 @@ import {
 } from "../components/icon";
 import { msalInstance, state } from "../config/msalConfig.js";
 import { msalService } from "../config/useAuth.js";
-const { logout } = msalService();
+const { handleRedirect,logout } = msalService();
 
 const userStore = useUserStore();
 const boardStore = useBoardStore();
@@ -29,12 +29,10 @@ const countBoard = computed(() => {
 });
 
 const handleLogout = () => {
-const sessionData = sessionStorage.getItem("msal.account.keys") || "{}"; 
-  if (sessionData?.includes("login.windows.net")){  //เช็คว่ามาจาก microsoft ไหม
+  if (userStore.isMicroSoftLogin === true){
     logout();
   }
   userStore.clearAuthToken();
-  router.push({ name: "Login" });
 };
 
 const initialize = async () => {
@@ -45,15 +43,9 @@ const initialize = async () => {
   }
 };
 onMounted(async () => {
-  await initialize();
+await initialize();
+await handleRedirect(router);
 });
-
-async function signOut() {
-  userStore.clearAuthToken();
-  // userStore.updateIsAuthen(false);
-
-  router.push({ name: "Login" });
-}
 
 // onMounted(async () => {
 //   if (!(await isTokenValid(userStore.encodeToken))) {
@@ -168,7 +160,7 @@ const open = ref(true);
               </summary>
             </transition>
             <ul class="mt-2 space-y-1 px-4" v-if="open">
-              <li v-for="board in userStore.boards" :key="board.id">
+              <li v-for="board in boardStore.boards" :key="board.id">
                 <router-link
                   :to="{ name: 'task', params: { boardId: board.id } }"
                   :class="{
@@ -298,10 +290,12 @@ const open = ref(true);
       </transition>
       <transition name="text-fade">
         <div
+       @click="handleLogout"
           v-if="open"
-          class="itbkk-sign-out w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full"
+          class="itbkk-sign-out w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full cursor-pointer"
         >
-          <span @click="handleLogout" class="cursor-pointer">
+          <span
+           class="cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"

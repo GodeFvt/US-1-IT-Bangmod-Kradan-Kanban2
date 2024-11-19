@@ -102,13 +102,13 @@ function handleResponseError(responseCode) {
 
 async function fetchData() {
   if (userStore.authToken !== null) {
-    if (userStore.boards.length === 0) {
+    if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
         handleResponseError(resBoard);
       } else {
-        userStore.setAllBoard(resBoard);
+        boardStore.setAllBoard(resBoard);
       }
     }
   }

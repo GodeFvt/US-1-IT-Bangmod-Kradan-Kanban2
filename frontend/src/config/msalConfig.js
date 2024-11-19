@@ -15,7 +15,7 @@ const msalConfig = {
     authority: AUTHORITY,
     redirectUri: window.location.origin, // Replace with your actual redirect URI
     postLogoutUri: window.location.origin, // You must register this URI on App Registration. Defaults to window.location.href e.g. http://localhost:3000/
-    navigateToLoginRequestUrl: true,
+    navigateToLoginRequestUrl: false,
   },
   cache: {
     cacheLocation: "sessionStorage",

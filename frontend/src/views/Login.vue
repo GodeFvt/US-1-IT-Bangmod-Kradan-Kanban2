@@ -12,26 +12,7 @@ import { getAllBoards } from "../lib/fetchUtill.js";
 import { msalService } from "../config/useAuth.js";
 import { msalInstance, state } from "../config/msalConfig.js";
 
-const { login, handleRedirect, getToken } = msalService();
 
-const handleLogin = async () => {
-  await login();
-};
-
-const initialize = async () => {
-  try {
-    await msalInstance.initialize();
-  } catch (error) {
-    console.log("Initialization error", error);
-  }
-};
-onMounted(async () => {
-  await initialize();
-  await handleRedirect();
-  if (userStore.authToken !== null) {
-
-  }
-});
 const toggleIcon = ref(false);
 const user = ref({
   userName: "",
@@ -46,8 +27,35 @@ const borderAnimate = ref("");
 const miniTaskBoardAnimate = ref("");
 const kanbanAnimate = ref("");
 const textAnimation = ref("");
+const showLoading = ref(false);
 let intervalId;
 let timeoutId;
+
+const { login, handleRedirect, getToken } = msalService();
+
+const handleLogin = async () => {
+  await login();
+};
+
+const initialize = async () => {
+  try {
+    await msalInstance.initialize();
+  } catch (error) {
+    console.log("Initialization error", error);
+  }
+};
+
+onMounted(async () => {
+  
+  await initialize();
+
+await handleRedirect(router);
+
+  // if(state.isAuthenticated === true && userStore.authToken === null){
+  //   const timer = setTimeout(() => {showLoading.value = true;},5000)
+
+  // }
+});
 
 onMounted(() => {
   animation();
