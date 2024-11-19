@@ -45,10 +45,10 @@ export function msalService() {
         console.log(res);
         localStorage.setItem("authToken", res.accessToken);
         userStore.setAuthToken(res.accessToken);
-        router.push({ name: "board" });
+        router.replace({ name: "board" });
       }
       if(!state.isAuthenticated){
-        router.push({ name: "Login" });
+        router.replace({ name: "Login" });
       }
     } catch (error) {
       console.error("Redirect error:", error);
