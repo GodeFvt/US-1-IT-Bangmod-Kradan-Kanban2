@@ -1,8 +1,7 @@
 package sit.us1.backend.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,22 +12,28 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 import sit.us1.backend.entities.account.CustomUserDetails;
+import sit.us1.backend.entities.account.MsUser;
+import sit.us1.backend.entities.account.User;
 import sit.us1.backend.entities.taskboard.BoardUser;
 import sit.us1.backend.exceptions.AccessDeniedException;
 import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.exceptions.UnauthorizedException;
+import sit.us1.backend.repositories.account.UserRepository;
 import sit.us1.backend.repositories.taskboard.BoardUserRepository;
+import sit.us1.backend.services.AuthenticationService;
 import sit.us1.backend.services.JwtTokenUtil;
 import sit.us1.backend.services.JwtUserDetailsService;
 
 
 import java.io.IOException;
+import java.security.SignatureException;
 import java.util.Base64;
 import java.util.List;
 
@@ -39,9 +44,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
-    @Autowired
-    BoardUserRepository boardUserRepository;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         try {
@@ -50,6 +52,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String jwtToken = null;
             boolean isTokenValid = false;
             String tokenError = null;
+            MsUser msUser = null;
 
             if (AuthWhitelistPaths.isWhitelisted(request.getRequestURI())) {
                 chain.doFilter(request, response);
@@ -60,28 +63,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (requestTokenHeader.startsWith("Bearer ")) {
                     jwtToken = requestTokenHeader.substring(7);
                     try {
-                        if (isMicrosoftToken(jwtToken)) {
-                             if(isTokenExpired(jwtToken)){
-                                 throw new ExpiredJwtException(null, null, "JWT Token has expired");
-                             }else {
-                                 CustomUserDetails userDetails = MicrosoftTokenWithGraphAPI(jwtToken);
-                                 BoardUser user = boardUserRepository.findById(userDetails.getOid()).orElse(null);
-                                 if(user == null) {
-                                     BoardUser newUser = new BoardUser();
-                                     newUser.setId(userDetails.getOid());
-                                     newUser.setUsername(userDetails.getUsername());
-                                     newUser.setName(userDetails.getName());
-                                     newUser.setEmail(userDetails.getEmail());
-                                     boardUserRepository.save(newUser);
-                                 }
-                                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                             }
+                        if (jwtTokenUtil.isMicrosoftToken(jwtToken)) {
+                            msUser = jwtTokenUtil.getMsUserFromToken(jwtToken);
+                            if (msUser == null) {
+                                throw new IllegalArgumentException("Invalid Microsoft Token");
+                            }
                         } else {
                             username = jwtTokenUtil.getSubjectFromToken(jwtToken, false);
                         }
-                        System.out.println("username: " + username);
                         isTokenValid = true;
                     } catch (IllegalArgumentException e) {
                         tokenError = "Unable to get JWT Token";
@@ -98,15 +87,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             request.setAttribute("isTokenValid", isTokenValid);
             request.setAttribute("tokenError", tokenError);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
-                if (jwtTokenUtil.validateToken(jwtToken, (CustomUserDetails) userDetails, false)) {
-                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (username != null) {
+                    UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
+                    if (jwtTokenUtil.validateToken(jwtToken, (CustomUserDetails) userDetails, false)) {
+                        authenticationToken(userDetails, request);
+                    }
+                }else if (msUser != null) {
+                    CustomUserDetails userDetails = jwtUserDetailsService.getUserDetailsMS(msUser);
+                    authenticationToken(userDetails, request);
                 }
             }
-
 
             if (requestTokenHeader == null && request.getRequestURI().equals("/v3/boards")) {
                 throw new UnauthorizedException("JWT Token is required");
@@ -119,57 +110,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
     }
 
-    private CustomUserDetails MicrosoftTokenWithGraphAPI(String token) {
-        try {
-            String graphApiUrl = "https://graph.microsoft.com/v1.0/me";
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
-            HttpEntity<String> entity = new HttpEntity<>("", headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(graphApiUrl, HttpMethod.GET, entity, String.class);
-            if (response.getStatusCode() != HttpStatus.OK) {
-                throw new UnauthorizedException("Invalid Microsoft Token");
-            }
-            String body = response.getBody();
-            String username = new ObjectMapper().readTree(body).get("userPrincipalName").asText();
-            String name = new ObjectMapper().readTree(body).get("displayName").asText();
-            String oid = new ObjectMapper().readTree(body).get("id").asText();
-            String email = new ObjectMapper().readTree(body).get("mail").asText();
-            List<GrantedAuthority> authorities = List.of(() -> "ROLE_USER");
-            return new CustomUserDetails(username, name, oid, email, "", null, authorities);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private boolean isMicrosoftToken(String token) {
-        try {
-            String payload = getPayloadFromToken(token);
-            return payload.contains("\"iss\":\"https://sts.windows.net/");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
-    }
-
-    private String getPayloadFromToken(String token) throws IllegalArgumentException {
-        String[] parts = token.split("\\.");
-        if (parts.length != 3) {
-            throw new IllegalArgumentException("Invalid JWT token format");
-        }
-        return new String(Base64.getUrlDecoder().decode(parts[1]));
-    }
-
-    private boolean isTokenExpired(String token) {
-        try {
-            String payload = getPayloadFromToken(token);
-            long exp = new ObjectMapper().readTree(payload).get("exp").asLong();
-            long currentTime = System.currentTimeMillis() / 1000;
-            return currentTime >= exp;
-        } catch (Exception ex) {
-            return true;
-        }
+    private void authenticationToken(UserDetails userDetails, HttpServletRequest request) {
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
     }
 
     public static void handleException(HttpServletResponse response, Exception e, String uri) throws IOException {
