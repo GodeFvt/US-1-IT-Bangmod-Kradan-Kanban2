@@ -49,7 +49,6 @@ const isEditPage = ref(true);
 const fileChange = ref(false);
 
 const fileURL = ref(props.fileUrl);
-
 watch(
   () => props.task,
   (newTask) => {
@@ -121,7 +120,6 @@ const fileCanPreview = (fileName) => {
   }
 };
 
-console.log(previewImagesURL.value.length === 0);
 
 const invalidFile = ref({
   maxSize: {
@@ -221,13 +219,16 @@ const disabledSave = computed(() => {
 });
 const fileInput = ref(null);
 function deleteFile(imgUrlObject, index, type, fileName) {
+  invalidFile.value.maxFile.filename = [];
   if (type === "fileDelete") {
     fileChange.value = true;
     fileURL.value.splice(index, 1);
+    fileURL.length >= 10 ? disabledInput.value = true : disabledInput.value = false
     fileDetete.value.push(fileName);
     removeURL(imgUrlObject);
   } else {
     previewImagesURL.value.splice(index, 1);
+    previewImagesURL.length >= 10 ? disabledInput.value = true : disabledInput.value = false
     removeURL(imgUrlObject);
   }
 
@@ -492,14 +493,14 @@ const limitThisTask = computed(() => {
             :class="
               disabledInput ||
               fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10
+              fileURL.length + previewImagesURL.length >= 10 || previewImagesURL.length >= 10
                 ? 'bg-gray-500 cursor-not-allowed'
                 : ''
             "
             :disabled="
               disabledInput ||
               fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10
+              fileURL.length + previewImagesURL.length >= 10 || previewImagesURL.length >= 10
             "
             @change="preview"
             multiple
@@ -514,7 +515,7 @@ const limitThisTask = computed(() => {
                 class="font-normal"
                 v-for="(name, index) in invalidFile?.maxSize?.filename"
                 :key="index"
-                >{{ name }}
+                >{{ index===0?"":"," }} {{ name }}
               </span>
             </div>
             <div
@@ -526,8 +527,7 @@ const limitThisTask = computed(() => {
                 class="font-normal"
                 v-for="(name, index) in invalidFile?.maxFile?.filename"
                 :key="index"
-                >{{ name }}
-              </span>
+                >{{ index===0?"":"," }} {{ name }}</span>
             </div>
             <div
               class="text-red-500 mt-1 text-sm font-medium"
@@ -538,7 +538,7 @@ const limitThisTask = computed(() => {
                 class="font-normal"
                 v-for="(name, index) in invalidFile?.dupFile?.filename"
                 :key="index"
-                >{{ name }}
+                >{{ index===0?"":"," }} {{ name }}
               </span>
             </div>
           </div>
@@ -548,7 +548,7 @@ const limitThisTask = computed(() => {
               v-for="(file, index) in [...previewImagesURL]"
               :key="index"
               class="relative flex flex-col border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
-              @click="openImageModal(previewBinary(file.url), file.name)"
+              
             >
               <!-- Delete Button Positioned at Top Right -->
               <div
@@ -557,7 +557,7 @@ const limitThisTask = computed(() => {
               >
                 <CloseIcon />
               </div>
-              <div class="flex flex-col items-center">
+              <div class="flex flex-col items-center cursor-pointer" @click="openImageModal(previewBinary(file.url), file.name)">
                 <img
                   v-if="fileCanPreview(file.name) === 'img'"
                   :src="previewBinary(file.url)"
@@ -664,7 +664,7 @@ const limitThisTask = computed(() => {
             class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2"
             
           >
-            <div class="flex flex-col items-center justify-between w-full "
+            <div class="flex flex-col items-center justify-between w-full cursor-pointer"
             @click="openImageModal(file.url, file.name)">
               <img
                 v-if="fileCanPreview(file.name) === 'img'"
@@ -688,7 +688,7 @@ const limitThisTask = computed(() => {
             <div
               :class="isEditPage ? 'block' : 'hidden'"
               @click="deleteFile(file.url, index, 'fileDelete', file.name)"
-              class="bottom-1 right-1 cursor-pointer fill-rose-300 text-sm"
+              class="bottom-1 right-1 cursor-pointer fill-rose-400 text-sm"
             >
               <DeleteIcon class="h-7 w-7" />
             </div>

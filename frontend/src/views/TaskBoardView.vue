@@ -260,7 +260,6 @@ watch(
               file.filename
             );
             //  console.log(resFile);
-            fileURL.value.push({ name: file.filename, url: resFile });
             if (typeof resFile !== "number") {
               // notPreview.value=true
               fileURL.value.push({ name: file.filename, url: resFile });
@@ -507,7 +506,7 @@ async function editTask(editedTask, files, fileName) {
     // console.log(files.filter((e)=> Object.keys(e).find("url")));
     //   console.log(files.map((e)=>e.url));
 
-    // console.log(files);
+    console.log(files);
 
     const res = await updateTask(
       boardId.value,
