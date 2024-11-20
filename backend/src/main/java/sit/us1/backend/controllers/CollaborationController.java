@@ -11,6 +11,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import sit.us1.backend.dtos.boardsDTO.CollaboratorResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
+import sit.us1.backend.services.EmailService;
+import sit.us1.backend.services.SecurityUtil;
 import sit.us1.backend.validations.ValidationUtil;
 import sit.us1.backend.services.CollaborationService;
 import sit.us1.backend.validations.ValidationGroups;
@@ -23,6 +25,8 @@ import java.util.List;
 public class CollaborationController {
     @Autowired
     private CollaborationService collabService;
+    @Autowired
+    private EmailService emailService;
 
     private final ValidationUtil validationUtil;
 
@@ -42,7 +46,15 @@ public class CollaborationController {
 
     @PostMapping("/collabs")
     public ResponseEntity<CollaboratorResponseDTO> addCollaborator(@PathVariable String boardId, @Validated({ValidationGroups.OnCreate.class, Default.class}) @RequestBody SimpleCollaboratorDTO newCollab) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(collabService.addCollaborator(boardId, newCollab));
+        CollaboratorResponseDTO collaboratorResponseDTO = collabService.addCollaborator(boardId, newCollab);
+        try {
+            emailService.sendInvitationEmail(collaboratorResponseDTO.getName(), collaboratorResponseDTO.getEmail(), collaboratorResponseDTO.getBoardName(), collaboratorResponseDTO.getAccessRight(), boardId);
+            collaboratorResponseDTO.setEmailStatus("Email sent successfully");
+        } catch (Exception e) {
+            collaboratorResponseDTO.setEmailStatus("Failed to send email");
+        }
+        collaboratorResponseDTO.setBoardName(null);
+        return ResponseEntity.status(HttpStatus.CREATED).body(collaboratorResponseDTO);
     }
 
     @PatchMapping("/collabs/{collabId}")

@@ -15,13 +15,11 @@ import sit.us1.backend.entities.taskboard.CollaborationId;
 import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.exceptions.ConflictException;
 import sit.us1.backend.exceptions.NotFoundException;
-import sit.us1.backend.exceptions.UnavailableException;
 import sit.us1.backend.repositories.account.UserRepository;
 import sit.us1.backend.repositories.taskboard.BoardRepository;
 import sit.us1.backend.repositories.taskboard.BoardUserRepository;
 import sit.us1.backend.repositories.taskboard.CollaborationRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,9 +36,6 @@ public class CollaborationService {
     private BoardRepository boardRepository;
     @Autowired
     private BoardUserRepository boardUserRepository;
-
-    @Autowired
-    private EmailService emailService;
     @Autowired
     private ListMapper listMapper;
     @Autowired
@@ -89,8 +84,7 @@ public class CollaborationService {
     @Transactional
     public CollaboratorResponseDTO addCollaborator(String id, SimpleCollaboratorDTO newCollab) {
         //Pessimistic Lock บล็อกการเข้าถึงจากคำขออื่น
-        Board board = boardRepository.findByIdWithLock(id)
-                .orElseThrow(() -> new NotFoundException("The specified board does not exist"));
+        Board board = boardRepository.findById(id).orElseThrow(() -> new NotFoundException("The specified board does not exist"));
         CollaboratorResponseDTO collaboratorResponseDTO = mapper.map(newCollab, CollaboratorResponseDTO.class);
 
         User user = userRepository.findByEmail(newCollab.getEmail());
@@ -126,18 +120,11 @@ public class CollaborationService {
             collaboratorResponseDTO.setName(user.getName());
             collaboratorResponseDTO.setIsPending(newCol.getIsPending());
             collaboratorResponseDTO.setAddedOn(newCol.getAddedOn());
-
+            collaboratorResponseDTO.setBoardName(board.getName());
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("User already exists");
         } catch (Exception e) {
             throw new BadRequestException(e.getMessage());
-        }
-
-        try {
-            emailService.sendInvitationEmail(SecurityUtil.getCurrentUserDetails().getName(), user.getEmail(), board.getName(), newCollab.getAccessRight(), id);
-            collaboratorResponseDTO.setEmailStatus("Email sent successfully");
-        } catch (Exception e) {
-            collaboratorResponseDTO.setEmailStatus("Failed to send email");
         }
 
         return collaboratorResponseDTO;
