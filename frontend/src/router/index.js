@@ -111,15 +111,15 @@ const cachedGetBoardsById = async (boardId) => {
     return boardStore.currentBoard;
   }
 
-  console.log("Fetching board by id:", boardId);
   const authToken = localStorage.getItem("authToken")
   const refresh_token = localStorage.getItem("refresh_token")
+  const graphToken = localStorage.getItem("graphAPI_token")
   let board;
   try{
-    if(!authToken && refresh_token){
+    if(!authToken && (refresh_token || userStore.isMicroSoftLogin)){
       await refreshTokenAndReturn()
     }
-    else if(refresh_token){
+    else if(refresh_token || userStore.isMicroSoftLogin){
       await isTokenValid(authToken);
     }
   }catch(error){
@@ -139,6 +139,7 @@ const cachedGetBoardsById = async (boardId) => {
 };
 
 router.beforeEach(async (to, from, next) => {
+  console.log('index')
   const userStore = useUserStore();
   const boardStore = useBoardStore();
   const boardId = to.params.boardId;
@@ -227,6 +228,7 @@ router.beforeEach(async (to, from, next) => {
 
         )
       ) {
+        console.log(userStore.authToken)
         return next({ 
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },

@@ -30,9 +30,11 @@ export function msalService() {
         "MSAL not initialized. Call initializeMsal() before using MSAL API."
       );
     }
-    msalInstance.logoutRedirect(loginRequest);
-   state.isAuthenticated = false;
+    state.isAuthenticated = false;
     state.user = null;
+    msalInstance.logoutRedirect({
+      postLogoutRedirectUri: "/",
+  });
   };
 
   const handleRedirect = async (router) => {
@@ -41,13 +43,14 @@ export function msalService() {
       const res = await msalInstance.handleRedirectPromise();
       state.isAuthenticated = msalInstance.getAllAccounts().length > 0;
       state.user = msalInstance.getAllAccounts()[0];
-      if (res) {
+      if (res && state.isAuthenticated) {
         console.log(res);
-        localStorage.setItem("authToken", res.accessToken);
-        userStore.setAuthToken(res.accessToken);
+        userStore.setAuthToken(res.idToken);
+        localStorage.setItem("graphAPI_token", res.accessToken);
         router.replace({ name: "board" });
       }
       if(!state.isAuthenticated){
+        console.log('handleRedirect');
         router.replace({ name: "Login" });
       }
     } catch (error) {
@@ -74,7 +77,7 @@ export function msalService() {
       const silentResponse = await msalInstance.acquireTokenSilent(
         silentRequest
       );
-      return silentResponse.accessToken;
+      return silentResponse;
     } catch (error) {
       console.error("Silent token acquisition error:", error);
     }

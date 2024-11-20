@@ -28,11 +28,13 @@ const countBoard = computed(() => {
   return boardStore.boards.length;
 });
 
-const handleLogout = () => {
+const handleLogout = async () => {
   if (userStore.isMicroSoftLogin === true){
+    userStore.isMicroSoftLogin = false;
     logout();
   }
   userStore.clearAuthToken();
+  router.push({ name: "Login" });
 };
 
 const initialize = async () => {
@@ -42,9 +44,9 @@ const initialize = async () => {
     console.log("Initialization error", error);
   }
 };
+
 onMounted(async () => {
 await initialize();
-await handleRedirect(router);
 });
 
 // onMounted(async () => {
@@ -282,8 +284,8 @@ const open = ref(true);
               <strong class="itbkk-fullname block font-medium">{{
                 userStore.authToken?.name || "Anonymous"
               }}</strong>
-
-              <span> {{ userStore.authToken?.email || "" }} </span>
+          
+              <span> {{ userStore.authToken?.email || userStore.authToken?.preferred_username || "" }} </span>
             </p>
           </div>
         </a>

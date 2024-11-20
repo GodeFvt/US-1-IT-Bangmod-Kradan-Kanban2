@@ -2,7 +2,10 @@ import VueJwtDecode from "vue-jwt-decode";
 import { refreshAccessToken } from "./fetchUtill.js";
 import { useUserStore } from "../stores/user.js";
 import { msalService } from "../config/useAuth.js";
+import { msalInstance, state } from "../config/msalConfig.js";
 
+
+const { login, handleRedirect, getToken } = msalService();
 function convertString(string) {
   return string
     ?.toLowerCase()
@@ -35,17 +38,29 @@ function validateSizeInput(...properties) {
     }
   });
 }
+const initialize = async () => {
+  try {
+    await msalInstance.initialize();
+    
+    return await getToken();
+  } catch (error) {
+    console.log("Initialization error", error);
+  }
+};
+
 
 async function refreshTokenAndReturn() {
   const userStore = useUserStore();
   if (userStore.isMicroSoftLogin) {
-    // ใช้ getToken เพื่อดึง Access Token ใหม่
-    if (newAccessToken) {
-      userStore.setAuthToken(newAccessToken.accessToken);
+    const res = await initialize();
+    if(res){
+    userStore.setAuthToken(res.idToken);
+      localStorage.setItem("graphAPI_token", res.accessToken);
       return true;
-    } else {
-      userStore.setAuthToken(null);
-      return false;
+    }
+    else{
+      userStore.clearAuthToken();
+      return false
     }
   }
   else{
@@ -65,14 +80,13 @@ async function isTokenValid(token) {
   let decodedToken;
   const userStore = useUserStore();
   const refresh_token = localStorage.getItem("refresh_token");
+  const graphToken = localStorage.getItem("graphAPI_token");
 
-  if (!token && userStore.isMicroSoftLogin) {
-    console.log('validateToken 1 ');
+  if ((!token || !graphToken) && userStore.isMicroSoftLogin) {
     return await refreshTokenAndReturn();
   }
   // Validate the token format
   if (!token && !refresh_token) {
-    console.log('validateToken 2 ');
     return false;
   }
   try {

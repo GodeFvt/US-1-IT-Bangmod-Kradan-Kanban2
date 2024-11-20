@@ -75,6 +75,7 @@ onMounted(async () => {
   }
 });
 
+
 const collabBoard = computed(() => {
   if (!userStore.authToken) return []; // ถ้า authToken เป็น null ให้คืนค่าเป็น array ว่าง เกิดปัญหา logout แล้วหาauthToken ไม่ได้
   return boardStore.boards.filter(

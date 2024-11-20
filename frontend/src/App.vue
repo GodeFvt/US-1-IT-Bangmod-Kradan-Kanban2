@@ -9,23 +9,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const disabledSideMenu = ref(false);
 
-watch(
-  () => route.path,
-  (newPath, oldPath) => {
-    if (newPath === "/login" || newPath === "/" || newPath === "/login/" ){
-        return;
-      }else{
-      userStore.initializeToken();
-    }
-  },
-  { immediate: true })
-
 onMounted(async () => {
-  await router.isReady(); // รอให้ router พร้อมก่อน ถ้าไม่ทำมันจะได้ค่าของ path อันก่อนหน้าเพราะ app.vue สร้างก่อน
-
-      if (route.path === "/login" || route.path === "/" || route.path === "/login/" ) {
-        return;
-      }
       userStore.initializeToken();
 });
 

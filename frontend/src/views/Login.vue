@@ -48,7 +48,6 @@ const initialize = async () => {
 onMounted(async () => {
   
   await initialize();
-
 await handleRedirect(router);
 
   // if(state.isAuthenticated === true && userStore.authToken === null){

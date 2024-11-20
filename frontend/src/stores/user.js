@@ -10,28 +10,53 @@ export const useUserStore = defineStore("userStore", {
 
   actions: {
     initializeToken() {
+      console.log('initial')
       const token = localStorage?.getItem("authToken");
       const refresh_Token = localStorage?.getItem("refresh_token");
-      if (token || refresh_Token) {
+      const keyMicrosoft = Object.keys(localStorage).some((key) =>
+        key.includes("login.windows.net")
+      );
+      
+
+      if (token || refresh_Token || keyMicrosoft) {
         try {
-          const decodedToken = VueJwtDecode.decode(token);
+          let decodedToken = null
+          if(token === null){
+            if(refresh_Token || keyMicrosoft){
+              this.authToken = decodedToken;
+               this.encodeToken = token;
+            }
+            else{
+              this.clearAuthToken();
+            }
+          }
+          else{
+             decodedToken = VueJwtDecode.decode(token);
           if (
             (decodedToken === "{}" ||
             decodedToken === null ||
-            decodedToken === undefined)&& !refresh_Token
+            decodedToken === undefined)&& (!refresh_Token || !keyMicrosoft)
           ) {
             this.clearAuthToken();
           } else {
             this.authToken = decodedToken;
             this.encodeToken = token;
-            if(this.authToken?.iss.includes("sts.windows.net")){
-              this.isMicroSoftLogin = true;
-            }
-            else{
-              this.isMicroSoftLogin = false;
-            }
+           
           }
-        } catch (error) {}
+          
+          }
+          
+          if(this?.authToken?.iss.includes("login.microsoftonline.com") || keyMicrosoft){
+            this.isMicroSoftLogin = true;
+          }
+          else{
+            this.isMicroSoftLogin = false;
+          }
+        } 
+        
+        catch (error) {
+          console.log('error',error);
+        }
       } else {
         this.clearAuthToken();
       }
@@ -46,6 +71,7 @@ export const useUserStore = defineStore("userStore", {
             decodedToken === null ||
             decodedToken === undefined
           ) {
+            console.log("clearStorage");
             this.clearAuthToken();
           } else {
             this.authToken = decodedToken;
@@ -54,15 +80,20 @@ export const useUserStore = defineStore("userStore", {
           localStorage.setItem("authToken", token);
         } catch (error) {}
       } else {
+        console.log("clearStorage 2");
         this.clearAuthToken();
       }
     },
     clearAuthToken() {
       this.authToken = null;
       this.encodeToken = null;
-      localStorage.clear();
-      sessionStorage.clear();
+      this.isMicroSoftLogin = false;
+    localStorage.clear();
     },
+    
+    updateIsMicrosoftLogin(boolean){
+      this.isMicroSoftLogin = boolean;
+    }
   },
 });
 if (import.meta.hot) {
