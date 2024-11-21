@@ -128,7 +128,7 @@ public class BoardAccessFilter extends OncePerRequestFilter {
         if (uriLength >= 6 && uriParts[4].equals("statuses") && !uriParts[5].equals("limit") && !uriParts[5].equals("all") && !statusService.isStatusExist(Integer.parseInt(uriParts[5]))) {
             throw new NotFoundException("Status not found");
         }
-        if (uriLength >= 6 && uriParts[4].equals("tasks") && !taskService.isTaskExist(Integer.parseInt(uriParts[5]))) {
+        if (uriLength >= 6 && uriParts[4].equals("tasks")&& !uriParts[5].equals("count") && !taskService.isTaskExist(Integer.parseInt(uriParts[5]))) {
             throw new NotFoundException("Task not found");
         }
     }
