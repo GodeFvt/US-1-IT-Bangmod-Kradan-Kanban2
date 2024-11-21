@@ -36,6 +36,11 @@ public class Collaboration {
     @JsonBackReference
     private Board board;
 
+    @ManyToOne
+    @JoinColumn(name = "oid", insertable = false, updatable = false)
+    @JsonBackReference
+    private BoardUser boardUser;
+
     public enum Access {
         READ, WRITE
     }

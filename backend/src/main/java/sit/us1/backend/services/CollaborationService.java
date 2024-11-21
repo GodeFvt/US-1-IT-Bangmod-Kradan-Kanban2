@@ -21,7 +21,10 @@ import sit.us1.backend.repositories.taskboard.BoardUserRepository;
 import sit.us1.backend.repositories.taskboard.CollaborationRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -56,28 +59,27 @@ public class CollaborationService {
 
     public List<CollaboratorResponseDTO> getCollaborator(String id) {
         List<Collaboration> collaborations = collaborationRepository.findAllByBoardIdOrderByAddedOn(id);
-//        List<SimpleCollaboratorDTO> simpleCollaboratorDTOS = new ArrayList<>();
-//        collaborations.forEach(collaboration -> {
-//            String oid = collaboration.getOid();
-//            Optional<User> user = userRepository.findById(oid);
-//            if (user.isEmpty()) {
-//                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn()));
-//            } else {
-//                simpleCollaboratorDTOS.add(new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn()));
-//            }
-//        });
-        return listMapper.mapList(collaborations, CollaboratorResponseDTO.class, mapper);
+        List<CollaboratorResponseDTO> collaboratorResponseDTOS = listMapper.mapList(collaborations, CollaboratorResponseDTO.class, mapper);
+
+        Map<String, CollaboratorResponseDTO> collaboratorMap = collaboratorResponseDTOS.stream()
+                .collect(Collectors.toMap(CollaboratorResponseDTO::getOid, Function.identity()));
+
+        collaborations.forEach(collaboration -> {
+            CollaboratorResponseDTO collaboratorResponseDTO = collaboratorMap.get(collaboration.getOid());
+            if (collaboratorResponseDTO != null) {
+                collaboratorResponseDTO.setName(collaboration.getBoardUser().getName());
+                collaboratorResponseDTO.setEmail(collaboration.getBoardUser().getEmail());
+            }
+        });
+
+        return collaboratorResponseDTOS;
     }
 
     public CollaboratorResponseDTO getCollaboratorById(String id, String oid) {
         Collaboration collaboration = collaborationRepository.findById(new CollaborationId(id, oid)).orElseThrow(() -> new NotFoundException("the specified collaborator does not exist"));
-//        Optional<User> user = userRepository.findById(collaboration.getOid());
-//        if (user.isEmpty()) {
-//            return new SimpleCollaboratorDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(),collaboration.getIsPending(), collaboration.getAddedOn());
-//            return new CollaboratorResponseDTO(oid, "Unknown", "Unknown", collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn(), null);
-//        }
-//        return new SimpleCollaboratorDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(),collaboration.getIsPending(), collaboration.getAddedOn());
-//        return new CollaboratorResponseDTO(oid, user.get().getName(), user.get().getEmail(), collaboration.getAccessRight().toString(), collaboration.getIsPending(), collaboration.getAddedOn(), null);
+        CollaboratorResponseDTO collaboratorResponseDTO = mapper.map(collaboration, CollaboratorResponseDTO.class);
+        collaboratorResponseDTO.setName(collaboration.getBoardUser().getName());
+        collaboratorResponseDTO.setEmail(collaboration.getBoardUser().getEmail());
         return mapper.map(collaboration, CollaboratorResponseDTO.class);
     }
 

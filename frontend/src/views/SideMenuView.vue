@@ -17,7 +17,7 @@ import {
 } from "../components/icon";
 import { msalInstance, state } from "../config/msalConfig.js";
 import { msalService } from "../config/useAuth.js";
-const { handleRedirect,logout } = msalService();
+const { handleRedirect, logout } = msalService();
 
 const userStore = useUserStore();
 const boardStore = useBoardStore();
@@ -29,8 +29,8 @@ const countBoard = computed(() => {
 });
 
 const handleLogout = async () => {
-  if (userStore.isMicroSoftLogin === true){
-    userStore.isMicroSoftLogin = false;
+  if (userStore.isMicroSoftLogin === "MS") {
+    userStore.isMicroSoftLogin = "Guest";
     logout();
   }
   userStore.clearAuthToken();
@@ -46,7 +46,7 @@ const initialize = async () => {
 };
 
 onMounted(async () => {
-await initialize();
+  await initialize();
 });
 
 // onMounted(async () => {
@@ -284,20 +284,25 @@ const open = ref(true);
               <strong class="itbkk-fullname block font-medium">{{
                 userStore.authToken?.name || "Anonymous"
               }}</strong>
-          
-              <span> {{ userStore.authToken?.email || userStore.authToken?.preferred_username || "" }} </span>
+
+              <span>
+                {{
+                  userStore.authToken?.email ||
+                  userStore.authToken?.preferred_username ||
+                  ""
+                }}
+              </span>
             </p>
           </div>
         </a>
       </transition>
       <transition name="text-fade">
         <div
-       @click="handleLogout"
+          @click="handleLogout"
           v-if="open"
           class="itbkk-sign-out w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full cursor-pointer"
         >
-          <span
-           class="cursor-pointer">
+          <span class="cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"

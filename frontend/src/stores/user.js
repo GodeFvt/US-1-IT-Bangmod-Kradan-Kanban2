@@ -5,57 +5,53 @@ export const useUserStore = defineStore("userStore", {
   state: () => ({
     authToken: null,
     encodeToken: localStorage.getItem("authToken") || null,
-    isMicroSoftLogin: false,
+    isMicroSoftLogin: "Guest",
   }),
 
   actions: {
     initializeToken() {
-      console.log('initial')
+      console.log("initial");
       const token = localStorage?.getItem("authToken");
       const refresh_Token = localStorage?.getItem("refresh_token");
       const keyMicrosoft = Object.keys(localStorage).some((key) =>
         key.includes("login.windows.net")
       );
-      
 
       if (token || refresh_Token || keyMicrosoft) {
         try {
-          let decodedToken = null
-          if(token === null){
-            if(refresh_Token || keyMicrosoft){
+          let decodedToken = null;
+          if (token === null) {
+            if (refresh_Token || keyMicrosoft) {
               this.authToken = decodedToken;
-               this.encodeToken = token;
-            }
-            else{
+              this.encodeToken = token;
+            } else {
               this.clearAuthToken();
             }
-          }
-          else{
-             decodedToken = VueJwtDecode.decode(token);
-          if (
-            (decodedToken === "{}" ||
-            decodedToken === null ||
-            decodedToken === undefined)&& (!refresh_Token || !keyMicrosoft)
-          ) {
-            this.clearAuthToken();
           } else {
-            this.authToken = decodedToken;
-            this.encodeToken = token;
-           
+            decodedToken = VueJwtDecode.decode(token);
+            if (
+              (decodedToken === "{}" ||
+                decodedToken === null ||
+                decodedToken === undefined) &&
+              (!refresh_Token || !keyMicrosoft)
+            ) {
+              this.clearAuthToken();
+            } else {
+              this.authToken = decodedToken;
+              this.encodeToken = token;
+            }
           }
-          
+
+          if (
+            this?.authToken?.iss.includes("login.microsoftonline.com") ||
+            keyMicrosoft
+          ) {
+            this.isMicroSoftLogin = "MS";
+          } else {
+            this.isMicroSoftLogin = "Guest";
           }
-          
-          if(this?.authToken?.iss.includes("login.microsoftonline.com") || keyMicrosoft){
-            this.isMicroSoftLogin = true;
-          }
-          else{
-            this.isMicroSoftLogin = false;
-          }
-        } 
-        
-        catch (error) {
-          console.log('error',error);
+        } catch (error) {
+          console.log("error", error);
         }
       } else {
         this.clearAuthToken();
@@ -87,13 +83,13 @@ export const useUserStore = defineStore("userStore", {
     clearAuthToken() {
       this.authToken = null;
       this.encodeToken = null;
-      this.isMicroSoftLogin = false;
-    localStorage.clear();
+      this.isMicroSoftLogin = 'Guest';
+      localStorage.clear();
     },
-    
-    updateIsMicrosoftLogin(boolean){
-      this.isMicroSoftLogin = boolean;
-    }
+
+    updateIsMicrosoftLogin(string) {
+      this.isMicroSoftLogin = string;
+    },
   },
 });
 if (import.meta.hot) {

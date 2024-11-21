@@ -56,6 +56,7 @@ function handleResponseError(responseCode) {
 }
 
 onMounted(async () => {
+  
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
