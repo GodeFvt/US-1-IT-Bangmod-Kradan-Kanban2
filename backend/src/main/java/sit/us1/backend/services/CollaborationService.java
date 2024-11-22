@@ -1,12 +1,18 @@
 package sit.us1.backend.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.*;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import sit.us1.backend.dtos.boardsDTO.CollaboratorResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
+import sit.us1.backend.entities.account.CustomUserDetails;
+import sit.us1.backend.entities.account.MsUser;
 import sit.us1.backend.entities.account.User;
 import sit.us1.backend.entities.taskboard.Board;
 import sit.us1.backend.entities.taskboard.BoardUser;
@@ -15,6 +21,7 @@ import sit.us1.backend.entities.taskboard.CollaborationId;
 import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.exceptions.ConflictException;
 import sit.us1.backend.exceptions.NotFoundException;
+import sit.us1.backend.exceptions.UnauthorizedException;
 import sit.us1.backend.repositories.account.UserRepository;
 import sit.us1.backend.repositories.taskboard.BoardRepository;
 import sit.us1.backend.repositories.taskboard.BoardUserRepository;
@@ -85,44 +92,54 @@ public class CollaborationService {
 
     @Transactional
     public CollaboratorResponseDTO addCollaborator(String id, SimpleCollaboratorDTO newCollab) {
-        //Pessimistic Lock บล็อกการเข้าถึงจากคำขออื่น
         Board board = boardRepository.findById(id).orElseThrow(() -> new NotFoundException("The specified board does not exist"));
         CollaboratorResponseDTO collaboratorResponseDTO = mapper.map(newCollab, CollaboratorResponseDTO.class);
+        MsUser msUser = null;
+        User ItBkkuser;
+        if (newCollab.getAccessToken() != null && !newCollab.getAccessToken().isEmpty()) {
+            msUser = getMsUserByEmail(newCollab.getEmail(), newCollab.getAccessToken());
+        }
 
-        User user = userRepository.findByEmail(newCollab.getEmail());
-        if (user == null) {
+        ItBkkuser = userRepository.findByEmail(newCollab.getEmail());
+
+        if (ItBkkuser == null && msUser == null) {
             throw new NotFoundException("The specified user does not exist");
         }
-        if (user.getOid().equals(SecurityUtil.getCurrentUserDetails().getOid())) {
+
+        collaboratorResponseDTO.setOid(ItBkkuser != null ? ItBkkuser.getOid() : msUser.getOid());
+        collaboratorResponseDTO.setName(ItBkkuser != null ?  ItBkkuser.getName(): msUser.getName());
+        collaboratorResponseDTO.setEmail(ItBkkuser != null ? ItBkkuser.getEmail() : msUser.getEmail() );
+
+        if (collaboratorResponseDTO.getOid().equals(SecurityUtil.getCurrentUserDetails().getOid())) {
             throw new ConflictException("Cannot add yourself as collaborator");
         }
 
-        if (collaborationRepository.existsById(new CollaborationId(id, user.getOid()))) {
+        if (collaborationRepository.existsById(new CollaborationId(id, collaboratorResponseDTO.getOid()))) {
             throw new ConflictException("User already exists");
         }
-
         try {
-            boardUserRepository.findById(user.getOid()).orElseGet(() -> {
-                BoardUser newUser = new BoardUser();
-                newUser.setId(user.getOid());
-                newUser.setUsername(user.getUsername());
-                newUser.setName(user.getName());
-                newUser.setEmail(user.getEmail());
-                return boardUserRepository.save(newUser);
-            });
+            Optional<BoardUser> boardUser = boardUserRepository.findById(collaboratorResponseDTO.getOid());
+
+            if (boardUser.isEmpty()) {
+                BoardUser newBoardUser = new BoardUser();
+                newBoardUser.setId(collaboratorResponseDTO.getOid());
+                newBoardUser.setName(collaboratorResponseDTO.getName());
+                newBoardUser.setUsername(ItBkkuser != null ? ItBkkuser.getUsername() : msUser.getName());
+                newBoardUser.setEmail(collaboratorResponseDTO.getEmail());
+                boardUserRepository.save(newBoardUser);
+            }
 
             Collaboration collaboration = new Collaboration();
             collaboration.setBoardId(id);
-            collaboration.setOid(user.getOid());
+            collaboration.setOid(collaboratorResponseDTO.getOid());
             collaboration.setAccessRight(newCollab.getAccessRight());
             collaboration.setIsPending(TRUE);
 
             Collaboration newCol = collaborationRepository.save(collaboration);
-            collaboratorResponseDTO.setOid(newCol.getOid());
-            collaboratorResponseDTO.setName(user.getName());
             collaboratorResponseDTO.setIsPending(newCol.getIsPending());
             collaboratorResponseDTO.setAddedOn(newCol.getAddedOn());
             collaboratorResponseDTO.setBoardName(board.getName());
+
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("User already exists");
         } catch (Exception e) {
@@ -196,6 +213,31 @@ public class CollaborationService {
             }
         } catch (Exception e) {
             throw new BadRequestException("Cannot accept collaborator");
+        }
+    }
+
+
+    private MsUser getMsUserByEmail(String email, String token) {
+        if (token == null || token.isEmpty()) {
+            return null;
+        }
+        try {
+            String graphApiUrl = "https://graph.microsoft.com/v1.0/users/" + email;
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+            HttpEntity<String> entity = new HttpEntity<>("", headers);
+            ResponseEntity<String> response = restTemplate.exchange(graphApiUrl, HttpMethod.GET, entity, String.class);
+            ObjectMapper mapper = new ObjectMapper();
+
+            Map<String, Object> map = mapper.readValue(response.getBody(), Map.class);
+            MsUser msUser = new MsUser();
+            msUser.setOid((String) map.get("id"));
+            msUser.setName((String) map.get("displayName"));
+            msUser.setEmail((String) map.get("mail"));
+            return msUser;
+        } catch (Exception e) {
+            return null;
         }
     }
 

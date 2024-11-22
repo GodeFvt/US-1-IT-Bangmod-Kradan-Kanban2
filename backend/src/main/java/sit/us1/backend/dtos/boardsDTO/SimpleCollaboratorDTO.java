@@ -25,6 +25,7 @@ public class SimpleCollaboratorDTO {
     private String accessRight;
     private Boolean isPending;
     private ZonedDateTime addedOn;
+    private String accessToken;
 
     public Collaboration.Access getAccessRight() {
         return Collaboration.Access.valueOf(this.accessRight.toUpperCase());
