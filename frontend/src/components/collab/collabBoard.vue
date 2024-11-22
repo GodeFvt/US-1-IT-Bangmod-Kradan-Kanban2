@@ -139,7 +139,11 @@ async function addCollaborator(collab) {
   } else {
     collab.email = collab.email.trim();
     collab.accessRight = collab.accessRight?.toUpperCase();
+    const graphApiToken = localStorage.getItem("graphAPI_token");
 
+    if(userStore.isMicroSoftLogin === 'MS'){
+      collab.accessToken = graphApiToken;
+    }
     boardStore.addCollab(collab);
     isShowAddCollab.value = false;
     const res = await addCollabs(boardId.value, collab);
