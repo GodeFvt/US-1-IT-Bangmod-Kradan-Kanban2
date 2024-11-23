@@ -132,6 +132,7 @@ async function addCollaborator(collab) {
     showPopUp.value = true;
     return;
   }
+
   if (collab.email === null || collab.email === "") {
     typeToast.value = "warning";
     messageToast.value = `Must enter the email.`;
@@ -143,7 +144,16 @@ async function addCollaborator(collab) {
 
     if(userStore.isMicroSoftLogin === 'MS'){
       collab.accessToken = graphApiToken;
+    }  
+
+let collabIndex = boardStore.collabs.findIndex((collaborator) => {
+        return collaborator.email === collab.email && collaborator.oid;
+      });   
+    if(collabIndex !== -1){
+      errorMSG.value = `The user "${collab.email}" is already the collaborator of this board.`;
+      return;
     }
+
     boardStore.addCollab(collab);
     isShowAddCollab.value = false;
     const res = await addCollabs(boardId.value, collab);
@@ -153,18 +163,17 @@ async function addCollaborator(collab) {
         messageToast.value = `We could not send e-mail to "${collab.email}", he/she can accept the invitation at 
          /board/${boardId.value}/collab/invitations`;
       } else {
-        console.log(res);
         typeToast.value = "success";
         messageToast.value = `Collaborator "${  res.email}" added successfully.`;
       }
-      const collabIndex = boardStore.collabs.findIndex((collaborator) => {
+       collabIndex = boardStore.collabs.findIndex((collaborator) => {
         return collaborator.email === collab.email && !collaborator.oid;
       });
       boardStore.updateCollabs(collabIndex, res);
       showToast.value = true;
 
-      removeCollabByEmail(collab)
-    } else if (res === 404) {
+    } 
+    else if (res === 404) {
       //The user "${collab.email}" does not exists. ที่ addModal
       typeToast.value = "danger";
       messageToast.value = `The user "${collab.email}" does not exists.`;
