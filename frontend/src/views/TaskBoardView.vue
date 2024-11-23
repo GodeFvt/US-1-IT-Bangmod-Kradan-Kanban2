@@ -84,7 +84,7 @@ const countStatus = computed(() => {
       statusStore.setNoOftask(accumulator);
       return accumulator;
     },
-    { "No Status": 0 ,"Done":0 }
+    { "No Status": 0, Done: 0 }
   );
 });
 
@@ -434,8 +434,6 @@ function ClickAdd() {
   };
 }
 
-
-
 async function addEditTask(newTask, file, fileName) {
   const indexToCheck = allTask.value.findIndex(
     (task) => task.id === newTask.id
@@ -573,16 +571,12 @@ async function removeTask(index, confirmDelete = false) {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-screen ">
-    <!-- <div class="h-[8%]">
-        <HeaderView class="h-full" />
-      </div> -->
+  <div class="flex flex-col w-full h-screen">
     <div class="flex flex-col items-center h-full gap-5 mt-2">
-      <!-- Task Status and Add Task Button -->
       <div
-        class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300 slide-right"
+        class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300 max-md:flex-col"
       >
-        <div class="m-[2px] flex sm:items-center items-end w-full">
+        <div class="m-[2px] flex sm:items-center items-end w-full my-2">
           <router-link :to="{ name: 'board' }">
             <button
               class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800"
@@ -603,7 +597,7 @@ async function removeTask(index, confirmDelete = false) {
               </svg>
             </button>
           </router-link>
-          <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold">
+          <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold ">
             {{
               boardStore.currentBoard.owner.id === userStore.authToken?.oid
                 ? boardStore.currentBoard.name + " Personal's Board"
@@ -612,174 +606,186 @@ async function removeTask(index, confirmDelete = false) {
           </div>
         </div>
         <!-- Filter -->
-        <div class="flex items-end w-full justify-end sm:mt-0 mt-5 mb-2">
-          <div class="flex flex-row items-center gap-1">
-            <div
-              class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2 disabled"
-              @click="
-                boardStore.currentBoard.owner.id === userStore.authToken?.oid
-                  ? (showVisibilityModal = true)
-                  : (showVisibilityModal = false)
-              "
-            >
-              <div
-                :class="
-                  boardStore.currentBoard.owner.id === userStore.authToken?.oid
-                    ? ''
-                    : 'tooltip tooltip-bottom tooltip-hover'
-                "
-                data-tip="You need to be board owner to perform this action"
-              >
-                <span class="font-bold visibility">
-                  {{ boardStore.visibilityPublic ? "Public" : "Private" }}</span
-                >
-                <Toggle
-                  :toggleActive="toggleVisibleActive"
-                  :class="
-                    boardStore.currentBoard.owner.id ===
-                    userStore.authToken?.oid
-                      ? 'cursor-pointer'
-                      : 'cursor-not-allowed'
-                  "
-                />
-              </div>
-            </div>
-
-            <div class="">
-              <router-link :to="{ name: 'AddTask' }">
-                <div
-                  :class="
-                    boardStore.isCanEdit
-                      ? ''
-                      : 'tooltip tooltip-bottom tooltip-hover'
-                  "
-                  data-tip="You need to be board owner or has write access to perform this action"
-                >
-                  <button
-                    class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                    :disabled="!boardStore.isCanEdit"
-                    :class="
-                      boardStore.isCanEdit
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
-                    "
-                  >
-                    Add Task
-                  </button>
-                </div>
-              </router-link>
-            </div>
-            <div class="">
-              <router-link :to="{ name: 'ManageCollab' }">
-                <div>
-                  <button
-                    class="itbkk-manage-collaborater bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                  >
-                    Manage Collabotater
-                  </button>
-                </div>
-              </router-link>
-            </div>
-
-            <!--DropDown-->
-            <div class="itbkk-status-filter dropdown dropdown-bottom">
-              <button
-                tabindex="0"
-                class="flex gap-1 justify-center items-center bg-gray-200 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-              >
-                Filter
-                <div
-                  v-if="statusFilter.length !== 0"
-                  class="bg-gray-500 rounded-lg px-[0.3rem] text-white"
-                >
-                  {{ statusFilter.length }}
-                </div>
-                <div
-                  class="itbkk-filter-clear cursor-pointer hover:text-red-400"
-                >
-                  <CloseIcon
-                    v-if="statusFilter.length !== 0"
-                    @click="statusFilter = []"
-                  />
-                </div>
-              </button>
-              <ul
-                tabindex="0"
-                class="dropdown-content flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] h-64 overflow-y-auto overflow-x-hidden"
-              >
-                <li
-                  v-for="status in statusStore.allStatus"
-                  :key="status.name"
-                  class="itbkk-filter-item p-2 hover:bg-gray-100 rounded-md"
-                >
-                  <label class="itbkk-status-choice flex items-center">
-                    <input
-                      type="checkbox"
-                      :value="status.name"
-                      v-model="statusFilter"
-                      class="itbkk-filter-item-clear checkbox"
-                    />
-                    <span class="ml-2 break-all">{{ status.name }}</span>
-                  </label>
-                </li>
-              </ul>
-            </div>
-            <!-- status setting -->
-            <div class="" @click="showSettingModal = true">
-              <button
-                class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
-              >
-                <SettingIcon />
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Task Table -->
-      <div
-        class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
-      >
-        <!-- Task Status Count -->
-        <div class="flex flex-row justify-between">
-          <div class="flex flex-row gap-[0.2rem] pr-1 drop-shadow-md">
-            <div class="">
-              <router-link :to="{ name: 'ManageStatus' }">
-                <button
-                  class="h-full cursor-pointer itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                >
-                  Manage Status
-                </button>
-              </router-link>
-            </div>
-            <div
-              v-for="(status, index) in Object.keys(countStatus)"
-              :key="status"
-              :class="{ 'slide-in': isVisible[index] }"
-              class="task-status-wrapper z-0 overflow-x-auto"
-            >
-              <TaskStatusCard :colorStatus="statusStore.getColorStatus(status)">
-                <template #count>{{ countStatus[status] }}</template>
-                <template #status>{{ status }}</template>
-              </TaskStatusCard>
-            </div>
-          </div>
-          <!-- <div class="cursor-pointer">
+      <div class="overflow-y-auto w-full overflow-x-hidden">
+        <div class="flex justify-center mb-10">
+          <div
+            class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+          >
+            <!-- Task Status Count -->
+            <div class="flex flex-wrap justify-between">
+              <div class="flex flex-row gap-[0.2rem] pr-1 drop-shadow-md">
+                <div class="flex flex-wrap">
+                  <div class="">
+                    <router-link :to="{ name: 'ManageStatus' }">
+                      <button
+                        class="h-full cursor-pointer itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                      >
+                        Manage Status
+                      </button>
+                    </router-link>
+                  </div>
+
+                  <div
+                    v-for="(status, index) in Object.keys(countStatus)"
+                    :key="status"
+                    :class="{ 'slide-in': isVisible[index] }"
+                    class="task-status-wrapper z-0"
+                  >
+                    <TaskStatusCard
+                      :colorStatus="statusStore.getColorStatus(status)"
+                    >
+                      <template #count>{{ countStatus[status] }}</template>
+                      <template #status>{{ status }}</template>
+                    </TaskStatusCard>
+                  </div>
+                </div>
+              </div>
+              <div class="flex sm:mt-0 mb-2">
+                <div class="flex flex-row items-end gap-1 flex-wrap mt-2">
+                  <div
+                    class="itbkk-board-visibility flex flex-col items-center cursor-pointer mr-2 disabled"
+                    @click="
+                      boardStore.currentBoard.owner.id ===
+                      userStore.authToken?.oid
+                        ? (showVisibilityModal = true)
+                        : (showVisibilityModal = false)
+                    "
+                  >
+                    <div
+                      :class="
+                        boardStore.currentBoard.owner.id ===
+                        userStore.authToken?.oid
+                          ? ''
+                          : 'tooltip tooltip-bottom tooltip-hover'
+                      "
+                      data-tip="You need to be board owner to perform this action"
+                    >
+                      <span class="font-bold visibility">
+                        {{
+                          boardStore.visibilityPublic ? "Public" : "Private"
+                        }}</span
+                      >
+                      <Toggle
+                        :toggleActive="toggleVisibleActive"
+                        :class="
+                          boardStore.currentBoard.owner.id ===
+                          userStore.authToken?.oid
+                            ? 'cursor-pointer'
+                            : 'cursor-not-allowed'
+                        "
+                      />
+                    </div>
+                  </div>
+
+                  <div class="">
+                    <router-link :to="{ name: 'AddTask' }">
+                      <div
+                        :class="
+                          boardStore.isCanEdit
+                            ? ''
+                            : 'tooltip tooltip-bottom tooltip-hover'
+                        "
+                        data-tip="You need to be board owner or has write access to perform this action"
+                      >
+                        <button
+                          class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                          :disabled="!boardStore.isCanEdit"
+                          :class="
+                            boardStore.isCanEdit
+                              ? 'cursor-pointer'
+                              : 'cursor-not-allowed disabled'
+                          "
+                        >
+                          Add Task
+                        </button>
+                      </div>
+                    </router-link>
+                  </div>
+                  <div class="">
+                    <router-link :to="{ name: 'ManageCollab' }">
+                      <div>
+                        <button
+                          class="itbkk-manage-collaborater bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                        >
+                          Manage Collabotater
+                        </button>
+                      </div>
+                    </router-link>
+                  </div>
+
+                  <!--DropDown-->
+                  <div class="itbkk-status-filter dropdown dropdown-bottom">
+                    <button
+                      tabindex="0"
+                      class="flex gap-1 justify-center items-center bg-gray-200 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                    >
+                      Filter
+                      <div
+                        v-if="statusFilter.length !== 0"
+                        class="bg-gray-500 rounded-lg px-[0.3rem] text-white"
+                      >
+                        {{ statusFilter.length }}
+                      </div>
+                      <div
+                        class="itbkk-filter-clear cursor-pointer hover:text-red-400"
+                      >
+                        <CloseIcon
+                          v-if="statusFilter.length !== 0"
+                          @click="statusFilter = []"
+                        />
+                      </div>
+                    </button>
+                    <ul
+                      tabindex="0"
+                      class="dropdown-content flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] h-64 overflow-y-auto overflow-x-hidden"
+                    >
+                      <li
+                        v-for="status in statusStore.allStatus"
+                        :key="status.name"
+                        class="itbkk-filter-item p-2 hover:bg-gray-100 rounded-md"
+                      >
+                        <label class="itbkk-status-choice flex items-center">
+                          <input
+                            type="checkbox"
+                            :value="status.name"
+                            v-model="statusFilter"
+                            class="itbkk-filter-item-clear checkbox"
+                          />
+                          <span class="ml-2 break-all">{{ status.name }}</span>
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
+                  <!-- status setting -->
+                  <div class="" @click="showSettingModal = true">
+                    <button
+                      class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
+                    >
+                      <SettingIcon />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <!-- <div class="cursor-pointer">
             <Themes @click="openChageThemes" />
           </div> -->
+            </div>
+
+            <TaskBoard
+              :statusFilter="statusFilter"
+              :allTask="taskStore.allTask"
+              :showErrorMSG="showErrorMSG"
+              :showLoading="showLoading"
+              :allTaskLimit="allTaskLimit"
+              @remove-task="removeTask"
+            >
+            </TaskBoard>
+          </div>
         </div>
-
-        <TaskBoard
-          :statusFilter="statusFilter"
-          :allTask="taskStore.allTask"
-          :showErrorMSG="showErrorMSG"
-          :showLoading="showLoading"
-          :allTaskLimit="allTaskLimit"
-          @remove-task="removeTask"
-        >
-        </TaskBoard>
       </div>
-
       <TaskDetail
         v-if="showDetail"
         @user-action="closeTask"
@@ -818,7 +824,6 @@ async function removeTask(index, confirmDelete = false) {
           </span>
         </template>
       </ConfirmModal>
-
 
       <ConfirmModal
         v-if="showSettingModal"

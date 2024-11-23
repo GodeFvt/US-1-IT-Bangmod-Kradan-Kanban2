@@ -18,7 +18,7 @@ import ConfirmModal from "../components/modal/ConfirmModal.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { isTokenValid } from "../lib/utill.js";
-import {useBoardStore} from "../stores/boards.js";
+import { useBoardStore } from "../stores/boards.js";
 
 const userStore = useUserStore();
 const boardStore = useBoardStore();
@@ -56,26 +56,22 @@ function handleResponseError(responseCode) {
 }
 
 onMounted(async () => {
-  
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
     // if (userStore.boards.length === 0) {
-      const resBoard = await getAllBoards();
-      if (resBoard === 401 || resBoard === 404) {
-        handleResponseError(resBoard);
-      } else { 
-        // personalBoard.value = [...resBoard.boards]
-        // collabBoard.value = [...resBoard.collab, ...resBoard.invited]
-        boardStore.setAllBoard(resBoard);
-     
-
-      }
+    const resBoard = await getAllBoards();
+    if (resBoard === 401 || resBoard === 404) {
+      handleResponseError(resBoard);
+    } else {
+      // personalBoard.value = [...resBoard.boards]
+      // collabBoard.value = [...resBoard.collab, ...resBoard.invited]
+      boardStore.setAllBoard(resBoard);
+    }
     //}
   }
 });
-
 
 const collabBoard = computed(() => {
   if (!userStore.authToken) return []; // ถ้า authToken เป็น null ให้คืนค่าเป็น array ว่าง เกิดปัญหา logout แล้วหาauthToken ไม่ได้
@@ -250,31 +246,31 @@ async function leaveBoard(boardId, confirmLeave = false) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
-  }  
+  }
   showLeaveModal.value = true;
   if (typeof boardId === "string") {
-      boardIdForDelete.value = boardId;
-      board.value = boardStore.boards.find((board) => board.id === boardId);  
-    }
+    boardIdForDelete.value = boardId;
+    board.value = boardStore.boards.find((board) => board.id === boardId);
+  }
   if (confirmLeave === true) {
-    const res = await deleteCollabs(boardIdForDelete.value, userStore.authToken.oid);
-      if (res === 200) {
-        typeToast.value = "success";
-        boardStore.deleteBoard(boardId);
-        messageToast.value = `You have left the board`;
-       
-      } else if (res === 401) {
-        handleResponseError(res);
-      } else {
-        typeToast.value = "warning";
-        messageToast.value = `An error has occurred, the board could not be left`;
-      }
-      showLeaveModal.value = false;
-      showToast.value = true;
+    const res = await deleteCollabs(
+      boardIdForDelete.value,
+      userStore.authToken.oid
+    );
+    if (res === 200) {
+      typeToast.value = "success";
+      boardStore.deleteBoard(boardId);
+      messageToast.value = `You have left the board`;
+    } else if (res === 401) {
+      handleResponseError(res);
+    } else {
+      typeToast.value = "warning";
+      messageToast.value = `An error has occurred, the board could not be left`;
     }
+    showLeaveModal.value = false;
+    showToast.value = true;
+  }
 }
-
-
 
 function openBoard(boardId) {
   router.push({ name: "task", params: { boardId: boardId } });
@@ -283,62 +279,63 @@ function openBoard(boardId) {
 function invitation(boardId) {
   router.push({ name: "Invitations", params: { boardId: boardId } });
 }
-
-
 </script>
 <template>
-  <div class="flex flex-col min-h-screen bg-background w-full">
-    <main class="flex-1 py-6">
-      <div class="container px-4 mx-auto">
-        <h2 class="slide-right mb-6 text-2xl font-bold">Your Boards</h2>
-        <div class="border-b border-gray-300 mb-12"></div>
-        <h2 class="itbkk-personal-board font-bold	text-2xl mb-6">Personal Board</h2>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <router-link :to="{ name: 'AddBoard' }">
-            <div
-              class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
+  <div class="flex flex-col w-full h-screen">
+    <div class="flex flex-col items-center h-full mt-2">
+      <div
+        class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
+      >
+        <h2 class="text-[1.5rem] mt-5 mb-2 font-bold">Your Boards</h2>
+      </div>
+      <div class="flex flex-col items-center h-full overflow-auto">
+        <div
+          class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+        >
+          <h2 class="itbkk-personal-board font-bold text-2xl mb-6">
+            Personal Board
+          </h2>
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <router-link :to="{ name: 'AddBoard' }">
+              <div
+                class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
+              >
+                <AddButton />
+                <h3 class="text-lg font-semibold mb-2 text-gray-400">
+                  Create New Board
+                </h3>
+              </div>
+            </router-link>
+            <!-- board card list -->
+            <boardCardList
+              :allBoard="personalBoard"
+              @removeBoard="removeBoard"
+              @openBoard="openBoard"
             >
-              <AddButton />
-              <h3 class="text-lg font-semibold mb-2 text-gray-400">
-                Create New Board
-              </h3>
-            </div>
-          </router-link>
-          <!-- board card list -->
-          <boardCardList
-            :allBoard="personalBoard"
-            @removeBoard="removeBoard"
-            @openBoard="openBoard"
-          >
-          </boardCardList>
-        </div>
+            </boardCardList>
+          </div>
 
-        <!-- Collab Board -->
-        <div class=" mb-12"></div>
-        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6" v-if="collabBoard?.length>0">Collab Board</h2>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <!-- <router-link :to="{ name: 'AddBoard' }">
-            <div
-              class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
-            >
-              <AddButton />
-              <h3 class="text-lg font-semibold mb-2 text-gray-400">
-                Add Collab Board
-              </h3>
-            </div>
-          </router-link> -->
-          <!-- board card list -->
-          <boardCardList
-            :allBoard="collabBoard"
-            boardType="collab"
-            @leaveBoard="leaveBoard"
-            @openBoard="openBoard"
-            @invitation="invitation"
+          <!-- Collab Board -->
+          <div class="mb-12"></div>
+          <h2
+            class="itbkk-collab-board font-bold text-2xl mb-6"
+            v-if="collabBoard?.length > 0"
           >
-          </boardCardList>
+            Collab Board
+          </h2>
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <boardCardList
+              :allBoard="collabBoard"
+              boardType="collab"
+              @leaveBoard="leaveBoard"
+              @openBoard="openBoard"
+              @invitation="invitation"
+            >
+            </boardCardList>
+          </div>
         </div>
       </div>
-    </main>
+    </div>
     <div
       v-if="showToast"
       class="fixed flex items-center w-full max-w-xs right-5 bottom-5"

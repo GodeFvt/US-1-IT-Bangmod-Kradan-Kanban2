@@ -490,12 +490,10 @@ async function clickRemove(index) {
 </script>
 <template>
   <div class="flex flex-col w-full h-screen">
-    <!-- <div class="h-[8%]">
-        <HeaderView class="h-full" />
-      </div> -->
-    <!-- Task Status and Add Task Button -->
     <div class="flex flex-col items-center h-full gap-5 mt-2">
-      <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
+      <div
+        class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
+      >
         <!-- Task Status Count -->
         <div class="m-[2px] flex sm:items-center items-end w-full">
           <router-link :to="{ name: 'task' }">
@@ -526,21 +524,8 @@ async function clickRemove(index) {
             }}
           </div>
         </div>
-        <!-- <div class="m-[2px] flex sm:items-center items-end">
-          <router-link :to="{ name: 'task' }">
-            <div
-              class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1"
-            >
-              Home
-            </div>
-          </router-link>
-          <div class="mx-2 text-slate-500">/</div>
-
-          <div class="text-gray-800 text-[1rem] font-bold">ManageStatus</div>
-        </div> -->
-
         <!-- Filter -->
-        <div class="flex items-end w-full justify-end">
+        <div class="flex items-end w-full justify-end mb-2">
           <div
             class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
           >

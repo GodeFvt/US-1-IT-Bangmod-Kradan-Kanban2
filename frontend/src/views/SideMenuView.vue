@@ -1,12 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { getAllBoards } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
 import { useBoardStore } from "../stores/boards.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { isTokenValid } from "../lib/utill.js";
-import Themes  from "../components/icon/Themes.vue";
+import Themes from "../components/icon/Themes.vue";
 import {
   HomeIcon,
   AccountSettingIcon,
@@ -51,33 +51,39 @@ onMounted(async () => {
   await initialize();
 });
 
-// onMounted(async () => {
-//   if (!(await isTokenValid(userStore.encodeToken))) {
-//     if(userStore.visibilityPublic === false){
-//     showPopUp.value = true;
-//     return
-//     }
-//   }
-// });
+
 const open = ref(true);
 const showChangeThemes = ref(false);
-const themeSelect = ref('');
+const themeSelect = ref("");
+const updateSidebarState = () => {
+  const screenWidth = window.innerWidth;
+  open.value = screenWidth >= 1000; 
+};
+
+onMounted(() => {
+  updateSidebarState(); 
+  window.addEventListener("resize", updateSidebarState); 
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateSidebarState); 
+});
 
 function openChageThemes() {
   // console.log("openChageThemes");
   showChangeThemes.value = true;
 }
-function changeTheme(useraction) { 
+function changeTheme(useraction) {
   console.log(localStorage.getItem("theme"));
 
   // console.log("openChageThemes");
   console.log(useraction);
   if (useraction) {
-     localStorage.setItem("theme", themeSelect.value);
-     userStore.setTheme(themeSelect.value)
-     console.log(userStore.theme);
-  } 
-  showChangeThemes.value = false
+    localStorage.setItem("theme", themeSelect.value);
+    userStore.setTheme(themeSelect.value);
+    console.log(userStore.theme);
+  }
+  showChangeThemes.value = false;
 }
 </script>
 
@@ -108,7 +114,9 @@ function changeTheme(useraction) {
               v-if="open"
               @click="open = !open"
             >
-              <SharpSortIcon class="text-white transform scale-x-[-1] cursor-pointer" />
+              <SharpSortIcon
+                class="text-white transform scale-x-[-1] cursor-pointer"
+              />
             </div>
           </transition>
 
@@ -208,26 +216,24 @@ function changeTheme(useraction) {
           >
             <transition name="fade">
               <summary
-         
                 :class="{
-                  'bg-gray-200 text-gray-700 ':'',
-                  'text-white hover:bg-gray-100 ':
-                    route.name !== 'task',
                   'px-4 py-2': open,
                 }"
                 @click="openChageThemes"
-                class="flex cursor-pointer items-center justify-between rounded-lg px-1 py-2 text-sm font-medium hover:text-gray-700 hover:fill-gray-700"
+                class="flex cursor-pointer items-center text-white hover:bg-gray-100 fill-slate-50 justify-between rounded-lg px-1 py-2 text-sm font-medium hover:text-gray-700 hover:fill-gray-700"
               >
-                <div class="flex items-center ">
+                <div class="flex items-center">
                   <Themes
                     class="size-5 duration-500 transition-all"
-                    :class="{ 'fill-slate-50 mr-2 mb-1 ': open, 'ml-[0.1rem] fill-gray-700 ': !open }"
+                    :class="{
+                      'mr-2 mb-1 ': open,
+                      'ml-[0.1rem] ': !open,
+                    }"
                   />
                   <transition name="text-fade">
                     <span v-if="open">Themes</span>
                   </transition>
                 </div>
-
               </summary>
             </transition>
           </details>
@@ -235,7 +241,7 @@ function changeTheme(useraction) {
 
         <li>
           <details
-            class="slide-right group [&_summary::-webkit-details-marker]:hidden  "
+            class="slide-right group [&_summary::-webkit-details-marker]:hidden"
             style="animation-delay: 0.6s"
             @click="open = true"
           >
@@ -248,7 +254,7 @@ function changeTheme(useraction) {
               >
                 <div class="flex items-center">
                   <AccountSettingIcon
-                    class="size-5"
+                    class="size-5 duration-500 transition-all"
                     :class="{ 'mr-2 mb-1': open, 'ml-[0.1rem]': !open }"
                   />
                   <transition name="text-fade">
@@ -374,62 +380,60 @@ function changeTheme(useraction) {
 
   <AuthzPopup v-if="showPopUp" />
 
-  <ConfirmModal
-        v-if="showChangeThemes"
-        @user-action="changeTheme"
-        class="z-50"
-      >
-        <template #header>
-          <div class="flex justify-center">
-            <h2 class="font-bold">Select your themes</h2>
+  <ConfirmModal v-if="showChangeThemes" @user-action="changeTheme" class="z-50">
+    <template #header>
+      <div class="flex justify-center">
+        <h2 class="font-bold">Select your themes</h2>
+      </div>
+    </template>
+    <template #body>
+      <div class="flex justify-center items-center bg-gray-100">
+        <div class="w-full max-w-4xl p-4 bg-white shadow-md rounded-md">
+          <!-- Grid Section -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Left Grid -->
+            <div class="bg-gray-100 p-4">
+              <img src="../../public/table.png" alt="table" />
+            </div>
+
+            <!-- Right Grid -->
+            <div class="grid grid-rows-2 gap-2">
+              <img src="../../public/card.png" alt="card" />
+            </div>
           </div>
-        </template>
-        <template #body>
-          <div class="flex justify-center items-center bg-gray-100">
-            <div class="w-full max-w-4xl p-4 bg-white shadow-md rounded-md">
-              <!-- Grid Section -->
-              <div class="grid grid-cols-2 gap-4">
-                <!-- Left Grid -->
-                <div class="bg-gray-100 p-4">
-                  <img src="../../public/table.png" alt="table" />
-                </div>
 
-                <!-- Right Grid -->
-                <div class="grid grid-rows-2 gap-2">
-                  <img src="../../public/card.png" alt="card" />
-                </div>
-              </div>
-
-              <!-- Score Line -->
-              <!-- <div class="mt-4">
+          <!-- Score Line -->
+          <!-- <div class="mt-4">
             <div class="border-b-2 border-black"></div>
         </div> -->
 
-              <!-- Radio buttons -->
-              <div class="flex justify-center space-x-4 mt-4">
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    name="option"
-                    value="table"
-                    class="h-6 w-6 form-radio text-blue-600" v-model="themeSelect"
-                    :checked="userStore.theme==='table' ? true : false"
-                  />
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    name="option"
-                    value="card"
-                    class="h-6 w-6 form-radio text-gray-300" v-model="themeSelect"
-                    :checked="userStore.theme==='card' ? true : false"
-                  />
-                </label>
-              </div>
-            </div>
+          <!-- Radio buttons -->
+          <div class="flex justify-center space-x-4 mt-4">
+            <label class="flex items-center">
+              <input
+                type="radio"
+                name="option"
+                value="table"
+                class="h-6 w-6 form-radio text-blue-600"
+                v-model="themeSelect"
+                :checked="userStore.theme === 'table' ? true : false"
+              />
+            </label>
+            <label class="flex items-center">
+              <input
+                type="radio"
+                name="option"
+                value="card"
+                class="h-6 w-6 form-radio text-gray-300"
+                v-model="themeSelect"
+                :checked="userStore.theme === 'card' ? true : false"
+              />
+            </label>
           </div>
-        </template>
-      </ConfirmModal>
+        </div>
+      </div>
+    </template>
+  </ConfirmModal>
 </template>
 
 <style scoped>
