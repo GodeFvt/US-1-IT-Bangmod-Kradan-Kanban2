@@ -6,6 +6,7 @@ export const useUserStore = defineStore("userStore", {
     authToken: null,
     encodeToken: localStorage.getItem("authToken") || null,
     isMicroSoftLogin: "Guest",
+    theme: localStorage.getItem("theme") || "table", 
   }),
 
   actions: {
@@ -90,6 +91,11 @@ export const useUserStore = defineStore("userStore", {
     updateIsMicrosoftLogin(string) {
       this.isMicroSoftLogin = string;
     },
+
+    setTheme(newTheme) {
+      this.theme = newTheme;
+    },
+
   },
 });
 if (import.meta.hot) {

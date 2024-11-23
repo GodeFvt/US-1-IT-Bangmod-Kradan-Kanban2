@@ -65,7 +65,6 @@ const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
 const showVisibilityModal = ref(false);
-const showChangeThemes = ref(false);
 // const authorizAccess = ref(false);
 
 const boardId = ref(route.params.boardId);
@@ -85,7 +84,7 @@ const countStatus = computed(() => {
       statusStore.setNoOftask(accumulator);
       return accumulator;
     },
-    { "No Status": 0 }
+    { "No Status": 0 ,"Done":0 }
   );
 });
 
@@ -435,10 +434,7 @@ function ClickAdd() {
   };
 }
 
-function openChageThemes() {
-  // console.log("openChageThemes");
-  showChangeThemes.value = true;
-}
+
 
 async function addEditTask(newTask, file, fileName) {
   const indexToCheck = allTask.value.findIndex(
@@ -577,7 +573,7 @@ async function removeTask(index, confirmDelete = false) {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-screen">
+  <div class="flex flex-col w-full h-screen ">
     <!-- <div class="h-[8%]">
         <HeaderView class="h-full" />
       </div> -->
@@ -768,9 +764,9 @@ async function removeTask(index, confirmDelete = false) {
               </TaskStatusCard>
             </div>
           </div>
-          <div class="cursor-pointer">
+          <!-- <div class="cursor-pointer">
             <Themes @click="openChageThemes" />
-          </div>
+          </div> -->
         </div>
 
         <TaskBoard
@@ -823,57 +819,6 @@ async function removeTask(index, confirmDelete = false) {
         </template>
       </ConfirmModal>
 
-      <ConfirmModal
-        v-if="showChangeThemes"
-        @user-action="showChangeThemes = false"
-      >
-        <template #header>
-          <div class="flex justify-center">
-            <h2 class="font-bold">Select your themes</h2>
-          </div>
-        </template>
-        <template #body>
-          <div class="flex justify-center items-center bg-gray-100">
-            <div class="w-full max-w-4xl p-4 bg-white shadow-md rounded-md">
-              <!-- Grid Section -->
-              <div class="grid grid-cols-2 gap-4">
-                <!-- Left Grid -->
-                <div class="bg-gray-100 p-4">
-                  <img src="../../public/table.png" alt="table" />
-                </div>
-
-                <!-- Right Grid -->
-                <div class="grid grid-rows-2 gap-2">
-                  <img src="../../public/card.png" alt="card" />
-                </div>
-              </div>
-
-              <!-- Score Line -->
-              <!-- <div class="mt-4">
-            <div class="border-b-2 border-black"></div>
-        </div> -->
-
-              <!-- Radio buttons -->
-              <div class="flex justify-center space-x-4 mt-4">
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    name="option"
-                    class="h-6 w-6 form-radio text-blue-600"
-                  />
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    name="option"
-                    class="h-6 w-6 form-radio text-gray-300"
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-        </template>
-      </ConfirmModal>
 
       <ConfirmModal
         v-if="showSettingModal"

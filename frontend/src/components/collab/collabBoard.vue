@@ -286,7 +286,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
             </div>
           </router-link>
 
-          <button
+          <div
             class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800 rotate-180"
           >
             <svg
@@ -303,7 +303,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-          </button>
+          </div>
           <div class="text-gray-900 text-[1.5rem] font-bold">Collaborater</div>
         </div>
         <!-- <div class="m-[2px] flex sm:items-center items-end">
@@ -535,7 +535,7 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                           </div>
                           <div
                             v-else
-                            class="bg-red-300 text-white px-2 py-1 rounded cursor-pointer"
+                            class="text-white px-2 py-1 rounded cursor-pointer"
                             @click="
                               (isChangeAccess = false),
                                 (usernameId = index),
@@ -551,8 +551,8 @@ async function changeAccessOrRemoveCollab(confirmValue = false) {
                             :class="
                               boardStore.currentBoard.owner.id ===
                               userStore.authToken?.oid
-                                ? 'cursor-pointer hover:bg-red-500'
-                                : 'cursor-not-allowed disabled hover:bg-rose-300'
+                                ? 'cursor-pointer bg-red-500'
+                                : 'cursor-not-allowed disabled bg-gray-300'
                             "
                           >
                             Cancel

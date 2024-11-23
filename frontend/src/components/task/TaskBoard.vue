@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from "vue";
 import MoreActionIcon from "../icon/MoreActionIcon.vue";
+import Action from "../Action.vue";
 import SortIcon from "../icon/SortIcon.vue";
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
@@ -157,13 +158,15 @@ onUnmounted(() => {
   window.addEventListener("resize", handleResize);
   handleResize();
 });
+
+console.log(userStore.theme === "table");
 </script>
 
 <template>
   <TaskTableLoading v-if="showLoading" class="w-full" />
   <div v-else class="w-full rounded-md shadow-xl">
     <!-- Table -->
-    <TaskTable :taskFiltered="taskFiltered">
+    <TaskTable :taskFiltered="taskFiltered" v-if="userStore.theme === 'table'">
       <template #sortStatus>
         <div class="itbkk-status-sort flex gap-1" @click="switchSortType">
           <span>Status</span>
@@ -220,11 +223,11 @@ onUnmounted(() => {
           <td
             class="w-[20%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3 text-center"
           >
-          
-           <span class="itbkk-attachments">{{  task.attachments === null || task.attachments?.length === 0
-                  ? "-"
-                  : task.attachments?.length }}</span>
-     
+            <span class="itbkk-attachments">{{
+              task.attachments === null || task.attachments?.length === 0
+                ? "-"
+                : task.attachments?.length
+            }}</span>
           </td>
 
           <td class="w-[10%] px-2 py-4 max-md:hidden break-all">
@@ -250,7 +253,7 @@ onUnmounted(() => {
             <div
               class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
             >
-              <div
+              <!-- <div
                 :class="
                   boardStore.isCanEdit
                     ? ''
@@ -277,7 +280,7 @@ onUnmounted(() => {
                   />
                 </div>
               </div>
-              <div
+               <div
                 :class="
                   boardStore.isCanEdit
                     ? ''
@@ -303,7 +306,11 @@ onUnmounted(() => {
                     "
                   />
                 </div>
-              </div>
+              </div>  -->
+              <Action
+                @edit="editTask(task.id)"
+                @remove="$emit('removeTask', index)"
+              ></Action>
             </div>
           </td>
         </tr>
@@ -330,15 +337,16 @@ onUnmounted(() => {
           </span>
         </div>
       </template>
-    </TaskTable>   
-
-    <!-- <TaskCard>
+    </TaskTable>
+    <!-- <div v-else> noop</div> -->
+    <TaskCard v-else>
       <template #eachStatus>
         <div
-          class="w-[319px] h-[38rem] flex flex-col  overflow-y-auto overflow-x-hidden gap-5 border border-orange-700 p-3"
+          class="w-[319px] h-[38rem] flex flex-col overflow-y-auto overflow-x-hidden gap-5 border border-orange-700 p-3"
           v-for="status in statusStore.allStatus"
         >
           {{ status.name }}
+
           <div
             v-for="(task, index) in taskFiltered.filter(
               (e) => e.status.name === status.name
@@ -349,91 +357,72 @@ onUnmounted(() => {
               { 'background-color': statusStore.getColorStatus(status.name) },
             ]"
           >
-            <div class="bg-slate-50 rounded-lg p-4">
-              {{ task.title }}
-              <div>
-                <span
-                  class="itbkk-assignees"
-                  :class="
-                    task.assignees === null || task.assignees?.length === 0
-                      ? 'italic text-gray-600'
-                      : ''
-                  "
-                >
-                  {{
-                    task.assignees === null || task.assignees?.length === 0
-                      ? "Unassigned"
-                      : task.assignees
-                  }}</span
-                >
-              </div>
-              <div class="action">
-                <div
-                  class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
-                >
-                  <div
+           
+              <div class="bg-slate-50 rounded-lg p-4">
+                <p class="font-medium">{{ task.title }}</p>
+                <div>
+                  <span
+                    class="itbkk-assignees"
                     :class="
-                      userStore.isCanEdit
-                        ? ''
-                        : 'tooltip tooltip-bottom tooltip-hover'
+                      task.assignees === null || task.assignees?.length === 0
+                        ? 'italic text-gray-600'
+                        : ''
                     "
-                    data-tip="You need to be board owner to perform this action."
                   >
-                    <div
-                      class="itbkk-button-edit"
-                      :class="
-                        userStore.isCanEdit
-                          ? 'cursor-pointer'
-                          : 'cursor-not-allowed disabled'
-                      "
-                      @click="editTask(task.id)"
-                    >
-                      <EditIcon
-                        class="fill-zinc-500"
-                        :class="
-                          userStore.isCanEdit
-                            ? ' hover:fill-zinc-700'
-                            : ' hover:fill-zinc-500'
-                        "
-                      />
-                    </div>
-                  </div>
+                    {{
+                      task.assignees === null || task.assignees?.length === 0
+                        ? "Unassigned"
+                        : task.assignees
+                    }}</span
+                  >
+                </div>
+                <div class="action justify-self-end">
                   <div
-                    :class="
-                      userStore.isCanEdit
-                        ? ''
-                        : 'tooltip tooltip-bottom tooltip-hover'
-                    "
-                    data-tip="You need to be board owner to perform this action."
+                    class="itbkk-button-action flex flex-row gap-2 max-sm:flex-col "
                   >
-                    <div
-                      class="itbkk-button-delete"
-                      @click="$emit('removeTask', index)"
-                      :class="
-                        userStore.isCanEdit
-                          ? 'cursor-pointer'
-                          : 'cursor-not-allowed disabled'
-                      "
+                  <router-link
+              :to="{ name: 'TaskDetail', params: { taskId: task.id } }"
+            >       <div class="rotate-90">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="25"
+                      height="25"
+                      viewBox="0 0 1024 1024"
                     >
-                      <DeleteIcon
-                        class="fill-rose-300"
-                        :class="
-                          userStore.isCanEdit
-                            ? ' hover:fill-rose-400'
-                            : ' hover:fill-rose-300'
-                        "
+                      <path
+                        fill="currentColor"
+                        d="M1014.64 969.04L703.71 656.207c57.952-69.408 
+                        92.88-158.704 92.88-256.208c0-220.912-179.088-400-400-400s-400 
+                        179.088-400 400s179.088 400 400 400c100.368 0 192.048-37.056 
+                        262.288-98.144l310.496 312.448c12.496 12.497 32.769 
+                        12.497 45.265 0c12.48-12.496 12.48-32.752 0-45.263zM396.59 
+                        736.527c-185.856 0-336.528-150.672-336.528-336.528S210.734 
+                        63.471 396.59 63.471s336.528 150.672 336.528 336.528S582.446
+                        736.527 396.59 736.527"
                       />
-                    </div>
+                    
+                    </svg></div></router-link>
+                    <Action
+                      @edit="editTask(task.id)"
+                      @remove="$emit('removeTask', index)"
+                    ></Action>
                   </div>
                 </div>
               </div>
-            </div>
+            
           </div>
         </div>
       </template>
-    </TaskCard> -->
+    </TaskCard>
   </div>
   <AuthzPopup v-if="showPopUp" />
 </template>
 
-<style scoped></style>
+<style scoped>
+/* .router .action {
+  pointer-events: auto; 
+}
+.router {
+  pointer-events: none;
+} */
+</style>

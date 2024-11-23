@@ -7,34 +7,34 @@ const timeCount = ref(3);
 let intervals = [];
 const TaskNotFound = ref(route.params.page);
 onMounted(() => {
-  // intervals.push(
-  //   setTimeout(() => {
-  //     if (TaskNotFound.value === "Status") {
-  //       console.log("Status");
-  //       router.push({ name: "ManageStatus" });
-  //     } else if (TaskNotFound.value === "Board") {
-  //       router.push({ name: "Login" });
-  //     } else if (TaskNotFound.value === "authorizAccess") {
-  //       console.log("authorizAccess");
-  //       router.push({ name: "Login" });
-  //     } else if (TaskNotFound.value === "Task") {
-  //       console.log("Task");
-  //       router.push({
-  //         name: "task",
-  //         params: { boardId: route.params.boardId },
-  //       });
-  //     } else {
-  //       router.push({
-  //         name: "board",
-  //       });
-  //     }
-  //   }, 3000)
-  // );
-  // intervals.push(
-  //   setInterval(() => {
-  //     timeCount.value--;
-  //   }, 1000)
-  // );
+  intervals.push(
+    setTimeout(() => {
+      if (TaskNotFound.value === "Status") {
+        console.log("Status");
+        router.push({ name: "ManageStatus" });
+      } else if (TaskNotFound.value === "Board") {
+        router.push({ name: "Login" });
+      } else if (TaskNotFound.value === "authorizAccess") {
+        console.log("authorizAccess");
+        router.push({ name: "Login" });
+      } else if (TaskNotFound.value === "Task") {
+        console.log("Task");
+        router.push({
+          name: "task",
+          params: { boardId: route.params.boardId },
+        });
+      } else {
+        router.push({
+          name: "board",
+        });
+      }
+    }, 3000)
+  );
+  intervals.push(
+    setInterval(() => {
+      timeCount.value--;
+    }, 1000)
+  );
 });
 
 onUnmounted(() => {

@@ -3,7 +3,7 @@ import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { useBoardStore } from "../../stores/boards.js";
 import { useRoute, useRouter } from "vue-router";
-
+import  Action  from "../Action.vue";
 import { ref, watch } from "vue";
 import EditIcon from "../icon/EditIcon.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
@@ -143,7 +143,7 @@ function editStatus(id, name) {
               v-if="status.name !== 'No Status' && status.name !== 'Done'"
               class="flex flex-row gap-4 max-sm:flex-col"
             >
-              <div
+              <!-- <div
                 :class="
                   boardStore.isCanEdit ? '' : 'tooltip tooltip-top tooltip-hover'
                 "
@@ -191,7 +191,9 @@ function editStatus(id, name) {
                     "
                   />
                 </div>
-              </div>
+              </div> -->
+              <Action @edit="editStatus(status.id, status.name)" @remove="$emit('removeStatus', index)"></Action>
+
             </div>
           </td>
         </tr>
