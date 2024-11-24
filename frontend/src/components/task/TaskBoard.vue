@@ -164,9 +164,10 @@ console.log(userStore.theme === "table");
 
 <template>
   <TaskTableLoading v-if="showLoading" class="w-full" />
-  <div v-else class="w-full rounded-md shadow-xl">
+  <div v-else class="w-full rounded-md">
     <!-- Table -->
-    <TaskTable :taskFiltered="taskFiltered" v-if="userStore.theme === 'table'">
+    <div v-if="userStore.theme === 'table'" class="shadow-xl">
+    <TaskTable :taskFiltered="taskFiltered" >
       <template #sortStatus>
         <div class="itbkk-status-sort flex gap-1" @click="switchSortType">
           <span>Status</span>
@@ -338,24 +339,33 @@ console.log(userStore.theme === "table");
         </div>
       </template>
     </TaskTable>
+  </div>
     <!-- <div v-else> noop</div> -->
-    <TaskCard v-else>
+    <div v-else class="card">
+    <TaskCard>
       <template #eachStatus>
         <div
-          class="w-[319px] h-[38rem] flex flex-col overflow-y-auto overflow-x-hidden gap-5 border border-orange-700 p-3"
+          class= "w-[319px] h-[38rem] flex flex-col  border-t-[5px] bg-gray-100 rounded-lg shadow-md shrink-0	  
+          snap-always snap-center
+          "
+
           v-for="status in statusStore.allStatus"
+          :style="[
+              { 'border-color': statusStore.getColorStatus(status.name) },]"
         >
-          {{ status.name }}
+        
+          <div class=" font-medium bg-white min-h-min pb-2  pt-2 text-center border-b-2"    
+          ><p>{{ status.name }}</p></div>
+
+        <div class=" scroll-ml-4	 hover:overflow-y-auto  lg:overflow-y-auto
+        2xl:overflow-y-hidden overflow-x-hidden touch-auto gap-3 p-4 flex flex-col ">
 
           <div
             v-for="(task, index) in taskFiltered.filter(
               (e) => e.status.name === status.name
             )"
-            class="border-8 rounded-lg p-0"
-            :style="[
-              { 'border-color': statusStore.getColorStatus(status.name) },
-              { 'background-color': statusStore.getColorStatus(status.name) },
-            ]"
+            class="rounded-lg p-0	drop-shadow-md"
+            
           >
            
               <div class="bg-slate-50 rounded-lg p-4">
@@ -410,19 +420,34 @@ console.log(userStore.theme === "table");
                 </div>
               </div>
             
+            </div>
           </div>
         </div>
       </template>
     </TaskCard>
   </div>
+  </div>
   <AuthzPopup v-if="showPopUp" />
 </template>
 
 <style scoped>
-/* .router .action {
-  pointer-events: auto; 
+/* .card::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: #0d0d0d;
 }
-.router {
-  pointer-events: none;
+
+.card::-webkit-scrollbar {
+  width: 10px;
+  background-color: #0d0d0d;
+}
+
+.card::-webkit-scrollbar-thumb {
+  background-color: #bfbfbfe1;
+}
+
+.card::-webkit-scrollbar-thumb:active {
+  border-radius: 5px;
+  background-color: #f1f0f0;
 } */
+
 </style>

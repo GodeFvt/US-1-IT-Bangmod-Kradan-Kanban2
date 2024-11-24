@@ -663,7 +663,7 @@ async function removeTask(index, confirmDelete = false) {
                       "
                       data-tip="You need to be board owner to perform this action"
                     >
-                      <span class="font-bold visibility">
+                      <span class="font-bold visibility cursor-default mb-4" @click.stop>
                         {{
                           boardStore.visibilityPublic ? "Public" : "Private"
                         }}</span
