@@ -45,4 +45,6 @@ public interface TaskListRepository extends JpaRepository<TaskList, Integer> {
     Optional<TaskList> findByBoardIdAndId(String boardID, Integer id);
 
     List<TaskList> findAllByBoard_Id(String boardID);
+
+    boolean existsByBoardIdAndId(String boardID, Integer id);
 }

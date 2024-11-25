@@ -40,4 +40,5 @@ public interface TaskStatusRepository extends JpaRepository<TaskStatus, Integer>
 
     Optional<TaskStatus> findByIdAndBoardIdIsNull(Integer id);
 
+    boolean existsByBoardIdAndId (String boardId, Integer id);
 }

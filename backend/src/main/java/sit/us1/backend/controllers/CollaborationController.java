@@ -57,7 +57,7 @@ public class CollaborationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(collaboratorResponseDTO);
     }
 
-    @PatchMapping("/collabs/{collabId}")
+    @PatchMapping("/collabs/{collabId}" )
     public ResponseEntity<CollaboratorResponseDTO> updateCollaborator(@PathVariable String boardId, @PathVariable String collabId, @Validated({ValidationGroups.OnUpdate.class, Default.class}) @RequestBody SimpleCollaboratorDTO collab) {
         return ResponseEntity.ok(collabService.updateCollaborator(boardId, collabId, collab));
     }

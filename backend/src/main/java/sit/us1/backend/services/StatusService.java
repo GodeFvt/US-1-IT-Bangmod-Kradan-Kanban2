@@ -43,8 +43,8 @@ public class StatusService {
     @Value("${non-editable-statuses}")
     private String[] nonEditableStatuses;
 
-    public boolean isStatusExist(Integer statusId) {
-        return statusRepository.existsById(statusId);
+    public boolean isStatusExist(String boardId, Integer statusId) {
+        return statusRepository.existsByBoardIdAndId(boardId,statusId);
     }
 
     public List<SimpleStatusDTO> getAllStatus(String boardId) {
@@ -96,7 +96,6 @@ public class StatusService {
             throw validationException;
         }
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-//        TaskStatus oldStatus = statusRepository.findById(id).orElseThrow(() -> new BadRequestException("the specified status does not exist"));
         TaskStatus oldStatus = getStatus(boardId, id);
         if (Arrays.asList(nonEditableStatuses).contains(oldStatus.getName())) {
             throw new BadRequestException("This status " + oldStatus.getName() + " cannot be updated");
@@ -148,8 +147,6 @@ public class StatusService {
 
     @Transactional
     public SimpleStatusDTO deleteStatus(String boardId, Integer id) {
-//        Board board = boardRepository.findById(boardId).orElseThrow(() -> new NotFoundException("Board not found: " + boardId));
-//        TaskStatus status = statusRepository.findByBoardIdAndId(boardId,id).orElseThrow(() -> new NotFoundException("the specified status does not exist"));
         TaskStatus oldStatus = getStatus(boardId, id);
         StatusCountDTO statusCount = taskRepository.countByStatusIdAndReturnName(boardId, id);
         if (Arrays.asList(nonEditableStatuses).contains(oldStatus.getName())) {
