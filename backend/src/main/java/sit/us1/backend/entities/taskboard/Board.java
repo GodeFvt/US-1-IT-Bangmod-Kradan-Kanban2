@@ -1,5 +1,6 @@
 package sit.us1.backend.entities.taskboard;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -34,8 +35,8 @@ public class Board {
     @OneToMany(mappedBy = "board" , fetch = FetchType.EAGER)
     private List<TaskList> taskList;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "board" , fetch = FetchType.EAGER)
-    @JsonManagedReference
     private List<Collaboration> collaborators;
 
     @Column(name = "createdOn",updatable = false, insertable = false)

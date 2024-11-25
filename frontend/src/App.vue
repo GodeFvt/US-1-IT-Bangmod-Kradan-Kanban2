@@ -1,21 +1,33 @@
 <script setup>
-import { ref, watch, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useUserStore } from "./stores/user.js"; 
+import { ref, watch, onMounted, nextTick } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useUserStore } from "./stores/user.js";
 import SideMenuView from "./views/SideMenuView.vue";
 
 const route = useRoute();
+const router = useRouter();
 const userStore = useUserStore();
 const disabledSideMenu = ref(false);
-
-onMounted(() => {
-  userStore.initializeToken();
-});
 
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    if (newPath === "/login" || newPath === "/login/" || newPath === "/" || newPath.includes("TaskNotFound") || route.name === "404" || newPath.includes("invitation")  ) {
+    userStore.initializeToken();
+  },
+  { immediate: true }
+);
+
+watch(
+  () => route.path,
+  (newPath, oldPath) => {
+    if (
+      newPath === "/login" ||
+      newPath === "/login/" ||
+      newPath === "/" ||
+      newPath.includes("TaskNotFound") ||
+      route.name === "404" ||
+      newPath.includes("invitation")
+    ) {
       disabledSideMenu.value = true;
     } else {
       disabledSideMenu.value = false;

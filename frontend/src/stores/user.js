@@ -5,30 +5,54 @@ export const useUserStore = defineStore("userStore", {
   state: () => ({
     authToken: null,
     encodeToken: localStorage.getItem("authToken") || null,
-    boards: [],
-    visibilityPublic: false, //true คือ public
-    isCanEdit: true,
-    currentBoard: {},
+    isMicroSoftLogin: "Guest",
+    theme: localStorage.getItem("theme") || "table",
   }),
 
   actions: {
     initializeToken() {
-      const token = localStorage.getItem("authToken");
-      const refresh_Token = localStorage.getItem("refresh_token");
-      if (token || refresh_Token) {
+      const token = localStorage?.getItem("authToken");
+      const refresh_Token = localStorage?.getItem("refresh_token");
+      const keyMicrosoft = Object.keys(localStorage).some((key) =>
+        key.includes("login.windows.net")
+      );
+
+      if (token || refresh_Token || keyMicrosoft) {
         try {
-          const decodedToken = VueJwtDecode.decode(token);
-          if (
-            (decodedToken === "{}" ||
-            decodedToken === null ||
-            decodedToken === undefined)&& !refresh_Token
-          ) {
-            this.clearAuthToken();
+          let decodedToken = null;
+          if (token === null) {
+            if (refresh_Token || keyMicrosoft) {
+              this.authToken = decodedToken;
+              this.encodeToken = token;
+            } else {
+              this.clearAuthToken();
+            }
           } else {
-            this.authToken = decodedToken;
-            this.encodeToken = token;
+            decodedToken = VueJwtDecode.decode(token);
+            if (
+              (decodedToken === "{}" ||
+                decodedToken === null ||
+                decodedToken === undefined) &&
+              (!refresh_Token || !keyMicrosoft)
+            ) {
+              this.clearAuthToken();
+            } else {
+              this.authToken = decodedToken;
+              this.encodeToken = token;
+            }
           }
-        } catch (error) {}
+
+          if (
+            this?.authToken?.iss.includes("login.microsoftonline.com") ||
+            keyMicrosoft
+          ) {
+            this.isMicroSoftLogin = "MS";
+          } else {
+            this.isMicroSoftLogin = "Guest";
+          }
+        } catch (error) {
+          console.log("error", error);
+        }
       } else {
         this.clearAuthToken();
       }
@@ -57,39 +81,17 @@ export const useUserStore = defineStore("userStore", {
     clearAuthToken() {
       this.authToken = null;
       this.encodeToken = null;
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refresh_token");
+      this.isMicroSoftLogin = "Guest";
+      localStorage.clear();
     },
-    addBoard(board) {
-      this.boards.push(board);
+
+    updateIsMicrosoftLogin(string) {
+      this.isMicroSoftLogin = string;
     },
-    editBoard(index, board) {
-      this.boards[index] = { ...board };
+
+    setTheme(newTheme) {
+      this.theme = newTheme;
     },
-    deleteBoard(index) {
-      this.boards.splice(index, 1);
-    },
-    setAllBoard(newAllBoard) {
-      this.boards = [...newAllBoard.boards, ...newAllBoard.collab , ...newAllBoard.invited]; //invited เดี๋ยวเอาออกเพื่อความง่ายในการ dev
-    },
-    clearBoards() {
-      this.boards = [];
-    },
-    findBoardById(id) {
-      return this.boards.find((board) => board.id === id);
-    },
-    updatevIsibilityPublic(Boolean) {
-      this.visibilityPublic = Boolean;
-    },
-    updatevIsCanEdit(Boolean) {
-      this.isCanEdit = Boolean;
-    },
-    setCurrentBoard(board) {
-      this.currentBoard = { ...board };
-    },
-    setIsVisibilityCurrentBoard(visibility) {
-      this.currentBoard.visibility = visibility
-    } ,
   },
 });
 if (import.meta.hot) {

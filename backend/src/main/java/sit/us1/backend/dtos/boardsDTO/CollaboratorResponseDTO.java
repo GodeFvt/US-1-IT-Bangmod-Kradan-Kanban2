@@ -21,4 +21,5 @@ public class CollaboratorResponseDTO {
     private Boolean isPending;
     private ZonedDateTime addedOn;
     private String emailStatus;
+    private String boardName;
 }

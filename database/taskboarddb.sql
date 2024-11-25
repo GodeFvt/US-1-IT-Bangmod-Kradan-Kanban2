@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `taskboard`.`users` (
   `oid` VARCHAR(40) NOT NULL,
   `username` VARCHAR(50) NOT NULL,
   `name` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(150) NOT NULL,
   PRIMARY KEY (`oid`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;

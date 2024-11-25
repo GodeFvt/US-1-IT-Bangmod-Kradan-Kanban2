@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { getAllBoards } from "../lib/fetchUtill.js";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/user.js";
+import { useBoardStore } from "../stores/boards.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { isTokenValid } from "../lib/utill.js";
+import Themes from "../components/icon/Themes.vue";
 import {
   HomeIcon,
   AccountSettingIcon,
@@ -14,31 +16,68 @@ import {
   SharpSortIcon,
   BoardIcon,
 } from "../components/icon";
+import { msalInstance, state } from "../config/msalConfig.js";
+import { msalService } from "../config/useAuth.js";
+import ConfirmModal from "../components/modal/ConfirmModal.vue";
+const { handleRedirect, logout } = msalService();
 
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const route = useRoute();
 const router = useRouter();
 const showPopUp = ref(false);
 const countBoard = computed(() => {
-  return userStore.boards.length;
+  return boardStore.boards.length;
 });
 
-function signOut() {
+const handleLogout = async () => {
+  if (userStore.isMicroSoftLogin === "MS") {
+    userStore.isMicroSoftLogin = "Guest";
+    logout();
+  }
   userStore.clearAuthToken();
-  // userStore.updateIsAuthen(false);
-
   router.push({ name: "Login" });
-}
+};
 
-// onMounted(async () => {
-//   if (!(await isTokenValid(userStore.encodeToken))) {
-//     if(userStore.visibilityPublic === false){
-//     showPopUp.value = true;
-//     return
-//     }
-//   }
-// });
+const initialize = async () => {
+  try {
+    await msalInstance.initialize();
+  } catch (error) {
+    console.log("Initialization error", error);
+  }
+};
+
+onMounted(async () => {
+  await initialize();
+});
+
 const open = ref(true);
+const showChangeThemes = ref(false);
+const themeSelect = ref("");
+const updateSidebarState = () => {
+  const screenWidth = window.innerWidth;
+  open.value = screenWidth >= 1000;
+};
+
+onMounted(() => {
+  updateSidebarState();
+  window.addEventListener("resize", updateSidebarState);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateSidebarState);
+});
+
+function openChageThemes() {
+  showChangeThemes.value = true;
+}
+function changeTheme(useraction) {
+  if (useraction) {
+    localStorage.setItem("theme", themeSelect.value);
+    userStore.setTheme(themeSelect.value);
+  }
+  showChangeThemes.value = false;
+}
 </script>
 
 <template>
@@ -46,11 +85,6 @@ const open = ref(true);
     class="flex relative h-screen flex-col justify-between border-e bg-gray-800 border-r border-gray-500 duration-500"
     :class="{ 'w-[17rem]': open, 'w-[4rem]': !open }"
   >
-    <!-- <QuillIcon
-      class="bg-white rounded-full absolute -right-3 top-[7%] border border-gray-800 cursor-pointer duration-500"
-      :class="{ 'rotate-180 ': !open }"
-      @click="open = !open"
-    /> -->
     <div class="px-4 h-full">
       <div class="flex h-[9%] items-center py-3 border-b border-gray-100">
         <div class="flex h-full w-full justify-between items-center">
@@ -68,7 +102,9 @@ const open = ref(true);
               v-if="open"
               @click="open = !open"
             >
-              <SharpSortIcon class="text-white transform scale-x-[-1]" />
+              <SharpSortIcon
+                class="text-white transform scale-x-[-1] cursor-pointer"
+              />
             </div>
           </transition>
 
@@ -78,7 +114,7 @@ const open = ref(true);
               v-if="!open"
               @click="open = !open"
             >
-              <SharpMenuIcon class="text-white" />
+              <SharpMenuIcon class="text-white cursor-pointer" />
             </div>
           </transition>
         </div>
@@ -143,7 +179,7 @@ const open = ref(true);
               </summary>
             </transition>
             <ul class="mt-2 space-y-1 px-4" v-if="open">
-              <li v-for="board in userStore.boards" :key="board.id">
+              <li v-for="board in boardStore.boards" :key="board.id">
                 <router-link
                   :to="{ name: 'task', params: { boardId: board.id } }"
                   :class="{
@@ -158,6 +194,36 @@ const open = ref(true);
                 </router-link>
               </li>
             </ul>
+          </details>
+        </li>
+        <li>
+          <details
+            class="slide-right group [&_summary::-webkit-details-marker]:hidden"
+            style="animation-delay: 0.2s"
+            @click="open = true"
+          >
+            <transition name="fade">
+              <summary
+                :class="{
+                  'px-4 py-2': open,
+                }"
+                @click="openChageThemes"
+                class="flex cursor-pointer items-center text-white hover:bg-gray-100 fill-slate-50 justify-between rounded-lg px-1 py-2 text-sm font-medium hover:text-gray-700 hover:fill-gray-700"
+              >
+                <div class="flex items-center">
+                  <Themes
+                    class="size-5 duration-500 transition-all"
+                    :class="{
+                      'mr-2 mb-1 ': open,
+                      'ml-[0.1rem] ': !open,
+                    }"
+                  />
+                  <transition name="text-fade">
+                    <span v-if="open">Themes</span>
+                  </transition>
+                </div>
+              </summary>
+            </transition>
           </details>
         </li>
 
@@ -176,7 +242,7 @@ const open = ref(true);
               >
                 <div class="flex items-center">
                   <AccountSettingIcon
-                    class="size-5"
+                    class="size-5 duration-500 transition-all"
                     :class="{ 'mr-2 mb-1': open, 'ml-[0.1rem]': !open }"
                   />
                   <transition name="text-fade">
@@ -219,10 +285,10 @@ const open = ref(true);
                       type="submit"
                       class="flex items-center w-full rounded-lg px-4 py-2 text-sm font-medium [text-align:_inherit] hover:bg-gray-100 hover:text-gray-700 text-red-500"
                     >
-                      <span @click="signOut" class="cursor-pointer w-full">
+                      <span @click="handleLogout" class="cursor-pointer w-full">
                         Logout</span
                       >
-                      <span @click="signOut" class="cursor-pointer w-[5%]">
+                      <span @click="handleLogout" class="cursor-pointer w-[5%]">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="14"
@@ -266,17 +332,24 @@ const open = ref(true);
                 userStore.authToken?.name || "Anonymous"
               }}</strong>
 
-              <span> {{ userStore.authToken?.email || "" }} </span>
+              <span>
+                {{
+                  userStore.authToken?.email ||
+                  userStore.authToken?.preferred_username ||
+                  ""
+                }}
+              </span>
             </p>
           </div>
         </a>
       </transition>
       <transition name="text-fade">
         <div
+          @click="handleLogout"
           v-if="open"
-          class="itbkk-sign-out w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full"
+          class="itbkk-sign-out w-[15%] flex justify-center items-center bg-gray-800 p-4 hover:bg-gray-700 h-full cursor-pointer"
         >
-          <span @click="signOut" class="cursor-pointer">
+          <span class="cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"
@@ -294,6 +367,45 @@ const open = ref(true);
   </div>
 
   <AuthzPopup v-if="showPopUp" />
+
+  <ConfirmModal v-if="showChangeThemes" @user-action="changeTheme" class="z-50">
+    <template #header>
+      <div class="flex justify-center">
+        <h2 class="font-bold">Select your themes TaskList</h2>
+      </div>
+    </template>
+    <template #body>
+      <div class="flex justify-center items-center bg-gray-100">
+        <div class="bg-gray-100 p-4">
+          <label class="flex-col gap-1 flex items-center justify-center">
+            <img src="../../public/table.png" alt="table" />
+
+            <input
+              type="radio"
+              name="option"
+              value="table"
+              class="h-6 w-6 form-radio text-blue-600"
+              v-model="themeSelect"
+              :checked="userStore.theme === 'table' ? true : false"
+            />
+          </label>
+        </div>
+        <div class="bg-gray-100 p-4">
+          <label class="flex-col gap-1 flex items-center justify-center">
+            <img src="../../public/card.png" alt="card" />
+            <input
+              type="radio"
+              name="option"
+              value="card"
+              class="h-6 w-6 form-radio text-gray-300"
+              v-model="themeSelect"
+              :checked="userStore.theme === 'card' ? true : false"
+            />
+          </label>
+        </div>
+      </div>
+    </template>
+  </ConfirmModal>
 </template>
 
 <style scoped>

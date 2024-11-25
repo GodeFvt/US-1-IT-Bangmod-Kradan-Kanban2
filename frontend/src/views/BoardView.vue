@@ -18,13 +18,12 @@ import ConfirmModal from "../components/modal/ConfirmModal.vue";
 import AlertSquareIcon from "../components/icon/AlertSquareIcon.vue";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { isTokenValid } from "../lib/utill.js";
-import {useBoardStore} from "../stores/boards.js";
+import { useBoardStore } from "../stores/boards.js";
 
 const userStore = useUserStore();
 const boardStore = useBoardStore();
 const router = useRouter();
 const route = useRoute();
-
 const board = ref({});
 const typeToast = ref("");
 const messageToast = ref("");
@@ -33,13 +32,11 @@ const boardIdForDelete = ref("");
 //show component
 const showPopUp = ref(false);
 const showBoardModal = ref(false);
+const showLoading = ref(false);
 const isEdit = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
 const showLeaveModal = ref(false);
-// console.log(userStore.authToken.name);
-// const personalBoard = ref([]);
-// const collabBoard = ref([]);
 
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
@@ -60,31 +57,27 @@ onMounted(async () => {
     showPopUp.value = true;
     return;
   } else {
-    // if (userStore.boards.length === 0) {
-      const resBoard = await getAllBoards();
-      if (resBoard === 401 || resBoard === 404) {
-        handleResponseError(resBoard);
-      } else { 
-        // personalBoard.value = [...resBoard.boards]
-        // collabBoard.value = [...resBoard.collab, ...resBoard.invited]
-        userStore.setAllBoard(resBoard);
-     
-
-      }
-    //}
+    showLoading.value = true;
+    const resBoard = await getAllBoards();
+    showLoading.value = false;
+    if (resBoard === 401 || resBoard === 404) {
+      handleResponseError(resBoard);
+    } else {
+      boardStore.setAllBoard(resBoard);
+    }
   }
 });
 
 const collabBoard = computed(() => {
   if (!userStore.authToken) return []; // ถ้า authToken เป็น null ให้คืนค่าเป็น array ว่าง เกิดปัญหา logout แล้วหาauthToken ไม่ได้
-  return userStore.boards.filter(
+  return boardStore.boards.filter(
     (board) => board.owner.id !== userStore.authToken.oid
   );
 });
 
 const personalBoard = computed(() => {
   if (!userStore.authToken) return [];
-  return userStore.boards.filter(
+  return boardStore.boards.filter(
     (board) => board.owner.id === userStore.authToken.oid
   );
 });
@@ -92,11 +85,6 @@ const personalBoard = computed(() => {
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    // if (oldPath === "/login") {
-
-    // }
-    // else {fetchData();
-    // }
     if (newPath === "/board/add") {
       ClickAdd();
     }
@@ -117,8 +105,7 @@ watch(
           handleResponseError(res);
         } else {
           if (route.path === `/board/${newId}/edit`) {
-            console.log("edit eiei");
-            board.value = userStore.boards.find((board) => board.id === newId);
+            board.value = boardStore.boards.find((board) => board.id === newId);
 
             showBoardModal.value = true;
             isEdit.value = true;
@@ -137,7 +124,6 @@ function ClickAdd() {
   // showLoading.value = false;
   isEdit.value = true;
   showBoardModal.value = true;
-  console.log(board.value);
   board.value = {
     name: "",
     description: "",
@@ -145,13 +131,11 @@ function ClickAdd() {
 }
 
 async function addEditBoard(newBoard) {
-  const indexToCheck = userStore.boards.findIndex(
+  const indexToCheck = boardStore.boards.findIndex(
     (board) => board.id === newBoard.id
   );
-  console.log(newBoard);
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
     await editBoard(board.value.id, newBoard);
-    console.log("edit");
   } else {
     await addBoard(newBoard);
   }
@@ -178,7 +162,7 @@ async function addBoard(newBoard) {
       } else {
         // if res.status = 200
         typeToast.value = "success";
-        userStore.addBoard(res);
+        boardStore.addBoard(res);
         messageToast.value = `The board has been added`;
       }
       showToast.value = true;
@@ -199,10 +183,10 @@ async function editBoard(boardId, editedBoard) {
       handleResponseError(res);
     } else {
       typeToast.value = "success";
-      const indexToUpdate = userStore.boards.findIndex(
+      const indexToUpdate = boardStore.boards.findIndex(
         (board) => board.id === editedBoard.id
       );
-      userStore.editBoard(indexToUpdate, res);
+      boardStore.editBoard(indexToUpdate, res);
       messageToast.value = `The board has been updated`;
     }
     showToast.value = true;
@@ -220,10 +204,9 @@ async function removeBoard(boardId, confirmDelete = false) {
     return;
   } else {
     showDeleteModal.value = true;
-    console.log(typeof boardId);
     if (typeof boardId === "string") {
       boardIdForDelete.value = boardId;
-      board.value = userStore.boards.find((board) => board.id === boardId);
+      board.value = boardStore.boards.find((board) => board.id === boardId);
     }
     if (confirmDelete) {
       const res = await deleteBoard(boardIdForDelete.value);
@@ -235,7 +218,7 @@ async function removeBoard(boardId, confirmDelete = false) {
       } else {
         // if res.status = 200
         typeToast.value = "success";
-        userStore.deleteBoard(boardId);
+        boardStore.deleteBoard(boardId);
         messageToast.value = `The board has been deleted`;
       }
       showDeleteModal.value = false;
@@ -248,31 +231,31 @@ async function leaveBoard(boardId, confirmLeave = false) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
-  }  
+  }
   showLeaveModal.value = true;
   if (typeof boardId === "string") {
-      boardIdForDelete.value = boardId;
-      board.value = userStore.boards.find((board) => board.id === boardId);  
-    }
+    boardIdForDelete.value = boardId;
+    board.value = boardStore.boards.find((board) => board.id === boardId);
+  }
   if (confirmLeave === true) {
-    const res = await deleteCollabs(boardIdForDelete.value, userStore.authToken.oid);
-      if (res === 200) {
-        typeToast.value = "success";
-        userStore.deleteBoard(boardId);
-        messageToast.value = `You have left the board`;
-       
-      } else if (res === 401) {
-        handleResponseError(res);
-      } else {
-        typeToast.value = "warning";
-        messageToast.value = `An error has occurred, the board could not be left`;
-      }
-      showLeaveModal.value = false;
-      showToast.value = true;
+    const res = await deleteCollabs(
+      boardIdForDelete.value,
+      userStore.authToken.oid
+    );
+    if (res === 200) {
+      typeToast.value = "success";
+      boardStore.deleteBoard(boardId);
+      messageToast.value = `You have left the board`;
+    } else if (res === 401) {
+      handleResponseError(res);
+    } else {
+      typeToast.value = "warning";
+      messageToast.value = `An error has occurred, the board could not be left`;
     }
+    showLeaveModal.value = false;
+    showToast.value = true;
+  }
 }
-
-
 
 function openBoard(boardId) {
   router.push({ name: "task", params: { boardId: boardId } });
@@ -281,62 +264,69 @@ function openBoard(boardId) {
 function invitation(boardId) {
   router.push({ name: "Invitations", params: { boardId: boardId } });
 }
-
-
 </script>
 <template>
-  <div class="flex flex-col min-h-screen bg-background w-full">
-    <main class="flex-1 py-6">
-      <div class="container px-4 mx-auto">
-        <h2 class="slide-right mb-6 text-2xl font-bold">Your Boards</h2>
-        <div class="border-b border-gray-300 mb-12"></div>
-        <h2 class="itbkk-personal-board font-bold	text-2xl mb-6">Personal Board</h2>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <router-link :to="{ name: 'AddBoard' }">
-            <div
-              class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
+  <div class="flex flex-col w-full h-screen">
+    <div class="flex flex-col items-center h-full mt-2">
+      <div
+        class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
+      >
+        <h2
+          class="text-[1.5rem] m-[2px] my-2 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+        >
+          Your Boards
+        </h2>
+      </div>
+      <div class="flex flex-col items-center h-full w-full overflow-auto">
+        <div
+          class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+        >
+          <h2 class="itbkk-personal-board font-bold text-2xl mb-6">
+            Personal Board
+          </h2>
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <router-link :to="{ name: 'AddBoard' }">
+              <div
+                class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
+              >
+                <AddButton />
+                <h3 class="text-lg font-semibold mb-2 text-gray-400">
+                  Create New Board
+                </h3>
+              </div>
+            </router-link>
+            <!-- board card list -->
+            <boardCardList
+              :allBoard="personalBoard"
+              :showLoading="showLoading"
+              @removeBoard="removeBoard"
+              @openBoard="openBoard"
             >
-              <AddButton />
-              <h3 class="text-lg font-semibold mb-2 text-gray-400">
-                Create New Board
-              </h3>
-            </div>
-          </router-link>
-          <!-- board card list -->
-          <boardCardList
-            :allBoard="personalBoard"
-            @removeBoard="removeBoard"
-            @openBoard="openBoard"
-          >
-          </boardCardList>
-        </div>
+            </boardCardList>
+          </div>
 
-        <!-- Collab Board -->
-        <div class=" mb-12"></div>
-        <h2 class="itbkk-collab-board font-bold	text-2xl mb-6" v-if="collabBoard?.length>0">Collab Board</h2>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <!-- <router-link :to="{ name: 'AddBoard' }">
-            <div
-              class="itbkk-button-create cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 text-card-foreground shadow-sm transition-shadow hover:shadow-md p-6 flex flex-col items-center justify-center h-full relative"
-            >
-              <AddButton />
-              <h3 class="text-lg font-semibold mb-2 text-gray-400">
-                Add Collab Board
-              </h3>
-            </div>
-          </router-link> -->
-          <!-- board card list -->
-          <boardCardList
-            :allBoard="collabBoard"
-            boardType="collab"
-            @leaveBoard="leaveBoard"
-            @openBoard="openBoard"
-            @invitation="invitation"
+          <!-- Collab Board -->
+          <div class="mb-12"></div>
+          <h2
+            class="itbkk-collab-board font-bold text-2xl mb-6"
+            
           >
-          </boardCardList>
+            Collab Board
+          </h2>
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <boardCardList
+              :allBoard="collabBoard"
+              boardType="collab"
+              :showLoading="showLoading"
+              @leaveBoard="leaveBoard"
+              @openBoard="openBoard"
+              @invitation="invitation"
+            >
+            </boardCardList>
+          </div>
         </div>
       </div>
-    </main>
+    </div>
     <div
       v-if="showToast"
       class="fixed flex items-center w-full max-w-xs right-5 bottom-5"
@@ -365,7 +355,7 @@ function invitation(boardId) {
     @user-action="showDeleteModal = false"
     @confirm="removeBoard"
     :index="
-      userStore.boards.findIndex((board) => board.id === boardIdForDelete)
+      boardStore.boards.findIndex((board) => board.id === boardIdForDelete)
     "
     class="z-50"
     width="w-[42vh]"
@@ -390,7 +380,7 @@ function invitation(boardId) {
     @user-action="showLeaveModal = false"
     @confirm="leaveBoard"
     :index="
-      userStore.boards.findIndex((board) => board.id === boardIdForDelete)
+      boardStore.boards.findIndex((board) => board.id === boardIdForDelete)
     "
     class="z-50"
     width="w-[42vh]"

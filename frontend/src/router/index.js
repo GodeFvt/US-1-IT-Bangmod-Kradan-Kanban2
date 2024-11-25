@@ -5,9 +5,10 @@ import TaskStatusView from "../views/TaskStatusView.vue";
 import BoardView from "../views/BoardView.vue";
 import Login from "../views/Login.vue";
 import { useUserStore } from "../stores/user.js";
+import {useBoardStore } from "../stores/boards.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
-import ManageCollab from "../views/ManageCollab.vue"
+import ManageCollabView from "../views/ManageCollab.vue"
 import Invitations from "../views/Invitations.vue"
 const routes = [
   {
@@ -86,8 +87,8 @@ const routes = [
   },
   {
     path: "/board/:boardId/collab",
-    name: "ManageCollab",
-    component: ManageCollab,
+    name: "ManageCollabView",
+    component: ManageCollabView,
   },
   {
     path: "/board/:boardId/collab/invitations",
@@ -103,21 +104,22 @@ const router = createRouter({
 
 const cachedGetBoardsById = async (boardId) => {
   const userStore = useUserStore();
+  const boardStore = useBoardStore();
   if (!boardId) return null;
 
-  if (userStore.currentBoard?.id === boardId) {
-    return userStore.currentBoard;
+  if (boardStore.currentBoard?.id === boardId) {
+    return boardStore.currentBoard;
   }
 
-  console.log("Fetching board by id:", boardId);
   const authToken = localStorage.getItem("authToken")
   const refresh_token = localStorage.getItem("refresh_token")
+  const graphToken = localStorage.getItem("graphAPI_token")
   let board;
   try{
-    if(!authToken && refresh_token){
+    if(!authToken && (refresh_token || userStore.isMicroSoftLogin)){
       await refreshTokenAndReturn()
     }
-    else if(refresh_token){
+    else if(refresh_token || userStore.isMicroSoftLogin){
       await isTokenValid(authToken);
     }
   }catch(error){
@@ -128,20 +130,20 @@ const cachedGetBoardsById = async (boardId) => {
   
 
   if (board === 401 || board === 403 || board === 404) {
-    console.log(`Error: ${board}`);
     return board;
   } else {
-    userStore.setCurrentBoard(board);
+    boardStore.setCurrentBoard(board);
     return board;
   }
 };
 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
+  const boardStore = useBoardStore();
   const boardId = to.params.boardId;
 
   // ถ้าไปที่หน้า Login และมี token อยู่แล้ว ให้ไปที่หน้า board
-  if (to.name === "Login" && userStore.authToken !== null) {
+  if (to.name === "Login" && userStore.encodeToken !== null) {
     return next({ name: "board" });
   }
 
@@ -161,20 +163,11 @@ router.beforeEach(async (to, from, next) => {
       "AddStatus",
       "TaskDetail",
       "StatusDetail",
-      "ManageCollab",
+      "ManageCollabView",
      
     ].includes(to.name)
   ) {
     const board = await cachedGetBoardsById(boardId);
-    
-    // if (
-    //   userStore.authToken == null &&
-    //   board === 404 &&
-    //   !["task", "ManageStatus", "TaskDetail", "StatusDetail"].includes(to.name)
-    // ) {
-    //   next();
-    // }
-
     if (board === 404 || board === 400 || board === 500) {
       return next({ name: "TaskNotFound", params: { boardId, page: "Board" } });
     }
@@ -191,13 +184,13 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (typeof board === "object") {
-      userStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
+      boardStore.updatevIsibilityPublic(board.visibility === "PUBLIC");
       const oidByGet = board.owner.id;
       const oidByToken = userStore.authToken?.oid;
       const collaBorator = board.collaborators.find(c => c.oid === userStore.authToken?.oid);
-      userStore.setCurrentBoard(board);
-      userStore.updatevIsCanEdit(
-        isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet,collaBorator)
+      boardStore.setCurrentBoard(board);
+      boardStore.updatevIsCanEdit(
+        isNotDisable(boardStore.visibilityPublic, oidByToken, oidByGet,collaBorator)
       );
 
       const isOwner = userStore.authToken?.oid === board.owner.id;
@@ -208,7 +201,8 @@ router.beforeEach(async (to, from, next) => {
         "AddStatus",
       ].includes(to.name);
 
-      if (board.visibility === "PUBLIC" && !isOwner && ((collaBorator?.accessRight !== "WRITE" && !isOwner) && isEditAction && collaBorator?.isPending === true) ) {
+        //ไม่ใช่ทั้ง owner และ collaborator และไม่ได้เป็น write หรือมี pending และเข้าไปใน edit actionให้ 403
+      if (board.visibility === "PUBLIC" && ((collaBorator?.accessRight !== "WRITE" || collaBorator?.isPending === true) && !isOwner) && isEditAction) {
         return next({
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },

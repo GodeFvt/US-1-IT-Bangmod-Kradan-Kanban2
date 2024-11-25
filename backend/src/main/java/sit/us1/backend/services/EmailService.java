@@ -8,11 +8,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import sit.us1.backend.entities.taskboard.Collaboration;
 
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,8 +30,8 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendInvitationEmail(String inviterName, String recipientEmail, String boardName, Collaboration.Access access, String boardId) throws MessagingException, IOException {
-        String subject = inviterName + " has invited you to collaborate with " + access.toString() + " access right on board " + boardName;
+    public void sendInvitationEmail(String inviterName, String recipientEmail, String boardName, String access, String boardId) throws MessagingException, IOException {
+        String subject = inviterName + " has invited you to collaborate with " + access + " access right on board " + boardName;
         String invitationLink = "https://" + hostName  + "/us1/board/" + boardId + "/collab/invitations";
 
         // โหลดไฟล์ HTML template
@@ -43,7 +41,7 @@ public class EmailService {
         // แทนที่ตัวแปรใน HTML template
         content = content.replace("{{inviterName}}", inviterName)
                 .replace("{{boardName}}", boardName)
-                .replace("{{access}}", access.toString())
+                .replace("{{access}}", access)
                 .replace("{{invitationLink}}", invitationLink);
 
         // สร้างและส่งอีเมล
@@ -57,7 +55,6 @@ public class EmailService {
         helper.setText(content, true);
 
         mailSender.send(message);
-
 
     }
 

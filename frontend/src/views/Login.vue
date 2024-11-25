@@ -1,6 +1,7 @@
 <script setup>
 import { loginAccount } from "../lib/fetchUtill.js";
 import { useUserStore } from "../stores/user.js";
+import { useBoardStore } from "../stores/boards.js";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import SettingIcon from "../components/icon/SettingIcon.vue";
@@ -8,12 +9,16 @@ import TaskStatusCard from "../components/status/TaskStatusCard.vue";
 import HeaderView from "./HeaderView.vue";
 import { getAllBoards } from "../lib/fetchUtill.js";
 
+import { msalService } from "../config/useAuth.js";
+import { msalInstance, state } from "../config/msalConfig.js";
+
 const toggleIcon = ref(false);
 const user = ref({
   userName: "",
   password: "",
 });
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const showMessage = ref(false);
 const router = useRouter();
 const cardAnimate = ref("");
@@ -21,8 +26,33 @@ const borderAnimate = ref("");
 const miniTaskBoardAnimate = ref("");
 const kanbanAnimate = ref("");
 const textAnimation = ref("");
+const showLoading = ref(false);
 let intervalId;
 let timeoutId;
+
+const { login, handleRedirect, getToken } = msalService();
+
+const handleLogin = async () => {
+  await login();
+};
+
+const initialize = async () => {
+  try {
+    await msalInstance.initialize();
+  } catch (error) {
+    console.log("Initialization error", error);
+  }
+};
+
+onMounted(async () => {
+  await initialize();
+  await handleRedirect(router);
+
+  // if(state.isAuthenticated === true && userStore.authToken === null){
+  //   const timer = setTimeout(() => {showLoading.value = true;},5000)
+
+  // }
+});
 
 onMounted(() => {
   animation();
@@ -80,18 +110,20 @@ async function signInOnClick(userLogin) {
       localStorage.setItem("refresh_token", res.refresh_token);
       userStore.setAuthToken(res.access_token);
       const resBoard = await getAllBoards();
-      userStore.setAllBoard(resBoard);
+      boardStore.setAllBoard(resBoard);
       const redirectTo = router.currentRoute.value.query.redirectTo;
       if (redirectTo) {
         // ถ้ามี redirectTo ให้ไปที่หน้านั้น
         router.push(redirectTo);
-      } else if(userStore.boards.length === 1 && userStore.boards[0].owner.id === userStore.authToken.oid) {
+      } else if (
+        boardStore.boards.length === 1 &&
+        boardStore.boards[0].owner.id === userStore.authToken.oid
+      ) {
         router.push({
           name: "task",
-          params: { boardId: userStore.boards[0].id },
+          params: { boardId: boardStore.boards[0].id },
         });
-      } 
-      else {
+      } else {
         router.push({ name: "board" });
       }
     } else if (res === 400 || res === 401) {
@@ -232,11 +264,42 @@ async function signInOnClick(userLogin) {
                     Sign in
                   </button>
                   <button
+                    @click="handleLogin"
                     type="submit"
-                    class="w-full text-gray-900 font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:outline-none bg-white hover:bg-gray-100"
+                    class="flex justify-center items-center gap-4 w-full text-gray-900 font-medium rounded-lg text-sm px-5 py-2 text-center focus:outline-none bg-white hover:bg-gray-100"
                   >
-                    Sign in with Microsoft
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      x="0px"
+                      y="0px"
+                      width="7%"
+                      height="7%"
+                      viewBox="0 0 48 48"
+                    >
+                      <path
+                        fill="#ff5722"
+                        d="M6 6H22V22H6z"
+                        transform="rotate(-180 14 14)"
+                      ></path>
+                      <path
+                        fill="#4caf50"
+                        d="M26 6H42V22H26z"
+                        transform="rotate(-180 34 14)"
+                      ></path>
+                      <path
+                        fill="#ffc107"
+                        d="M26 26H42V42H26z"
+                        transform="rotate(-180 34 34)"
+                      ></path>
+                      <path
+                        fill="#03a9f4"
+                        d="M6 26H22V42H6z"
+                        transform="rotate(-180 14 34)"
+                      ></path>
+                    </svg>
+                    <span>Sign in with Microsoft</span>
                   </button>
+
                   <div class="mt-4 text-center text-sm">
                     Don't have an account?
                     <a href="#" class="underline"> Sign up </a>

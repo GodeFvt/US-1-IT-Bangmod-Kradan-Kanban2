@@ -5,8 +5,6 @@ import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useUserStore } from "../../stores/user.js";
 
-
-const boardStore = useUserStore();
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
   errorMSG: {

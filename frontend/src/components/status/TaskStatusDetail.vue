@@ -5,7 +5,7 @@ import CloseIcon from "../icon/CloseIcon.vue";
 import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useStatusStore } from "../../stores/statuses.js";
-import { useUserStore } from "../../stores/user.js";
+import { useBoardStore } from "../../stores/boards.js";
 
 const statusStore = useStatusStore();
 defineEmits(["userAction", "addEdit"]);
@@ -27,7 +27,7 @@ const duplicateStatus = ref({});
 const editMode = ref(props.isEdit);
 const validate = ref({ name: {}, description: {} });
 const alltask = ref([]);
-const userStore = useUserStore();
+const boardStore = useBoardStore();
 
 watch(
   () => props.status,
@@ -61,11 +61,7 @@ function textShow(text) {
   }
 }
 function edit(statusId) {
-  console.log(props.status.name);
-  console.log(userStore.isCanEdit);
-
-  if (userStore.isCanEdit) {
-    // ***
+  if (boardStore.isCanEdit) {
     if (props.status.name !== "No Status" && props.status.name !== "Done") {
       editMode.value = !editMode.value;
       router.push({ name: "EditStatus", params: { statusId: statusId } });
@@ -143,18 +139,22 @@ const disabledSave = computed(() => {
               </div>
               <div
                 :class="
-                  userStore.isCanEdit
+                  boardStore.isCanEdit
                     ? ''
                     : 'tooltip tooltip-bottom tooltip-hover '
                 "
                 data-tip="You need to be board owner to perform this action."
               >
                 <div
-                  v-show="status.name !== 'No Status' && status.name !== 'Done'"
+                  v-show="
+                    status.name !== 'No Status' &&
+                    status.name !== 'Done' &&
+                    !editMode
+                  "
                   @click="edit(status.id)"
                   class="ml-1"
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? 'cursor-pointer'
                       : 'cursor-not-allowed disabled'
                   "
@@ -163,7 +163,12 @@ const disabledSave = computed(() => {
                 </div>
               </div>
             </div>
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 mt-2 p-2 rounded-md h-[4rem]"
+            ></div>
             <textarea
+              v-else
               class="itbkk-status-name read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none"
               :class="
                 (editMode
@@ -209,7 +214,12 @@ const disabledSave = computed(() => {
           <!-- Status -->
           <div class="flex flex-col">
             <div class="font-bold text-lg">Description</div>
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 mt-2 p-2 rounded-md h-[6rem]"
+            ></div>
             <textarea
+              v-else
               class="itbkk-status-description read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-24 resize-none"
               :class="
                 (editMode ? validate.description.style : 'border-b',

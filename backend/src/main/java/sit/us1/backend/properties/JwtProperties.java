@@ -11,4 +11,5 @@ public class JwtProperties {
     private double maxTokenIntervalHour;
     private double maxRefreshTokenIntervalHour;
     private String issuer;
+    private String issuerMS;
 }

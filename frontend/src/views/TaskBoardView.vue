@@ -32,12 +32,14 @@ import { useTaskStore } from "../stores/tasks.js";
 import { useStatusStore } from "../stores/statuses.js";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
+import { useBoardStore } from "../stores/boards.js";
 import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
 import Themes from "../components/icon/Themes.vue";
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
 const router = useRouter();
@@ -55,7 +57,9 @@ const isVisible = ref([]);
 // show component
 const showErrorMSG = ref(false);
 const showLoading = ref(true);
+const showLoadingFile = ref(true);
 const showDetail = ref(false);
+const showAttachments = ref(false);
 const showToast = ref(false);
 const showAddModal = ref(false);
 const showDeleteModal = ref(false);
@@ -63,17 +67,14 @@ const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
 const showVisibilityModal = ref(false);
-const showChangeThemes = ref(false);
-// const authorizAccess = ref(false);
 
 const boardId = ref(route.params.boardId);
 const taskId = ref(1);
 const maximumTask = ref(statusStore.maximumTask);
 const toggleActive = ref(false);
 const toggleVisibleActive = ref(false);
-const boardName = ref(userStore.currentBoard.name);
-const fileURL=ref([])
-
+const boardName = ref(boardStore.currentBoard.name);
+const fileURL = ref([]);
 
 const allTaskLimit = ref([]); // allTask อันที่เกิน
 const countStatus = computed(() => {
@@ -84,7 +85,7 @@ const countStatus = computed(() => {
       statusStore.setNoOftask(accumulator);
       return accumulator;
     },
-    { "No Status": 0 }
+    { "No Status": 0, Done: 0 }
   );
 });
 
@@ -99,41 +100,20 @@ function handleResponseError(responseCode) {
 }
 
 async function fetchData() {
+  showLoading.value = true;
   if (userStore.authToken !== null) {
-    if (userStore.boards.length === 0) {
+    if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
-      
+
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
         handleResponseError(resBoard);
       } else {
-        userStore.setAllBoard(resBoard);
+        boardStore.setAllBoard(resBoard);
       }
     }
   }
-  toggleVisibleActive.value = userStore.visibilityPublic;
+  toggleVisibleActive.value = boardStore.visibilityPublic;
 
-  // boardName.value = userStore.findBoardById(boardId).name;
-  // watch(
-  //   () => userStore.boards,
-  //   (newBoards, oldBoards) => {
-  //     console.log(userStore.boards);
-  //     updateBoardName();
-  //   },
-  //   { immediate: true }
-  // );
-
-  // function updateBoardName() {
-  //   const board = userStore.findBoardById(boardId.value);
-  //   console.log(board);
-  //   if (board) {
-  //     boardName.value = board.name;
-  //   } else {
-  //     console.warn(`Board with id ${boardId.value} not found`);
-  //     boardName.value = "Loading...";
-  //   }
-  // }
-
-  //   const getLimit = await getLimit()
   const resTask = await getFilteredTask(boardId.value);
   if (resTask === undefined) {
     showErrorMSG.value = true;
@@ -171,31 +151,6 @@ async function fetchData() {
   }
 }
 
-// async function handleBoardDetail() {
-//   const res = await getBoardsById(boardId.value);
-//   if (typeof res !== 'object') {
-//     handleResponseError(res);
-//   } else {
-//     userStore.updatevIsibilityPublic(
-//       res.visibility === "PUBLIC" ? true : false
-//     );
-//     toggleVisibleActive.value = userStore.visibilityPublic;
-//     boardName.value = res.name;
-
-//     // if(userStore.visibilityPublic === false){
-
-//     const oidByGet = res.owner.id;
-//     const oidByToken = userStore.authToken?.oid;
-//     console.log(oidByGet===oidByToken);
-//     userStore.updatevIsCanEdit(
-//       isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
-//     );
-//     console.log(userStore.isCanEdit);
-
-//     // }
-//   }
-// }
-
 function countStatuses() {
   const countStatusKeys = Object.keys(countStatus);
   countStatusKeys.forEach((status, index) => {
@@ -206,10 +161,9 @@ function countStatuses() {
 }
 
 onMounted(async () => {
-  
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail();
-    if (userStore.visibilityPublic === false) {
+    if (boardStore.visibilityPublic === false) {
       showPopUp.value = true;
       return;
     } else {
@@ -228,11 +182,9 @@ watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
     boardId.value = newBoardId;
-    // handleBoardDetail();
-    boardName.value = userStore.currentBoard.name;
+    boardName.value = boardStore.currentBoard.name;
     fetchData();
     countStatuses();
-    // console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
   }
 );
 
@@ -243,35 +195,46 @@ watch(
     if (newId !== undefined) {
       if (
         !(await isTokenValid(userStore.encodeToken)) &&
-        userStore.visibilityPublic === false
+        boardStore.visibilityPublic === false
       ) {
         showPopUp.value = true;
         return;
       } else {
+        showDetail.value = true;
+        showAttachments.value = true;
+        if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
+          isEdit.value = true;
+        } else {
+          isEdit.value = false;
+        }
+        showLoading.value = true;
+        showLoadingFile.value = true;
         const res = await getTaskById(boardId.value, newId);
         if (typeof res !== "object") {
           handleResponseError(res);
-        } else {  
+        } else {
           task.value = res;
+          showLoading.value = false;
+          task.value.attachments?.length > 0
+            ? (showLoadingFile.value = true)
+            : (showLoadingFile.value = false);
           task.value.attachments.forEach(async (file) => {
-             const resFile = await downloadfile(boardId.value,newId, file.filename)
-            //  console.log(resFile);
-            fileURL.value.push({"name":file.filename,"url":resFile}); 
-
-          })
-
-          // const resFile2 = await downloadfile(boardId.value,newId, task.value.attachments[0].filename)
-          // console.log(fileURL2.value);
-          // fileURL2.value = resFile2
-          if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
-            isEdit.value = true;
-            // console.log(isEdit.value);
-          } else {
-            isEdit.value = false;
-          }
-          showDetail.value = true;
+            const resFile = await downloadfile(
+              boardId.value,
+              newId,
+              file.filename
+            );
+            if (typeof resFile !== "number") {
+              fileURL.value.push({ name: file.filename, url: resFile });
+            } else {
+              fileURL.value.push({
+                name: file.filename,
+                url: "https://api.iconify.design/ic:baseline-sim-card-alert.svg",
+              });
+            }
+            showLoadingFile.value = false;
+          });
         }
-        showLoading.value = false;
       }
     }
   },
@@ -339,11 +302,6 @@ async function confirmLimit(action) {
 }
 
 async function confirmVisibility(action) {
-  // console.log(
-  //   "bafore fetch",
-  //   toggleVisibleActive.value,
-  //   userStore.visibilityPublic
-  // );
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
@@ -351,15 +309,12 @@ async function confirmVisibility(action) {
     toggleVisibleActive.value = !toggleVisibleActive.value;
     if (action === false) {
       showVisibilityModal.value = false;
-      toggleVisibleActive.value = userStore.visibilityPublic;
+      toggleVisibleActive.value = boardStore.visibilityPublic;
     } else if (action) {
       let visibility = toggleVisibleActive.value
         ? { visibility: "PUBLIC" }
         : { visibility: "PRIVATE" };
       const res = await toggleVisibility(boardId.value, visibility);
-      // console.log(res);
-      // console.log( "after fetch",toggleVisibleActive.value);
-
       if (res === 400 || res === 404) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred enable visibility`;
@@ -375,20 +330,14 @@ async function confirmVisibility(action) {
       } else if (res === 401) {
         handleResponseError(res);
       } else {
-        // console.log(res.visibility);
-        // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
-        userStore.updatevIsibilityPublic(
+        boardStore.updatevIsibilityPublic(
           res.visibility === "PUBLIC" ? true : false
         );
-        toggleVisibleActive.value = userStore.visibilityPublic;
+        toggleVisibleActive.value = boardStore.visibilityPublic;
         if (res.visibility === "PUBLIC") {
           navigator.clipboard.writeText(window.location.href);
         }
-        userStore.setIsVisibilityCurrentBoard(res.visibility);
-        // console.log("200 fetch", toggleVisibleActive.value);
-
-        // typeToast.value = "success";
-        // messageToast.value = `The Kanban board now limits ${maximumTask.value} tasks in each status`;
+        boardStore.setIsVisibilityCurrentBoard(res.visibility);
       }
       showVisibilityModal.value = false;
     }
@@ -410,13 +359,14 @@ function closeTask(action) {
   showDetail.value = action;
   showAddModal.value = action;
   router.push({ name: "task" });
-  fileURL.value=[]
+  fileURL.value = [];
 }
 
 function ClickAdd() {
   showLoading.value = false;
   showDetail.value = true;
   isEdit.value = true;
+  showAttachments.value = false;
   task.value = {
     title: "",
     description: "",
@@ -425,22 +375,14 @@ function ClickAdd() {
   };
 }
 
-function openChageThemes() {
-  // console.log("openChageThemes");
-  showChangeThemes.value = true;
-}
-
-async function addEditTask(newTask,file,fileName) {
+async function addEditTask(newTask, file, fileName) {
   const indexToCheck = allTask.value.findIndex(
     (task) => task.id === newTask.id
   );
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
-    // console.log("edit T");
-    // console.log(file);
-    await editTask(newTask,file,fileName);
+    await editTask(newTask, file, fileName);
   } else {
-    // console.log("add T");
     await addTask(newTask);
   }
 }
@@ -477,50 +419,38 @@ async function addTask(newTask) {
   }
 }
 
-async function editTask(editedTask ,files,fileName) {
+async function editTask(editedTask, files, fileName) {
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
   } else {
-    // console.log(taskId.value);
-    // console.log(editedTask);
-    // console.log(file);
-    
-   
-    // console.log(123);
-    // res= await addAttachments(boardId.value,taskId.value,files) 
-    // } else {
+    editedTask.status = editedTask.status.name;
+    const res = await updateTask(
+      boardId.value,
+      editedTask,
+      files.map((e) => e.url),
+      fileName
+    );
 
-      editedTask.status = editedTask.status.name;
-
-     //เอาแค่ [{url}]
-      // console.log(files.filter((e)=> Object.keys(e).find("url")));
-    //   console.log(files.map((e)=>e.url));
-
-    // console.log(files);
-      
-      const  res  = await updateTask(boardId.value, editedTask,files.map((e)=>e.url),fileName);
-    // }
-   
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
       messageToast.value = `An error occurred updating the task "${editedTask.title}"`;
     } else if (res === 401 || res === 403) {
       handleResponseError(res);
     } else {
-         const indexToUpdate = allTask.value.findIndex(
+      const indexToUpdate = allTask.value.findIndex(
         (task) => task.id === editedTask.id
-        );
-        taskStore.editTask(indexToUpdate, res);
-        statusStore.setNoOftask(countStatus.value);
-        if (res.filesErrors.length!==0) {
-          typeToast.value = "warning";
-          messageToast.value = `An error occurred, and the file update was unsuccessful`;
-        } else {
-          typeToast.value = "success";
-           messageToast.value = `Task "${editedTask.title}" updated successfully`;
-        }
-    } 
+      );
+      taskStore.editTask(indexToUpdate, res);
+      statusStore.setNoOftask(countStatus.value);
+      if (res.filesErrors.length !== 0) {
+        typeToast.value = "warning";
+        messageToast.value = `An error occurred, and the file update was unsuccessful`;
+      } else {
+        typeToast.value = "success";
+        messageToast.value = `Task "${editedTask.title}" updated successfully`;
+      }
+    }
     showToast.value = true;
   }
 }
@@ -528,12 +458,12 @@ async function editTask(editedTask ,files,fileName) {
 async function removeTask(index, confirmDelete = false) {
   if (
     !(await isTokenValid(userStore.encodeToken)) &&
-    userStore.isCanEdit === true
+    boardStore.isCanEdit === true
   ) {
     showPopUp.value = true;
     return;
   } else {
-    userStore.isCanEdit
+    boardStore.isCanEdit
       ? (showDeleteModal.value = true)
       : (showDeleteModal.value = false);
     task.value = allTask.value[index];
@@ -564,15 +494,11 @@ async function removeTask(index, confirmDelete = false) {
 
 <template>
   <div class="flex flex-col w-full h-screen">
-    <!-- <div class="h-[8%]">
-        <HeaderView class="h-full" />
-      </div> -->
     <div class="flex flex-col items-center h-full gap-5 mt-2">
-      <!-- Task Status and Add Task Button -->
       <div
-        class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300 slide-right"
+        class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300 max-md:flex-col"
       >
-        <div class="m-[2px] flex sm:items-center items-end w-full">
+        <div class="m-[2px] flex sm:items-center items-end w-full my-2">
           <router-link :to="{ name: 'board' }">
             <button
               class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800"
@@ -593,183 +519,197 @@ async function removeTask(index, confirmDelete = false) {
               </svg>
             </button>
           </router-link>
-          <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold">
+          <div
+            class="itbkk-BoardName text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+          >
             {{
-              userStore.currentBoard.owner.id === userStore.authToken?.oid
-                ? userStore.currentBoard.name + " Personal's Board"
-                : userStore.currentBoard.name + "Collaborate's Board"
+              boardStore.currentBoard.owner.id === userStore.authToken?.oid
+                ? boardStore.currentBoard.name + " Personal's Board"
+                : boardStore.currentBoard.name + "Collaborate's Board"
             }}
           </div>
         </div>
         <!-- Filter -->
-        <div class="flex items-end w-full justify-end sm:mt-0 mt-5 mb-2">
-          <div class="flex flex-row items-center gap-1">
-            <div
-              class="itbkk-board-visibility flex flex-col items-center cursor-pointer mb-2 mr-2 disabled"
-              @click="
-                userStore.currentBoard.owner.id === userStore.authToken?.oid
-                  ? (showVisibilityModal = true)
-                  : (showVisibilityModal = false)
-              "
-            >
-              <div
-                :class="
-                userStore.currentBoard.owner.id === userStore.authToken?.oid                   
-                 ? ''
-                    : 'tooltip tooltip-bottom tooltip-hover'
-                "
-                data-tip="You need to be board owner to perform this action"
-              >
-                <span class="font-bold visibility">
-                  {{ userStore.visibilityPublic ? "Public" : "Private" }}</span
-                >
-                <Toggle
-                  :toggleActive="toggleVisibleActive"
-                  :class="
-                  userStore.currentBoard.owner.id === userStore.authToken?.oid                      
-                  ? 'cursor-pointer'
-                      : 'cursor-not-allowed'
-                  "
-                />
-              </div>
-            </div>
-
-
-            <div class="">
-              <router-link :to="{ name: 'AddTask' }">
-                <div
-                  :class="
-                    userStore.isCanEdit
-                      ? ''
-                      : 'tooltip tooltip-bottom tooltip-hover'
-                  "
-                  data-tip="You need to be board owner or has write access to perform this action"
-                >
-                  <button
-                    class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                    :disabled="!userStore.isCanEdit"
-                    :class="
-                      userStore.isCanEdit
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
-                    "
-                  >
-                    Add Task
-                  </button>
-                </div>
-              </router-link>
-            </div>
-            <div class="">
-              <router-link :to="{ name: 'ManageCollab' }">
-                <div>
-                  <button
-                    class="itbkk-manage-collaborater bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                  >
-                    Manage Collabotater
-                  </button>
-                </div>
-              </router-link>
-            </div>
-
-            <!--DropDown-->
-            <div class="itbkk-status-filter dropdown dropdown-bottom">
-              <button
-                tabindex="0"
-                class="flex gap-1 justify-center items-center bg-gray-200 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-              >
-                Filter
-                <div
-                  v-if="statusFilter.length !== 0"
-                  class="bg-gray-500 rounded-lg px-[0.3rem] text-white"
-                >
-                  {{ statusFilter.length }}
-                </div>
-                <div
-                  class="itbkk-filter-clear cursor-pointer hover:text-red-400"
-                >
-                  <CloseIcon
-                    v-if="statusFilter.length !== 0"
-                    @click="statusFilter = []"
-                  />
-                </div>
-              </button>
-              <ul
-                tabindex="0"
-                class="dropdown-content flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] h-64 overflow-y-auto overflow-x-hidden"
-              >
-                <li
-                  v-for="status in statusStore.allStatus"
-                  :key="status.name"
-                  class="itbkk-filter-item p-2 hover:bg-gray-100 rounded-md"
-                >
-                  <label class="itbkk-status-choice flex items-center">
-                    <input
-                      type="checkbox"
-                      :value="status.name"
-                      v-model="statusFilter"
-                      class="itbkk-filter-item-clear checkbox"
-                    />
-                    <span class="ml-2 break-all">{{ status.name }}</span>
-                  </label>
-                </li>
-              </ul>
-            </div>
-            <!-- status setting -->
-            <div class="" @click="showSettingModal = true">
-              <button
-                class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
-              >
-                <SettingIcon />
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Task Table -->
-      <div
-        class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
-      >
-        <!-- Task Status Count -->
-        <div class="flex flex-row justify-between">
-          <div class="flex flex-row gap-[0.2rem] pr-1 drop-shadow-md">
-            <div class="">
-              <router-link :to="{ name: 'ManageStatus' }">
-                <button
-                  class="h-full cursor-pointer itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                >
-                  Manage Status
-                </button>
-              </router-link>
+      <div class="overflow-y-auto w-full overflow-x-hidden">
+        <div class="flex justify-center mb-10">
+          <div
+            class="flex flex-col justify-center gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+          >
+            <!-- Task Status Count -->
+            <div class="flex flex-wrap justify-between">
+              <div class="flex flex-row pr-1 drop-shadow-md">
+                <div class="flex flex-wrap gap-[0.2rem]">
+                  <div class="">
+                    <router-link :to="{ name: 'ManageStatus' }">
+                      <button
+                        class="h-full cursor-pointer itbkk-manage-status mb-1 w-20 bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                      >
+                        Manage Status
+                      </button>
+                    </router-link>
+                  </div>
+
+                  <div
+                    v-for="(status, index) in Object.keys(countStatus)"
+                    :key="status"
+                    :class="{ 'slide-in': isVisible[index] }"
+                    class="task-status-wrapper z-0"
+                  >
+                    <TaskStatusCard
+                      :colorStatus="statusStore.getColorStatus(status)"
+                    >
+                      <template #count>{{ countStatus[status] }}</template>
+                      <template #status>{{ status }}</template>
+                    </TaskStatusCard>
+                  </div>
+                </div>
+              </div>
+              <div class="flex sm:mt-0 mb-2">
+                <div class="flex flex-row items-end gap-1 flex-wrap mt-2">
+                  <div
+                    class="itbkk-board-visibility flex flex-col items-center cursor-pointer mr-2 disabled"
+                    @click="
+                      boardStore.currentBoard.owner.id ===
+                      userStore.authToken?.oid
+                        ? (showVisibilityModal = true)
+                        : (showVisibilityModal = false)
+                    "
+                  >
+                    <div
+                      :class="
+                        boardStore.currentBoard.owner.id ===
+                        userStore.authToken?.oid
+                          ? ''
+                          : 'tooltip tooltip-bottom tooltip-hover'
+                      "
+                      data-tip="You need to be board owner to perform this action"
+                    >
+                      <span
+                        class="font-bold visibility cursor-default mb-4"
+                        @click.stop
+                      >
+                        {{
+                          boardStore.visibilityPublic ? "Public" : "Private"
+                        }}</span
+                      >
+                      <Toggle
+                        :toggleActive="toggleVisibleActive"
+                        :class="
+                          boardStore.currentBoard.owner.id ===
+                          userStore.authToken?.oid
+                            ? 'cursor-pointer'
+                            : 'cursor-not-allowed'
+                        "
+                      />
+                    </div>
+                  </div>
+
+                  <div class="">
+                    <router-link :to="{ name: 'AddTask' }">
+                      <div
+                        :class="
+                          boardStore.isCanEdit
+                            ? ''
+                            : 'tooltip tooltip-bottom tooltip-hover'
+                        "
+                        data-tip="You need to be board owner or has write access to perform this action"
+                      >
+                        <button
+                          class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                          :disabled="!boardStore.isCanEdit"
+                          :class="
+                            boardStore.isCanEdit
+                              ? 'cursor-pointer'
+                              : 'cursor-not-allowed disabled'
+                          "
+                        >
+                          Add Task
+                        </button>
+                      </div>
+                    </router-link>
+                  </div>
+                  <div class="">
+                    <router-link :to="{ name: 'ManageCollabView' }">
+                      <div>
+                        <button
+                          class="itbkk-manage-collaborater bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                        >
+                          Manage Collabotater
+                        </button>
+                      </div>
+                    </router-link>
+                  </div>
+
+                  <!--DropDown-->
+                  <div class="itbkk-status-filter dropdown dropdown-bottom">
+                    <button
+                      tabindex="0"
+                      class="flex gap-1 justify-center items-center bg-gray-200 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
+                    >
+                      Filter
+                      <div
+                        v-if="statusFilter.length !== 0"
+                        class="bg-gray-500 rounded-lg px-[0.3rem] text-white"
+                      >
+                        {{ statusFilter.length }}
+                      </div>
+                      <div
+                        class="itbkk-filter-clear cursor-pointer hover:text-red-400"
+                      >
+                        <CloseIcon
+                          v-if="statusFilter.length !== 0"
+                          @click="statusFilter = []"
+                        />
+                      </div>
+                    </button>
+                    <ul
+                      tabindex="0"
+                      class="dropdown-content z-50 flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] overflow-y-auto overflow-x-hidden"
+                    >
+                      <li
+                        v-for="status in statusStore.allStatus"
+                        :key="status.name"
+                        class="itbkk-filter-item p-2 hover:bg-gray-100 rounded-md"
+                      >
+                        <label class="itbkk-status-choice flex items-center">
+                          <input
+                            type="checkbox"
+                            :value="status.name"
+                            v-model="statusFilter"
+                            class="itbkk-filter-item-clear checkbox"
+                          />
+                          <span class="ml-2 break-all">{{ status.name }}</span>
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
+                  <!-- status setting -->
+                  <div class="" @click="showSettingModal = true">
+                    <button
+                      class="itbkk-status-setting bg-gray-200 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg"
+                    >
+                      <SettingIcon />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div
-              v-for="(status, index) in Object.keys(countStatus)"
-              :key="status"
-              :class="{ 'slide-in': isVisible[index] }"
-              class="task-status-wrapper z-0 overflow-x-auto"
+
+            <TaskBoard
+              :statusFilter="statusFilter"
+              :allTask="taskStore.allTask"
+              :showErrorMSG="showErrorMSG"
+              :showLoading="showLoading"
+              :allTaskLimit="allTaskLimit"
+              @remove-task="removeTask"
             >
-              <TaskStatusCard :colorStatus="statusStore.getColorStatus(status)">
-                <template #count>{{ countStatus[status] }}</template>
-                <template #status>{{ status }}</template>
-              </TaskStatusCard>
-            </div>
-          </div>
-          <div class="cursor-pointer">
-            <Themes @click="openChageThemes" />
+            </TaskBoard>
           </div>
         </div>
-
-        <TaskBoard
-          :statusFilter="statusFilter"
-          :allTask="taskStore.allTask"
-          :showErrorMSG="showErrorMSG"
-          :showLoading="showLoading"
-          :allTaskLimit="allTaskLimit"
-          @remove-task="removeTask"
-        >
-        </TaskBoard>
       </div>
-
       <TaskDetail
         v-if="showDetail"
         @user-action="closeTask"
@@ -777,6 +717,8 @@ async function removeTask(index, confirmDelete = false) {
         :task="task"
         :isEdit="isEdit"
         :showLoading="showLoading"
+        :showLoadingFile="showLoadingFile"
+        :showAttachment="showAttachments"
         :allTaskLimit="allTaskLimit"
         :fileUrl="fileURL"
       >
@@ -810,64 +752,10 @@ async function removeTask(index, confirmDelete = false) {
       </ConfirmModal>
 
       <ConfirmModal
-        v-if="showChangeThemes"
-        @user-action="showChangeThemes = false"
-      >
-        <template #header>
-          <div class="flex justify-center">
-            <h2 class="font-bold">Select your themes</h2>
-          </div>
-        </template>
-        <template #body>
-          <div
-            class="flex justify-center items-center bg-gray-100"
-          >
-            <div class="w-full max-w-4xl p-4 bg-white shadow-md rounded-md">
-              <!-- Grid Section -->
-              <div class="grid grid-cols-2 gap-4">
-                <!-- Left Grid -->
-                <div class="bg-gray-100 p-4">
-                <img src="../../public/table.png" alt="table">
-             </div>
-
-                <!-- Right Grid -->
-                <div class="grid grid-rows-2 gap-2">
-                  <img src="../../public/card.png" alt="card">
-                </div>
-              </div>
-
-              <!-- Score Line -->
-              <!-- <div class="mt-4">
-            <div class="border-b-2 border-black"></div>
-        </div> -->
-
-              <!-- Radio buttons -->
-              <div class="flex justify-center space-x-4 mt-4">
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    name="option"
-                    class="h-6 w-6 form-radio text-blue-600"
-                  />
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    name="option"
-                    class="h-6 w-6 form-radio text-gray-300"
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-        </template>
-      </ConfirmModal>
-
-      <ConfirmModal
         v-if="showSettingModal"
         @user-action="confirmLimit"
         :width="'w-[60vh]'"
-        :canEdit="userStore.isCanEdit"
+        :canEdit="boardStore.isCanEdit"
         :disabled="maximumTask > 30 || maximumTask <= 0"
         class="itbkk-modal-setting z-50"
       >
@@ -960,10 +848,6 @@ async function removeTask(index, confirmDelete = false) {
       </Toast>
     </div>
   </div>
-  <!-- <identifyUser
-      :boardId="boardId"
-      >
-    </identifyUser> -->
 </template>
 <style scoped>
 .task-status-wrapper {

@@ -26,12 +26,14 @@ import limitModal from "../components/modal/limitModal.vue";
 import SettingIcon from "../components/icon/SettingIcon.vue";
 import AuthzPopup from "../components/AuthzPopup.vue";
 import { useUserStore } from "../stores/user.js";
+import { useBoardStore } from "../stores/boards.js";
 import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
 import PopUp from "../components/modal/PopUp.vue";
 import CloseIcon from "../components/icon/CloseIcon.vue";
 
 const userStore = useUserStore();
+const boardStore = useBoardStore();
 const statusStore = useStatusStore();
 const taskStore = useTaskStore();
 const router = useRouter();
@@ -45,6 +47,7 @@ const allTaskLimit = ref([]); // allTask อันที่เกิน
 // show component
 const showErrorMSG = ref(false);
 const showLoading = ref(true);
+const showLoadingStatus = ref(false);
 const showTranfer = ref(false);
 const showDetail = ref(false);
 const showToast = ref(false);
@@ -53,7 +56,7 @@ const showDeleteModal = ref(false);
 const showPopUp = ref(false);
 const isEdit = ref(false);
 // const authorizAccess = ref(false);
-const boardName = ref(userStore.currentBoard.name);
+const boardName = ref(boardStore.currentBoard.name);
 const toggleActive = ref(statusStore.isLimit);
 const indexToRemove = ref(-1);
 const messageToast = ref("");
@@ -81,12 +84,12 @@ function handleResponseError(responseCode) {
 
 async function fetchData() {
   if (userStore.authToken !== null) {
-    if (userStore.boards.length === 0) {
+    if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       if (resBoard === 401 || resBoard === 403 || resBoard === 404) {
         handleResponseError(resBoard);
       } else {
-        userStore.setAllBoard(resBoard);
+        boardStore.setAllBoard(resBoard);
       }
     }
   }
@@ -128,29 +131,10 @@ async function fetchData() {
   }
 }
 
-// async function handleBoardDetail(){
-//   const res = await getBoardsById(boardId.value);
-//    if (typeof res !== 'object') {
-//         handleResponseError(res)
-//       }
-//     else {
-//       userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
-//       toggleVisibleActive.value = userStore.visibilityPublic
-//       boardName.value = res.name;
-//       const oidByGet = res.owner.id;
-//       const oidByToken = userStore.authToken?.oid;
-//       userStore.updatevIsCanEdit(isNotDisable(
-//         userStore.visibilityPublic,
-//         oidByToken,
-//         oidByGet
-//       ))
-//     }
-// }
-
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail()
-    if (userStore.visibilityPublic === false) {
+    if (boardStore.visibilityPublic === false) {
       showPopUp.value = true;
       return;
     } else {
@@ -167,7 +151,7 @@ watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
     boardId.value = newBoardId;
-    boardName.value = userStore.currentBoard.name;
+    boardName.value = boardStore.currentBoard.name;
     fetchData();
   }
 );
@@ -191,16 +175,19 @@ watch(
     if (newId !== undefined) {
       if (
         !(await isTokenValid(userStore.encodeToken)) &&
-        userStore.visibilityPublic === false
+        boardStore.visibilityPublic === false
       ) {
         showPopUp.value = true;
         return;
       } else {
+        showDetail.value = true;
+        showLoadingStatus.value = true;
         const res = await getStatusById(boardId.value, newId);
         if (res === 401 || res === 403 || res === 404) {
           handleResponseError(res);
         } else {
           status.value = res;
+          showLoadingStatus.value = false;
           if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
             if (
               status.value.name === "No Status" ||
@@ -215,7 +202,6 @@ watch(
           } else {
             isEdit.value = false;
           }
-          showDetail.value = true;
         }
         showLoading.value = false;
       }
@@ -284,7 +270,7 @@ async function addStatus(newStatus) {
       } else {
         typeToast.value = "success";
         statusStore.addStatus(res);
-        if (userStore.findBoardById(boardId.value).isCustomStatus === false) {
+        if (boardStore.findBoardById(boardId.value).isCustomStatus === false) {
           const resStatus = await getAllStatus(boardId.value);
           statusStore.setAllStatus(resStatus);
         }
@@ -312,7 +298,7 @@ async function editStatus(editedStatus) {
         (status) => status.id === editedStatus.id
       );
       statusStore.editStatus(indexToUpdate, res);
-      if (userStore.findBoardById(boardId.value).isCustomStatus === false) {
+      if (boardStore.findBoardById(boardId.value).isCustomStatus === false) {
         const resStatus = await getAllStatus(boardId.value);
         statusStore.setAllStatus(resStatus);
       }
@@ -436,7 +422,7 @@ async function removeStatus(index, confirmDelete = false) {
           messageToast.value = `The status has been deleted`;
         }
         statusStore.deleteStatus(index);
-        if (userStore.findBoardById(boardId.value).isCustomStatus === false) {
+        if (boardStore.findBoardById(boardId.value).isCustomStatus === false) {
           const resStatus = await getAllStatus(boardId.value);
           statusStore.setAllStatus(resStatus);
         }
@@ -457,11 +443,11 @@ async function removeStatus(index, confirmDelete = false) {
 }
 
 async function clickRemove(index) {
-  if (!(await isTokenValid(userStore.encodeToken)) && userStore.isCanEdit) {
+  if (!(await isTokenValid(userStore.encodeToken)) && boardStore.isCanEdit) {
     showPopUp.value = true;
     return;
   } else {
-    userStore.isCanEdit
+    boardStore.isCanEdit
       ? (showDeleteModal.value = true)
       : (showDeleteModal.value = false);
     if (showDeleteModal.value) {
@@ -488,14 +474,12 @@ async function clickRemove(index) {
 </script>
 <template>
   <div class="flex flex-col w-full h-screen">
-    <!-- <div class="h-[8%]">
-        <HeaderView class="h-full" />
-      </div> -->
-    <!-- Task Status and Add Task Button -->
-    <div class="flex flex-col items-center h-full gap-5 mt-2">
-      <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
+    <div class="flex flex-col items-center h-full gap-4 mt-2">
+      <div
+        class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
+      >
         <!-- Task Status Count -->
-        <div class="m-[2px] flex sm:items-center items-end w-full">
+        <div class="m-[2px] flex sm:items-center items-end w-full my-2">
           <router-link :to="{ name: 'task' }">
             <button
               class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800"
@@ -516,28 +500,19 @@ async function clickRemove(index) {
               </svg>
             </button>
           </router-link>
-          <div class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold">
+          <div
+            class="itbkk-button-home text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+          >
             {{
-              userStore.currentBoard.owner.id === userStore.authToken?.oid
-                ? userStore.currentBoard.name + " Personal's Board"
-                : userStore.currentBoard.name + "Collaborate's Board"
+              boardStore.currentBoard.owner.id === userStore.authToken?.oid
+                ? boardStore.currentBoard.name + " Personal's Board"
+                : boardStore.currentBoard.name + "Collaborate's Board"
             }}
           </div>
         </div>
-        <!-- <div class="m-[2px] flex sm:items-center items-end">
-          <router-link :to="{ name: 'task' }">
-            <div
-              class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1"
-            >
-              Home
-            </div>
-          </router-link>
-          <div class="mx-2 text-slate-500">/</div>
-
-          <div class="text-gray-800 text-[1rem] font-bold">ManageStatus</div>
-        </div> -->
-
         <!-- Filter -->
+      </div>
+      <div class="flex flex-row w-[95%] max-sm:w-full max-sm:px-2">
         <div class="flex items-end w-full justify-end">
           <div
             class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
@@ -546,7 +521,7 @@ async function clickRemove(index) {
               <router-link :to="{ name: 'AddStatus' }">
                 <div
                   :class="
-                    userStore.isCanEdit
+                    boardStore.isCanEdit
                       ? ''
                       : 'tooltip tooltip-bottom tooltip-hover'
                   "
@@ -554,9 +529,9 @@ async function clickRemove(index) {
                 >
                   <button
                     class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                    :disabled="!userStore.isCanEdit"
+                    :disabled="!boardStore.isCanEdit"
                     :class="
-                      userStore.isCanEdit
+                      boardStore.isCanEdit
                         ? 'cursor-pointer'
                         : 'cursor-not-allowed disabled'
                     "
@@ -578,9 +553,8 @@ async function clickRemove(index) {
           </div>
         </div>
       </div>
-
       <div
-        class="flex justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+        class="flex justify-center gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
       >
         <!-- Status Table -->
         <TaskStatusTable
@@ -596,7 +570,7 @@ async function clickRemove(index) {
         @addEdit="addEditStatus"
         :status="status"
         :isEdit="isEdit"
-        :showLoading="showLoading"
+        :showLoading="showLoadingStatus"
       >
       </TaskStatusDetail>
 
@@ -673,7 +647,7 @@ async function clickRemove(index) {
     <ConfirmModal
       v-if="showSettingModal"
       @user-action="confirmLimit"
-      :canEdit="userStore.isCanEdit"
+      :canEdit="boardStore.isCanEdit"
       :width="'w-[60vh]'"
       :disabled="maximumTask > 30 || maximumTask <= 0"
       class="itbkk-modal-setting z-50"

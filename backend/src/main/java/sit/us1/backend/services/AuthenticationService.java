@@ -49,6 +49,7 @@ public class AuthenticationService {
                 user.setId(userDetails.getOid());
                 user.setUsername(userDetails.getUsername());
                 user.setName(userDetails.getName());
+                user.setEmail(userDetails.getEmail());
                 boardUserRepository.save(user);
             }
         } catch (Exception e) {

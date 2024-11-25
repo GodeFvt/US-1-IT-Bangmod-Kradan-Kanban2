@@ -31,10 +31,15 @@ public class Collaboration {
     @Column(name = "addedOn", updatable = false, insertable = false)
     private ZonedDateTime addedOn;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "boardId", insertable = false, updatable = false)
-    @JsonBackReference
     private Board board;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "oid", insertable = false, updatable = false)
+    private BoardUser boardUser;
 
     public enum Access {
         READ, WRITE

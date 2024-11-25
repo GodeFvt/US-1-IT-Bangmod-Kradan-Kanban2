@@ -47,8 +47,8 @@ public class TaskService {
         this.hostName = fileStorageProperties.getFileServiceHostName();
     }
 
-    public boolean isTaskExist(Integer taskId) {
-        return taskRepository.existsById(taskId);
+    public boolean isTaskExist(String boardId ,Integer taskId) {
+        return taskRepository.existsByBoardIdAndId(boardId,taskId);
     }
 
     public List<SimpleTaskDTO> getAllTask() {

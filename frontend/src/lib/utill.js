@@ -1,7 +1,10 @@
 import VueJwtDecode from "vue-jwt-decode";
 import { refreshAccessToken } from "./fetchUtill.js";
 import { useUserStore } from "../stores/user.js";
+import { msalService } from "../config/useAuth.js";
+import { msalInstance, state } from "../config/msalConfig.js";
 
+const { login, handleRedirect, getToken } = msalService();
 function convertString(string) {
   return string
     ?.toLowerCase()
@@ -34,23 +37,49 @@ function validateSizeInput(...properties) {
     }
   });
 }
+const initialize = async () => {
+  try {
+    await msalInstance.initialize();
+
+    return await getToken();
+  } catch (error) {
+    console.log("Initialization error", error);
+  }
+};
 
 async function refreshTokenAndReturn() {
   const userStore = useUserStore();
-  const refreshTokenSuccess = await refreshAccessToken();
-  if (typeof refreshTokenSuccess !== "object") {
-    userStore.setAuthToken(null);
-    return false;
+  if (userStore.isMicroSoftLogin === "MS") {
+    const res = await initialize();
+    if (res) {
+      userStore.setAuthToken(res.idToken);
+      localStorage.setItem("graphAPI_token", res.accessToken);
+      return true;
+    } else {
+      userStore.clearAuthToken();
+      return false;
+    }
   } else {
-    userStore.setAuthToken(refreshTokenSuccess.access_token);
-    return true;
+    const refreshTokenSuccess = await refreshAccessToken();
+    if (typeof refreshTokenSuccess !== "object") {
+      userStore.setAuthToken(null);
+      return false;
+    } else {
+      userStore.setAuthToken(refreshTokenSuccess.access_token);
+      return true;
+    }
   }
 }
 
 async function isTokenValid(token) {
   let decodedToken;
+  const userStore = useUserStore();
   const refresh_token = localStorage.getItem("refresh_token");
+  const graphToken = localStorage.getItem("graphAPI_token");
 
+  if ((!token || !graphToken) && userStore.isMicroSoftLogin === "MS") {
+    return await refreshTokenAndReturn();
+  }
   // Validate the token format
   if (!token && !refresh_token) {
     return false;
@@ -119,35 +148,31 @@ const previewBinary = (binaryObject) => {
 };
 
 const removeURL = (binaryObject) => {
-  console.log("removePreview");
   return URL.revokeObjectURL(binaryObject);
 };
 
-function validateFile(file , fileURL  ,index) {
+function validateFile(file, fileURL, index) {
   let result = {
-    maxSize: { msg: '', filename: [] },
-    maxFile: { msg: '', filename: [] },
-    dupFile: { msg: '', filename: [] },
+    maxSize: { msg: "", filename: [] },
+    maxFile: { msg: "", filename: [] },
+    dupFile: { msg: "", filename: [] },
   };
   if (file.size > 20 * 1024 * 1024) {
-    result.maxSize.msg = 'Each file cannot be larger than 20 MB. The following files are not added: '
-    result.maxSize.filename.push(file.name) ;
-  } 
-   if (
-    fileURL.length >= 10 ||
-    index + fileURL.length > 10) {
-      result.maxFile.msg =  'Each task can have at most 10 files. The following files are not added: '
-      result.maxFile.filename.push(file.name) ;
-  } 
-    if (
-    fileURL.filter((e) => e.name === file.name)
-      .length >= 1
-  ) {
-    result.dupFile.msg =  'File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file: '
-    result.dupFile.filename.push(file.name) ;
-
+    result.maxSize.msg =
+      "Each file cannot be larger than 20 MB. The following files are not added: ";
+    result.maxSize.filename.push(file.name);
   }
-  return  result 
+  if (fileURL.length >= 10 || index + fileURL.length > 10) {
+    result.maxFile.msg =
+      "Each task can have at most 10 files. The following files are not added: ";
+    result.maxFile.filename.push(file.name);
+  }
+  if (fileURL.filter((e) => e.name === file.name).length >= 1) {
+    result.dupFile.msg =
+      "File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file: ";
+    result.dupFile.filename.push(file.name);
+  }
+  return result;
 }
 
 export {
