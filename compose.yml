@@ -24,6 +24,9 @@ services:
   fe:
     container_name: us1-frontend
     image: frontend:v2
+    environment:
+      - CLIENT_ID=${MS_CLIENT_ID}
+      - AUTHORITY=${MS_AUTHORITY}
     build:
       context: frontend
     networks:
@@ -45,6 +48,7 @@ services:
       - JWT_SECRET=${SECRET}
       - JWT_SECRET_REFRESH=${SECRET_REFRESH}
       - JWT_ISSUER=${ISSUER}
+      - JWT_ISSUER_MS=${ISSUER_MS}
       - SMTP_SERVER=${SMTPSERVER}
       - SMTP_PORT=${SMTPPORT}
       - SMTP_USERNAME=${SMTPUSERNAME}
