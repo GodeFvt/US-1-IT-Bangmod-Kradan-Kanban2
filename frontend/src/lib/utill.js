@@ -148,7 +148,6 @@ const previewBinary = (binaryObject) => {
 };
 
 const removeURL = (binaryObject) => {
-  console.log("removePreview");
   return URL.revokeObjectURL(binaryObject);
 };
 

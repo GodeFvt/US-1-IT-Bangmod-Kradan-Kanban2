@@ -152,11 +152,9 @@ async function updateTask(boardId, task , files ,fileNameToDelete ="") {
     const userStore = useUserStore();
     const token = userStore.encodeToken;
     const formData = new FormData();
-    console.log(files ,fileNameToDelete ,"5");
-  
     if (files.length>0) {
       files.forEach((file) => {
-      formData.append("files", file);//file array 
+      formData.append("files", file);
     });
     }
     const taskBlob = new Blob([JSON.stringify(task)], { type: "application/json" });
@@ -661,9 +659,6 @@ async function downloadfile(boardId,taskId, filename) {
       }
     );
     if (res.status === 200) {
-      // console.log(res);
-      // const str = res.url
-      // const blob = new Blob([str], { type : 'plain/text' });
       const blob = await res.blob();
       return  previewBinary(blob)
     

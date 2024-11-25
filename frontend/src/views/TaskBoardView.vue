@@ -67,7 +67,6 @@ const showSettingModal = ref(false);
 const showListStatus = ref(false);
 const showPopUp = ref(false);
 const showVisibilityModal = ref(false);
-// const authorizAccess = ref(false);
 
 const boardId = ref(route.params.boardId);
 const taskId = ref(1);
@@ -183,11 +182,9 @@ watch(
   () => route.params.boardId,
   (newBoardId, oldBoardId) => {
     boardId.value = newBoardId;
-    // handleBoardDetail();
     boardName.value = boardStore.currentBoard.name;
     fetchData();
     countStatuses();
-    // console.log("wacth", toggleVisibleActive.value, userStore.visibilityPublic);
   }
 );
 
@@ -227,9 +224,7 @@ watch(
               newId,
               file.filename
             );
-            //  console.log(resFile);
             if (typeof resFile !== "number") {
-              // notPreview.value=true
               fileURL.value.push({ name: file.filename, url: resFile });
             } else {
               fileURL.value.push({
@@ -386,11 +381,8 @@ async function addEditTask(newTask, file, fileName) {
   );
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
-    // console.log("edit T");
-    // console.log(file);
     await editTask(newTask, file, fileName);
   } else {
-    // console.log("add T");
     await addTask(newTask);
   }
 }
@@ -432,29 +424,13 @@ async function editTask(editedTask, files, fileName) {
     showPopUp.value = true;
     return;
   } else {
-    // console.log(taskId.value);
-    // console.log(editedTask);
-    // console.log(file);
-
-    // console.log(123);
-    // res= await addAttachments(boardId.value,taskId.value,files)
-    // } else {
-
     editedTask.status = editedTask.status.name;
-
-    //เอาแค่ [{url}]
-    // console.log(files.filter((e)=> Object.keys(e).find("url")));
-    //   console.log(files.map((e)=>e.url));
-
-   // console.log(files);
-
     const res = await updateTask(
       boardId.value,
       editedTask,
       files.map((e) => e.url),
       fileName
     );
-    // }
 
     if (res === 422 || res === 400 || res === 500 || res === 404) {
       typeToast.value = "warning";
@@ -543,7 +519,9 @@ async function removeTask(index, confirmDelete = false) {
               </svg>
             </button>
           </router-link>
-          <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold">
+          <div
+            class="itbkk-BoardName text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+          >
             {{
               boardStore.currentBoard.owner.id === userStore.authToken?.oid
                 ? boardStore.currentBoard.name + " Personal's Board"
@@ -558,12 +536,12 @@ async function removeTask(index, confirmDelete = false) {
       <div class="overflow-y-auto w-full overflow-x-hidden">
         <div class="flex justify-center mb-10">
           <div
-            class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+            class="flex flex-col justify-center gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
           >
             <!-- Task Status Count -->
             <div class="flex flex-wrap justify-between">
-              <div class="flex flex-row gap-[0.2rem] pr-1 drop-shadow-md">
-                <div class="flex flex-wrap">
+              <div class="flex flex-row pr-1 drop-shadow-md">
+                <div class="flex flex-wrap gap-[0.2rem]">
                   <div class="">
                     <router-link :to="{ name: 'ManageStatus' }">
                       <button
@@ -689,7 +667,7 @@ async function removeTask(index, confirmDelete = false) {
                     </button>
                     <ul
                       tabindex="0"
-                      class="dropdown-content flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] h-64 overflow-y-auto overflow-x-hidden"
+                      class="dropdown-content z-50 flex flex-col gap-2 p-2 shadow bg-base-100 rounded-box w-[10rem] overflow-y-auto overflow-x-hidden"
                     >
                       <li
                         v-for="status in statusStore.allStatus"
@@ -718,9 +696,6 @@ async function removeTask(index, confirmDelete = false) {
                   </div>
                 </div>
               </div>
-              <!-- <div class="cursor-pointer">
-            <Themes @click="openChageThemes" />
-          </div> -->
             </div>
 
             <TaskBoard
@@ -873,10 +848,6 @@ async function removeTask(index, confirmDelete = false) {
       </Toast>
     </div>
   </div>
-  <!-- <identifyUser
-      :boardId="boardId"
-      >
-    </identifyUser> -->
 </template>
 <style scoped>
 .task-status-wrapper {

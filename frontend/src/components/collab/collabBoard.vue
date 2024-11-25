@@ -2,12 +2,12 @@
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useUserStore } from "../../stores/user.js";
 import { useRoute, useRouter } from "vue-router";
-import {ref,watch} from "vue";
+import { ref, watch } from "vue";
 import collabDetail from "./collabDetail.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
 import { useBoardStore } from "../../stores/boards.js";
 
-defineEmits(["removeCollab",'addCollab','changeAccess']);
+defineEmits(["removeCollab", "addCollab", "changeAccess"]);
 const props = defineProps({
   showErrorMSG: {
     type: Boolean,
@@ -48,22 +48,15 @@ watch(
     }
   }
 );
-
-
 </script>
 
 <template>
   <div class="flex flex-col w-full h-screen">
-    <!-- <div class="h-[8%]">
-        <HeaderView class="h-full" />
-      </div> -->
-    <!-- Task Status and Add Task Button -->
-    <div class="flex flex-col items-center h-full gap-5 mt-2">
-      <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2">
-        <!-- Task Status Count -->
-        <div class="m-[2px] flex sm:items-center items-end w-full">
+    <div class="flex flex-col items-center h-full gap-4 mt-2">
+      <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300">
+        <div class="m-[2px] my-2 flex sm:items-center items-end w-full flex-wrap">
           <router-link :to="{ name: 'task' }">
-            <div class="itbkk-board-name text-gray-600 text-[1.5rem] font-bold">
+            <div class="itbkk-board-name text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold">
               {{
                 boardStore.currentBoard.owner.id === userStore.authToken?.oid
                   ? boardStore.currentBoard.name + " Personal's Board"
@@ -71,7 +64,7 @@ watch(
               }}
             </div>
           </router-link>
-
+          <div class="flex items-center ">
           <div
             class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800 rotate-180"
           >
@@ -90,22 +83,10 @@ watch(
               />
             </svg>
           </div>
-          <div class="text-gray-900 text-[1.5rem] font-bold">Collaborater</div>
+          <div class="text-gray-900 text-2xl max-md:text-xl max-sm:text-sm font-bold">Collaborater</div></div>
         </div>
-        <!-- <div class="m-[2px] flex sm:items-center items-end">
-          <router-link :to="{ name: 'task' }">
-            <div
-              class="itbkk-button-home text-gray-800 text-[1rem] hover:underline hover:decoration-1"
-            >
-              Home
-            </div>
-          </router-link>
-          <div class="mx-2 text-slate-500">/</div>
-
-          <div class="text-gray-800 text-[1rem] font-bold">ManageStatus</div>
-        </div> -->
-
-        <!-- Filter -->
+      </div>
+      <div class="flex flex-row w-[95%] max-sm:w-full max-sm:px-2">
         <div class="flex items-end w-full justify-end">
           <div
             class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
@@ -128,7 +109,7 @@ watch(
                     ? 'cursor-pointer'
                     : 'cursor-not-allowed'
                 "
-                @click="$emit ('addCollab',true)"
+                @click="$emit('addCollab', true)"
               >
                 Add Collaborater
               </button>
@@ -138,14 +119,14 @@ watch(
       </div>
 
       <div
-        class="flex justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+        class="flex justify-center gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
       >
         <!-- Status Table -->
         <TaskTableLoading v-if="showLoading" class="w-full" />
 
         <div v-else class="w-full rounded-md shadow-xl">
           <div
-            class="flex justify-center mt-4 gap-3 w-[100%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+            class="flex justify-center gap-3 w-[100%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
           >
             <table class="w-full rounded-md">
               <thead
@@ -247,8 +228,13 @@ watch(
                           v-model="collab.accessRight"
                           @click="oldAccess = collab.accessRight"
                           @change="
-                              $emit('changeAccess', index, isChangeAccess, collab,oldAccess),
-                              console.log('change',oldAccess)
+                            $emit(
+                              'changeAccess',
+                              index,
+                              isChangeAccess,
+                              collab,
+                              oldAccess
+                            )
                           "
                           :disabled="
                             boardStore.currentBoard.owner.id !==
@@ -286,12 +272,13 @@ watch(
                             v-if="collab.isPending === false"
                             class="itbkk-collab-remove text-white fill-rose-300"
                             @click="
-                              (isChangeAccess = false),$emit('removeCollab', index,isChangeAccess,collab)
-               
-                                // boardStore.currentBoard.owner.id ===
-                                // userStore.authToken?.oid
-                                //   ? (showConfirmModal = true)
-                                //   : (showConfirmModal = false)
+                              (isChangeAccess = false),
+                                $emit(
+                                  'removeCollab',
+                                  index,
+                                  isChangeAccess,
+                                  collab
+                                )
                             "
                             :disabled="
                               boardStore.currentBoard.owner.id !==
@@ -317,12 +304,13 @@ watch(
                             v-else
                             class="text-white px-2 py-1 rounded cursor-pointer"
                             @click="
-                              (isChangeAccess = false),$emit('removeCollab', index,isChangeAccess,collab)
-               
-                                // boardStore.currentBoard.owner.id ===
-                                // userStore.authToken?.oid
-                                //   ? (showConfirmModal = true)
-                                //   : (showConfirmModal = false)
+                              (isChangeAccess = false),
+                                $emit(
+                                  'removeCollab',
+                                  index,
+                                  isChangeAccess,
+                                  collab
+                                )
                             "
                             :disabled="
                               boardStore.currentBoard.owner.id !==
@@ -334,7 +322,6 @@ watch(
                                 ? 'cursor-pointer bg-red-500'
                                 : 'cursor-not-allowed disabled bg-gray-300'
                             "
-                     
                           >
                             Cancel
                           </div>
@@ -370,7 +357,6 @@ watch(
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>

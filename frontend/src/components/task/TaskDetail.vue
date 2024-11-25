@@ -195,33 +195,26 @@ const disabledSave = computed(() => {
     previewImagesURL.value.length === 0 &&
     fileChange.value === false
   ) {
-    // console.log("isTaskChanged.value && previewImagesURL.value.length === 0");
     return true;
   } else if (
     invalidFile.value.maxSize.filename > 0 ||
     invalidFile.value.maxFile.filename > 0 ||
     invalidFile.value.dupFile.filename > 0
   ) {
-    // console.log("previewImagesURL.value.some(e=>e.invalid)");
     return true;
   } else if (fileChange.value) {
-    // console.log("fileChange ===false ");
     return false;
   } else if (duplicateTask.value.title === null || countTitle.value <= 0) {
-    // console.log("2");
     return true;
   } else if (
     validate.value.title.boolean ||
     validate.value.description.boolean ||
     validate.value.assignees.boolean
   ) {
-    // console.log("3");
     return true;
   } else if (limitThisTask.value) {
-    // console.log("4");
     return true;
   } else {
-    // console.log("else");
     //save กดได้
     return false;
   }
@@ -272,7 +265,7 @@ const limitThisTask = computed(() => {
     ) {
       //ไม่แสดงข้อความเตือนถ้า เลทิก สเตตัสเดิม limit
       if (
-        duplicateTask.value.status.name === props.task.status.name &&
+        duplicateTask.value.status.name === props.task?.status?.name &&
         noOftask.value[duplicateTask.value.status.name] === maximumTask.value
       ) {
         return false;
@@ -299,7 +292,7 @@ function redoFile(userAction) {
         fileName: [...fileDetete.value.fileName],
         fileUrl: [...fileDetete.value.fileUrl],
       };
-          fileURL.value.push(...fileSelectRedo.value)
+      fileURL.value.push(...fileSelectRedo.value);
 
       for (let i = arr.fileName.length - 1; i >= 0; i--) {
         // หาค่า index ที่ตรงกันใน fileSelectRedo
@@ -310,20 +303,18 @@ function redoFile(userAction) {
         if (index !== -1) {
           // ลบข้อมูลที่ตำแหน่ง i
           fileDetete.value.fileName.splice(i, 1);
-          fileDetete.value.fileUrl.splice(i, 1);      
+          fileDetete.value.fileUrl.splice(i, 1);
         }
       }
-    }  
-  }  
-  if (fileDetete.value.fileName.length<=0) {
-    showRedoButton.value=false
-    fileChange.value = false
+    }
   }
-  fileSelectRedo.value=[]
+  if (fileDetete.value.fileName.length <= 0) {
+    showRedoButton.value = false;
+    fileChange.value = false;
+  }
+  fileSelectRedo.value = [];
   showRedo.value = false;
- 
 }
-
 </script>
 
 <template>
@@ -339,7 +330,6 @@ function redoFile(userAction) {
             : ' rounded-s-md rounded-e-md w-[81rem]'
         "
       >
-        <!-- Close Button Container with sticky positioning -->
         <div
           class="w-full flex justify-end sticky top-0 z-10 mb-2"
           :class="showAttachment ? 'hidden' : ''"
@@ -352,7 +342,7 @@ function redoFile(userAction) {
           </div>
         </div>
         <div class="pl-10 pr-5" :class="showAttachment ? 'mt-10' : ''">
-          <div class="font-bold text-sm">Title</div>
+          <div class="font-bold text-base">Title</div>
           <div class="flex flex-row gap-5 items-end w-full rounded-b-lg mt-2">
             <div
               v-if="showLoading"
@@ -387,7 +377,7 @@ function redoFile(userAction) {
               data-tip="You need to be board owner to perform this action."
             ></div>
             <div class="flex flex-col justify-center items-center">
-              <p class="font-bold text-sm">Limit</p>
+              <p class="font-bold text-base">Limit</p>
               <p
                 class="font-bold text-sm"
                 :class="isLimit ? 'text-green-600	' : 'text-rose-600'"
@@ -408,10 +398,9 @@ function redoFile(userAction) {
             >
           </div>
         </div>
-
         <div class="pl-10 pr-5 mt-3 flex gap-5">
           <div class="flex flex-col w-[50%]">
-            <div class="font-bold text-sm">Assignees</div>
+            <div class="font-bold text-base">Assignees</div>
             <div
               v-if="showLoading"
               class="animate-pulse bg-gray-300 rounded-md h-[3rem] w-full"
@@ -456,7 +445,7 @@ function redoFile(userAction) {
           </div>
 
           <div class="flex flex-col w-[30%]">
-            <label for="category" class="font-bold text-sm">Status</label>
+            <label for="category" class="font-bold text-base">Status</label>
             <div
               v-if="showLoading"
               class="animate-pulse bg-gray-300 rounded-md h-[3rem] w-full"
@@ -495,13 +484,16 @@ function redoFile(userAction) {
             </div>
           </div>
         </div>
-        <div class="text-rose-600 mt-1" v-if="limitThisTask && editMode">
+        <div
+          class="text-end pr-5 text-rose-600 mt-1"
+          v-if="limitThisTask && editMode"
+        >
           The status {{ duplicateTask.status.name }} will have too many tasks.
           Please make progress and update status of existing tasks first.
         </div>
 
         <div class="pl-10 pr-5 mt-3 flex flex-col h-full">
-          <div class="font-bold text-sm">Description</div>
+          <div class="font-bold text-base">Description</div>
           <div
             v-if="showLoading"
             class="animate-pulse bg-gray-300 rounded-md h-full w-full"
@@ -548,8 +540,10 @@ function redoFile(userAction) {
           class="pl-10 pr-5 mt-3 flex flex-col h-full"
           :class="editMode || isEditPage ? '' : 'hidden'"
         >
-          <label class="font-bold text-sm" for="file_input">Upload file</label>
-          <p>
+          <label class="font-bold text-base" for="file_input"
+            >Upload file</label
+          >
+          <p class="font-bold text-sm">
             Max file : 10
             <span>, Number file you can add : {{ 10 - fileURL.length }}</span>
           </p>
@@ -628,7 +622,7 @@ function redoFile(userAction) {
               >
                 <CloseIcon />
               </div>
-              <FileList  class="w-[8rem]"
+              <FileList
                 :filename="file.name"
                 :fileurl="previewBinary(file.url)"
                 @openImage="openImageModal(previewBinary(file.url), file.name)"
@@ -685,7 +679,12 @@ function redoFile(userAction) {
               "
               @click="
                 $emit('userAction', false),
-                  $emit('addEdit', duplicateTask, previewImagesURL, fileDetete.fileName)
+                  $emit(
+                    'addEdit',
+                    duplicateTask,
+                    previewImagesURL,
+                    fileDetete.fileName
+                  )
               "
             >
               SAVE
@@ -714,29 +713,31 @@ function redoFile(userAction) {
           </div>
         </div>
         <div>
-          <div class="flex flex-col justify-between">
-          <div class="font-bold text-sm pl-2 mt-3">Attachments</div>
-          <div class="self-end">
-              <button @click="showRedo = true" v-show="showRedoButton">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="25"
-                  height="25"
-                  viewBox="0 0 24 24"
+          <div class="flex flex-row items-center justify-between">
+            <div class="font-bold text-base pl-2 mt-3">Attachments</div>
+
+            <button
+              @click="showRedo = true"
+              v-show="showRedoButton"
+              class="mt-3 pr-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+              >
+                <g
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-width="2"
                 >
-                  <g
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-width="2"
-                  >
-                    <path d="M4 9h12a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H7" />
-                    <path stroke-linejoin="round" d="M7 5L3 9l4 4" />
-                  </g>
-                </svg>
-              </button>
-              <!-- <button class="bg-yellow-300">redo</button> -->
-            </div>
+                  <path d="M4 9h12a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H7" />
+                  <path stroke-linejoin="round" d="M7 5L3 9l4 4" />
+                </g>
+              </svg>
+            </button>
           </div>
           <AttachmentLoadingVue v-if="showLoadingFile" />
           <!-- Scrollable Content Area -->
@@ -747,14 +748,18 @@ function redoFile(userAction) {
               v-show="fileURL"
               class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2"
             >
-            <FileList class="w-[8rem]"
+              <FileList
+                class="w-[8rem]"
                 :filename="file.name"
                 :fileurl="file.url"
                 @openImage="openImageModal(file.url, file.name)"
               ></FileList>
               <div
                 :class="editMode || isEditPage ? 'block' : 'hidden'"
-                @click="deleteFile(file.url, index, 'fileDelete', file.name) , (showRedoButton = true)"
+                @click="
+                  deleteFile(file.url, index, 'fileDelete', file.name),
+                    (showRedoButton = true)
+                "
                 class="bottom-1 right-1 cursor-pointer fill-rose-400 text-sm"
               >
                 <DeleteIcon class="h-7 w-7" />
@@ -793,7 +798,7 @@ function redoFile(userAction) {
       </div>
     </template>
     <template #body>
-      <div class="mb-2">select the file which you need redo</div>
+      <div class="mb-2">Select the file which you need redo</div>
 
       <div class="flex flex-row gap-3 flex-wrap justify-center">
         <div
@@ -827,7 +832,6 @@ function redoFile(userAction) {
       </div>
     </template>
   </ConfirmModal>
-
 </template>
 
 <style scoped>

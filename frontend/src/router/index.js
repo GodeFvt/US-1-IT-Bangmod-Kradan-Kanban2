@@ -130,7 +130,6 @@ const cachedGetBoardsById = async (boardId) => {
   
 
   if (board === 401 || board === 403 || board === 404) {
-    console.log(`Error: ${board}`);
     return board;
   } else {
     boardStore.setCurrentBoard(board);
@@ -139,7 +138,6 @@ const cachedGetBoardsById = async (boardId) => {
 };
 
 router.beforeEach(async (to, from, next) => {
-  console.log('index')
   const userStore = useUserStore();
   const boardStore = useBoardStore();
   const boardId = to.params.boardId;
@@ -170,15 +168,6 @@ router.beforeEach(async (to, from, next) => {
     ].includes(to.name)
   ) {
     const board = await cachedGetBoardsById(boardId);
-    
-    // if (
-    //   userStore.authToken == null &&
-    //   board === 404 &&
-    //   !["task", "ManageStatus", "TaskDetail", "StatusDetail"].includes(to.name)
-    // ) {
-    //   next();
-    // }
-
     if (board === 404 || board === 400 || board === 500) {
       return next({ name: "TaskNotFound", params: { boardId, page: "Board" } });
     }
@@ -228,7 +217,6 @@ router.beforeEach(async (to, from, next) => {
 
         )
       ) {
-        console.log(userStore.authToken)
         return next({ 
           name: "TaskNotFound",
           params: { boardId, page: "authorizAccess" },

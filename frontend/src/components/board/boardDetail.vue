@@ -6,7 +6,6 @@ import { useRouter } from "vue-router";
 import { validateSizeInput } from "../../lib/utill.js";
 import { useUserStore } from "../../stores/user.js";
 
-
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
   board: {
@@ -42,8 +41,10 @@ watch(
       }
     }
     duplicateBoard.value = { ...newBoard };
-    // duplicateBoard.value.name = `${props.username} personal board` 
-    duplicateBoard.value.name === ''  ? duplicateBoard.value.name =`${props.username} personal board` :  duplicateBoard.value.name
+    // duplicateBoard.value.name = `${props.username} personal board`
+    duplicateBoard.value.name === ""
+      ? (duplicateBoard.value.name = `${props.username} personal board`)
+      : duplicateBoard.value.name;
   },
   { immediate: true }
 );
@@ -63,15 +64,14 @@ function textShow(text) {
   }
 }
 function edit(boardId) {
-    console.log(boardId);
-//   if (boardId !== null) {
-//     editMode.value = !editMode.value;
-//     router.push({ name: "EditStatus", params: { statusId: statusId  , boardId : "1"} });
-//   }
+  //   if (boardId !== null) {
+  //     editMode.value = !editMode.value;
+  //     router.push({ name: "EditStatus", params: { statusId: statusId  , boardId : "1"} });
+  //   }
 }
 
 const duplicateName = computed(() => {
-  return false
+  return false;
   // if (isStatusChanged.value === false) {
   //   return allBoard.value
   //     .filter((e) => e.name !== props.board.name)
@@ -84,9 +84,11 @@ const duplicateName = computed(() => {
 });
 
 const disabledSave = computed(() => {
-  const arrStyle = validateSizeInput(
-    { propName: "Board name", propLenght: countBoardName.value, size: 120 }
-  );
+  const arrStyle = validateSizeInput({
+    propName: "Board name",
+    propLenght: countBoardName.value,
+    size: 120,
+  });
 
   validate.value.name = arrStyle[0];
 
@@ -96,7 +98,7 @@ const disabledSave = computed(() => {
     countBoardName.value <= 0
   ) {
     return true;
-  } else if (validate.value.name.boolean ) {
+  } else if (validate.value.name.boolean) {
     return true;
   } else {
     return false;
@@ -110,7 +112,7 @@ const disabledSave = computed(() => {
   >
     <div class="flex h-full items-center justify-center">
       <div
-        class="itbkk-modal-board flex flex-col justify-start rounded-md bg-white h-[55%] max-h-800px w-[50rem] shadow-md relative overflow-auto"
+        class="itbkk-modal-board flex flex-col justify-start rounded-md bg-white w-[50rem] shadow-md relative overflow-auto"
       >
         <!-- Close Button -->
         <div class="w-full flex justify-end">
@@ -124,19 +126,11 @@ const disabledSave = computed(() => {
 
         <!-- Content -->
         <div class="flex flex-col w-full pl-9 pr-9 mt-1">
-          <!-- Status Name -->
           <div class="flex flex-col">
             <div class="flex items-center">
               <div class="font-bold text-xl">
                 <span>Board Name</span>
               </div>
-              <!-- <div
-                v-show="board.id !== 1"
-                @click="edit(board.id)"
-                class="cursor-pointer ml-1"
-              >
-                <EditTaskIcon class="w-[1rem] h-[1rem]" />
-              </div> -->
             </div>
             <textarea
               class="itbkk-board-name read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none"
@@ -176,18 +170,14 @@ const disabledSave = computed(() => {
                 <span class="text-xs text-red-500" v-if="validate.name.boolean">
                   {{ validate.name.msg }}</span
                 >
-                <!-- <span class="text-xs text-red-500" v-if="duplicateName">
-                  Board name must be uniques, please choose another name.
-                </span> -->
               </div>
             </div>
           </div>
           <!-- Description -->
-          <div class="flex flex-col">
+          <!-- <div class="flex flex-col">
             <div class="font-bold text-lg">Description</div>
             <textarea
               class="itbkk-status-description read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-24 resize-none"
-              
               :readonly="!editMode"
               type="text"
               name="description"
@@ -203,23 +193,11 @@ const disabledSave = computed(() => {
               }}
                 </textarea
             >
-        
-          </div>
-          <!-- <div class="flex flex-col">
-            <div class="font-bold text-sm mt-2">Color</div>
-            <div class="mt-2">
-              <input
-                type="color"
-                v-model="duplicateBoard.color"
-                :disabled="!editMode"
-              />
-            </div>
           </div> -->
         </div>
 
-        <!-- Save Buttons, Close Buttons -->
         <div
-          class="w-full flex justify-end mb-5"
+          class="w-full flex justify-end my-5"
           :class="editMode ? 'block ' : 'hidden'"
         >
           <div class="flex mr-10 gap-2">
@@ -235,7 +213,7 @@ const disabledSave = computed(() => {
                 $emit('userAction', false), $emit('addEdit', duplicateBoard)
               "
             >
-             {{ !board?.id? "CREATE" : "SAVE"   }} 
+              {{ !board?.id ? "CREATE" : "SAVE" }}
             </button>
             <button
               class="itbkk-button-cancel text-white inline-flex items-center bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"

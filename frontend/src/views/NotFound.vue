@@ -10,15 +10,12 @@ onMounted(() => {
   intervals.push(
     setTimeout(() => {
       if (TaskNotFound.value === "Status") {
-        console.log("Status");
         router.push({ name: "ManageStatus" });
       } else if (TaskNotFound.value === "Board") {
         router.push({ name: "Login" });
       } else if (TaskNotFound.value === "authorizAccess") {
-        console.log("authorizAccess");
         router.push({ name: "Login" });
       } else if (TaskNotFound.value === "Task") {
-        console.log("Task");
         router.push({
           name: "task",
           params: { boardId: route.params.boardId },

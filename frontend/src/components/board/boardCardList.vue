@@ -26,7 +26,9 @@ const props = defineProps({
 });
 const userStore = useUserStore();
 function getCollaborator(board) {
-  const collaborator = board.collaborators.find((collab) => collab.oid === userStore.authToken.oid);
+  const collaborator = board.collaborators.find(
+    (collab) => collab.oid === userStore.authToken.oid
+  );
   return collaborator;
 }
 </script>
@@ -34,6 +36,20 @@ function getCollaborator(board) {
 <template>
   <!-- Board Cards -->
   <boardCard
+    v-for="board in 3"
+    v-if="showLoading && boardType === 'personal'"
+    customClass="bg-gray-100 h-[12rem] animate-pulse rounded-md"
+  >
+  </boardCard>
+  <boardCard
+    v-for="board in 4"
+    v-else-if="showLoading && boardType === 'collab'"
+    customClass="bg-gray-100 h-[12rem] animate-pulse rounded-md"
+  >
+  </boardCard>
+
+  <boardCard
+    v-else 
     v-for="board in allBoard"
     :key="board.id"
     customClass="relative group"
@@ -87,11 +103,7 @@ function getCollaborator(board) {
       <h3 class="itbkk-board-name slide-right text-lg font-semibold">
         {{ board.name }}
       </h3>
-      
     </template>
-    <!-- <template #content>
-              <p class="slide-right text-sm text-muted-foreground">{{ board.description }}</p>
-            </template> -->
     <template #collab v-if="boardType === 'collab'">
       <div
         class="flex flex-col w-[75%] text-center mt-1 place-items-start ml-3 mb-2"

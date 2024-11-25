@@ -164,7 +164,7 @@ onUnmounted(() => {
 <template>
   <TaskTableLoading
     v-if="showLoading && userStore.theme === 'table'"
-    class="w-full"
+    class="w-full rounded-md"
   />
   <TaskCardLoading
     v-else-if="showLoading && userStore.theme === 'card'"

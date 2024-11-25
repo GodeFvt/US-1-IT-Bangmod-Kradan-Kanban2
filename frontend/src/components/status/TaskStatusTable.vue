@@ -41,16 +41,8 @@ watch(
 );
 
 function editStatus(id, name) {
-  console.log(boardStore.isCanEdit);
   if (boardStore.isCanEdit) {
-    // ***
-    console.log("e");
-    console.log(name);
-    console.log(name !== "No Status" && name !== "Done");
     if (name !== "No Status" && name !== "Done") {
-      console.log("ewd");
-      // editMode.value = !editMode.value;
-      console.log(id);
       router.push({ name: "EditStatus", params: { statusId: id } });
     }
   }

@@ -2,7 +2,7 @@
 
 <template>
   <!-- Table -->
-  <div class="m-4 w-3/4 rounded-md lg:shadow-xl lg:border-l-4">
+  <div class="w-full rounded-md lg:shadow-xl lg:border-l-4">
     <table class="w-full">
       <thead class="bg-gray-50 w-full">
         <tr class="flex w-full">
@@ -26,7 +26,7 @@
         </tr>
       </thead>
       <tbody
-        class="h-[60vh] max-sm:h-[50vh] flex flex-col items-center w-full overflow-y-scroll overflow-x-hidden"
+        class="h-[70vh] max-sm:h-[50vh] flex flex-col items-center w-full overflow-y-scroll overflow-x-hidden"
       >
         <tr
           class="flex w-full items-center justify-center bg-white border-b max-lg:border-l-4"

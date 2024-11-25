@@ -47,6 +47,7 @@ const allTaskLimit = ref([]); // allTask อันที่เกิน
 // show component
 const showErrorMSG = ref(false);
 const showLoading = ref(true);
+const showLoadingStatus = ref(false);
 const showTranfer = ref(false);
 const showDetail = ref(false);
 const showToast = ref(false);
@@ -130,25 +131,6 @@ async function fetchData() {
   }
 }
 
-// async function handleBoardDetail(){
-//   const res = await getBoardsById(boardId.value);
-//    if (typeof res !== 'object') {
-//         handleResponseError(res)
-//       }
-//     else {
-//       userStore.updatevIsibilityPublic(res.visibility ==="PUBLIC" ?  true : false );
-//       toggleVisibleActive.value = userStore.visibilityPublic
-//       boardName.value = res.name;
-//       const oidByGet = res.owner.id;
-//       const oidByToken = userStore.authToken?.oid;
-//       userStore.updatevIsCanEdit(isNotDisable(
-//         userStore.visibilityPublic,
-//         oidByToken,
-//         oidByGet
-//       ))
-//     }
-// }
-
 onMounted(async () => {
   if (!(await isTokenValid(userStore.encodeToken))) {
     // await handleBoardDetail()
@@ -198,11 +180,14 @@ watch(
         showPopUp.value = true;
         return;
       } else {
+        showDetail.value = true;
+        showLoadingStatus.value = true;
         const res = await getStatusById(boardId.value, newId);
         if (res === 401 || res === 403 || res === 404) {
           handleResponseError(res);
         } else {
           status.value = res;
+          showLoadingStatus.value = false;
           if (route.path === `/board/${boardId.value}/status/${newId}/edit`) {
             if (
               status.value.name === "No Status" ||
@@ -217,7 +202,6 @@ watch(
           } else {
             isEdit.value = false;
           }
-          showDetail.value = true;
         }
         showLoading.value = false;
       }
@@ -586,7 +570,7 @@ async function clickRemove(index) {
         @addEdit="addEditStatus"
         :status="status"
         :isEdit="isEdit"
-        :showLoading="showLoading"
+        :showLoading="showLoadingStatus"
       >
       </TaskStatusDetail>
 

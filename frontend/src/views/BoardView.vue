@@ -24,7 +24,6 @@ const userStore = useUserStore();
 const boardStore = useBoardStore();
 const router = useRouter();
 const route = useRoute();
-
 const board = ref({});
 const typeToast = ref("");
 const messageToast = ref("");
@@ -33,13 +32,11 @@ const boardIdForDelete = ref("");
 //show component
 const showPopUp = ref(false);
 const showBoardModal = ref(false);
+const showLoading = ref(false);
 const isEdit = ref(false);
 const showToast = ref(false);
 const showDeleteModal = ref(false);
 const showLeaveModal = ref(false);
-// console.log(userStore.authToken.name);
-// const personalBoard = ref([]);
-// const collabBoard = ref([]);
 
 function handleResponseError(responseCode) {
   if (responseCode === 401) {
@@ -60,16 +57,14 @@ onMounted(async () => {
     showPopUp.value = true;
     return;
   } else {
-    // if (userStore.boards.length === 0) {
+    showLoading.value = true;
     const resBoard = await getAllBoards();
+    showLoading.value = false;
     if (resBoard === 401 || resBoard === 404) {
       handleResponseError(resBoard);
     } else {
-      // personalBoard.value = [...resBoard.boards]
-      // collabBoard.value = [...resBoard.collab, ...resBoard.invited]
       boardStore.setAllBoard(resBoard);
     }
-    //}
   }
 });
 
@@ -90,11 +85,6 @@ const personalBoard = computed(() => {
 watch(
   () => route.path,
   (newPath, oldPath) => {
-    // if (oldPath === "/login") {
-
-    // }
-    // else {fetchData();
-    // }
     if (newPath === "/board/add") {
       ClickAdd();
     }
@@ -115,7 +105,6 @@ watch(
           handleResponseError(res);
         } else {
           if (route.path === `/board/${newId}/edit`) {
-            console.log("edit eiei");
             board.value = boardStore.boards.find((board) => board.id === newId);
 
             showBoardModal.value = true;
@@ -135,7 +124,6 @@ function ClickAdd() {
   // showLoading.value = false;
   isEdit.value = true;
   showBoardModal.value = true;
-  console.log(board.value);
   board.value = {
     name: "",
     description: "",
@@ -146,10 +134,8 @@ async function addEditBoard(newBoard) {
   const indexToCheck = boardStore.boards.findIndex(
     (board) => board.id === newBoard.id
   );
-  console.log(newBoard);
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
     await editBoard(board.value.id, newBoard);
-    console.log("edit");
   } else {
     await addBoard(newBoard);
   }
@@ -218,7 +204,6 @@ async function removeBoard(boardId, confirmDelete = false) {
     return;
   } else {
     showDeleteModal.value = true;
-    console.log(typeof boardId);
     if (typeof boardId === "string") {
       boardIdForDelete.value = boardId;
       board.value = boardStore.boards.find((board) => board.id === boardId);
@@ -286,7 +271,11 @@ function invitation(boardId) {
       <div
         class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
       >
-        <h2 class="text-[1.5rem] m-[2px] my-2 font-bold">Your Boards</h2>
+        <h2
+          class="text-[1.5rem] m-[2px] my-2 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+        >
+          Your Boards
+        </h2>
       </div>
       <div class="flex flex-col items-center h-full w-full overflow-auto">
         <div
@@ -309,6 +298,7 @@ function invitation(boardId) {
             <!-- board card list -->
             <boardCardList
               :allBoard="personalBoard"
+              :showLoading="showLoading"
               @removeBoard="removeBoard"
               @openBoard="openBoard"
             >
@@ -319,7 +309,7 @@ function invitation(boardId) {
           <div class="mb-12"></div>
           <h2
             class="itbkk-collab-board font-bold text-2xl mb-6"
-            v-if="collabBoard?.length > 0"
+            
           >
             Collab Board
           </h2>
@@ -327,6 +317,7 @@ function invitation(boardId) {
             <boardCardList
               :allBoard="collabBoard"
               boardType="collab"
+              :showLoading="showLoading"
               @leaveBoard="leaveBoard"
               @openBoard="openBoard"
               @invitation="invitation"

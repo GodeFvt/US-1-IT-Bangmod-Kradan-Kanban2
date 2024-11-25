@@ -44,11 +44,13 @@ defineEmits(["remove","edit"]);
         "
       >
         <DeleteIcon
-          :class="boardStore.isCanEdit ? ' fill-rose-500' : ' fill-gray-300'"
+          :class="boardStore.isCanEdit ? ' fill-rose-500' : 'fill-gray-300'"
         />
       </div>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>

@@ -6,12 +6,11 @@ export const useUserStore = defineStore("userStore", {
     authToken: null,
     encodeToken: localStorage.getItem("authToken") || null,
     isMicroSoftLogin: "Guest",
-    theme: localStorage.getItem("theme") || "table", 
+    theme: localStorage.getItem("theme") || "table",
   }),
 
   actions: {
     initializeToken() {
-      console.log("initial");
       const token = localStorage?.getItem("authToken");
       const refresh_Token = localStorage?.getItem("refresh_token");
       const keyMicrosoft = Object.keys(localStorage).some((key) =>
@@ -68,7 +67,6 @@ export const useUserStore = defineStore("userStore", {
             decodedToken === null ||
             decodedToken === undefined
           ) {
-            console.log("clearStorage");
             this.clearAuthToken();
           } else {
             this.authToken = decodedToken;
@@ -77,16 +75,14 @@ export const useUserStore = defineStore("userStore", {
           localStorage.setItem("authToken", token);
         } catch (error) {}
       } else {
-        console.log("clearStorage 2");
         this.clearAuthToken();
       }
     },
     clearAuthToken() {
       this.authToken = null;
       this.encodeToken = null;
-      this.isMicroSoftLogin = 'Guest';
-      // localStorage.removeItem("authToken");
-       localStorage.clear();
+      this.isMicroSoftLogin = "Guest";
+      localStorage.clear();
     },
 
     updateIsMicrosoftLogin(string) {
@@ -96,7 +92,6 @@ export const useUserStore = defineStore("userStore", {
     setTheme(newTheme) {
       this.theme = newTheme;
     },
-
   },
 });
 if (import.meta.hot) {
