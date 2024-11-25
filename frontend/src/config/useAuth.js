@@ -44,13 +44,11 @@ export function msalService() {
       state.isAuthenticated = msalInstance.getAllAccounts().length > 0;
       state.user = msalInstance.getAllAccounts()[0];
       if (res && state.isAuthenticated) {
-        console.log(res);
         userStore.setAuthToken(res.idToken);
         localStorage.setItem("graphAPI_token", res.accessToken);
         router.replace({ name: "board" });
       }
       if(!state.isAuthenticated){
-        console.log('handleRedirect');
         router.replace({ name: "Login" });
       }
     } catch (error) {
@@ -71,7 +69,6 @@ export function msalService() {
       }
       const silentRequest = {
         scopes: loginRequest.scopes,
-        
         account: accounts[0],
       };
       const silentResponse = await msalInstance.acquireTokenSilent(
