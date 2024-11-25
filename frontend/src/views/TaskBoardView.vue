@@ -705,7 +705,7 @@ async function removeTask(index, confirmDelete = false) {
                     </router-link>
                   </div>
                   <div class="">
-                    <router-link :to="{ name: 'ManageCollab' }">
+                    <router-link :to="{ name: 'ManageCollabView' }">
                       <div>
                         <button
                           class="itbkk-manage-collaborater bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"

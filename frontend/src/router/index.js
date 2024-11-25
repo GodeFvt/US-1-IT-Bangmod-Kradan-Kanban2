@@ -8,7 +8,7 @@ import { useUserStore } from "../stores/user.js";
 import {useBoardStore } from "../stores/boards.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
-import ManageCollab from "../views/ManageCollab.vue"
+import ManageCollabView from "../views/ManageCollab.vue"
 import Invitations from "../views/Invitations.vue"
 const routes = [
   {
@@ -87,8 +87,8 @@ const routes = [
   },
   {
     path: "/board/:boardId/collab",
-    name: "ManageCollab",
-    component: ManageCollab,
+    name: "ManageCollabView",
+    component: ManageCollabView,
   },
   {
     path: "/board/:boardId/collab/invitations",
@@ -165,7 +165,7 @@ router.beforeEach(async (to, from, next) => {
       "AddStatus",
       "TaskDetail",
       "StatusDetail",
-      "ManageCollab",
+      "ManageCollabView",
      
     ].includes(to.name)
   ) {
