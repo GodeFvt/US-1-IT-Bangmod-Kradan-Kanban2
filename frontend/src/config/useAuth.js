@@ -1,5 +1,6 @@
 import { msalInstance, state, loginRequest } from "./msalConfig";
 import { useUserStore } from "../stores/user.js";
+const LOGOUT_REDIRECT_URI = import.meta.env.VITE_LOGOUT_REDIRECT_URI;
 
 export function msalService() {
   const initialize = async () => {
@@ -33,8 +34,8 @@ export function msalService() {
     state.isAuthenticated = false;
     state.user = null;
     msalInstance.logoutRedirect({
-      postLogoutRedirectUri: "/",
-  });
+      postLogoutRedirectUri: LOGOUT_REDIRECT_URI,
+    });
   };
 
   const handleRedirect = async (router) => {
@@ -48,7 +49,7 @@ export function msalService() {
         localStorage.setItem("graphAPI_token", res.accessToken);
         router.replace({ name: "board" });
       }
-      if(!state.isAuthenticated){
+      if (!state.isAuthenticated) {
         router.replace({ name: "Login" });
       }
     } catch (error) {
