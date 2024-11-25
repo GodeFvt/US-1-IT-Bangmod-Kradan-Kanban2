@@ -24,11 +24,11 @@ services:
   fe:
     container_name: us1-frontend
     image: frontend:v2
-    environment:
-      - CLIENT_ID=${MS_CLIENT_ID}
-      - AUTHORITY=${MS_AUTHORITY}
     build:
       context: frontend
+      args:
+        VITE_CLIENT_ID: ${MS_CLIENT_ID}
+        VITE_AUTHORITY: ${MS_AUTHORITY}
     networks:
       taskproj-net:
         aliases:
