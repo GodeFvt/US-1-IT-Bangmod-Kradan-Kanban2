@@ -8,13 +8,14 @@ import { reactive } from "vue";
 
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
 const AUTHORITY = import.meta.env.VITE_AUTHORITY;
+const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI;
 
 const msalConfig = {
   auth: {
     clientId: CLIENT_ID,
     authority: AUTHORITY,
-    redirectUri: window.location.origin, // Replace with your actual redirect URI
-    postLogoutUri: window.location.origin, // You must register this URI on App Registration. Defaults to window.location.href e.g. http://localhost:3000/
+    redirectUri: REDIRECT_URI, // Replace with your actual redirect URI
+    postLogoutUri: REDIRECT_URI, // You must register this URI on App Registration. Defaults to window.location.href e.g. http://localhost:3000/
     navigateToLoginRequestUrl: false,
   },
   cache: {
