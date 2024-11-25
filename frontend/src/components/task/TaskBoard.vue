@@ -81,7 +81,6 @@ watch(
   async ([statusFilter, allTask]) => {
     if (statusFilter.length === 0) {
       taskFiltered.value = allTask;
-      console.log(taskFiltered.value);
     } else {
       const res = await getFilteredTask(route.params.boardId, statusFilter);
       if (res === 401) {
@@ -160,7 +159,6 @@ onUnmounted(() => {
   handleResize();
 });
 
-console.log(userStore.theme === "table");
 </script>
 
 <template>

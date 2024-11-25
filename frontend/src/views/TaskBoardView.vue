@@ -446,7 +446,7 @@ async function editTask(editedTask, files, fileName) {
     // console.log(files.filter((e)=> Object.keys(e).find("url")));
     //   console.log(files.map((e)=>e.url));
 
-    console.log(files);
+   // console.log(files);
 
     const res = await updateTask(
       boardId.value,

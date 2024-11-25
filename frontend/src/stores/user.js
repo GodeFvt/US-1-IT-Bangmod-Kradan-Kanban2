@@ -85,7 +85,8 @@ export const useUserStore = defineStore("userStore", {
       this.authToken = null;
       this.encodeToken = null;
       this.isMicroSoftLogin = 'Guest';
-      localStorage.clear();
+      // localStorage.removeItem("authToken");
+       localStorage.clear();
     },
 
     updateIsMicrosoftLogin(string) {
