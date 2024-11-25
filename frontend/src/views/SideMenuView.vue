@@ -51,22 +51,21 @@ onMounted(async () => {
   await initialize();
 });
 
-
 const open = ref(true);
 const showChangeThemes = ref(false);
 const themeSelect = ref("");
 const updateSidebarState = () => {
   const screenWidth = window.innerWidth;
-  open.value = screenWidth >= 1000; 
+  open.value = screenWidth >= 1000;
 };
 
 onMounted(() => {
-  updateSidebarState(); 
-  window.addEventListener("resize", updateSidebarState); 
+  updateSidebarState();
+  window.addEventListener("resize", updateSidebarState);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", updateSidebarState); 
+  window.removeEventListener("resize", updateSidebarState);
 });
 
 function openChageThemes() {

@@ -4,6 +4,7 @@ import MoreActionIcon from "../icon/MoreActionIcon.vue";
 import Action from "../Action.vue";
 import SortIcon from "../icon/SortIcon.vue";
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
+import TaskCardLoading from "../loading/TaskCardLoading.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { useUserStore } from "../../stores/user.js";
 import { useBoardStore } from "../../stores/boards.js";
@@ -163,245 +164,200 @@ console.log(userStore.theme === "table");
 </script>
 
 <template>
-  <TaskTableLoading v-if="showLoading" class="w-full" />
+  <TaskTableLoading
+    v-if="showLoading && userStore.theme === 'table'"
+    class="w-full"
+  />
+  <TaskCardLoading
+    v-else-if="showLoading && userStore.theme === 'card'"
+    class="w-full"
+  />
   <div v-else class="w-full rounded-md">
     <!-- Table -->
     <div v-if="userStore.theme === 'table'" class="shadow-xl">
-    <TaskTable :taskFiltered="taskFiltered" >
-      <template #sortStatus>
-        <div class="itbkk-status-sort flex gap-1" @click="switchSortType">
-          <span>Status</span>
+      <TaskTable :taskFiltered="taskFiltered">
+        <template #sortStatus>
+          <div class="itbkk-status-sort flex gap-1" @click="switchSortType">
+            <span>Status</span>
 
-          <SortIcon sortType="default" v-if="sortType === 'default'" />
-          <SortIcon sortType="asc" v-else-if="sortType === 'asc'" />
-          <SortIcon sortType="desc" v-else-if="sortType === 'desc'" />
-        </div>
-      </template>
-      <template #tr-item>
-        <tr
-          class="itbkk-item task-row-wrapper flex w-full items-center justify-center border-l-4 border-b"
-          :style="updateBorderStyle(task.status.name)"
-          v-for="(task, index) in taskFiltered"
-          :key="index"
-          :class="{ 'slide-in': isVisible[index] }"
-        >
-          <td class="px-6 py-4 max-md:hidden w-[5%]">
-            {{ index + 1 }}
-          </td>
-
-          <td
-            class="h-full w-[30%] px-6 py-4 max-md:w-[65%] max-md:px-2 max-md:py-3 hover:bg-neutral-100"
+            <SortIcon sortType="default" v-if="sortType === 'default'" />
+            <SortIcon sortType="asc" v-else-if="sortType === 'asc'" />
+            <SortIcon sortType="desc" v-else-if="sortType === 'desc'" />
+          </div>
+        </template>
+        <template #tr-item>
+          <tr
+            class="itbkk-item task-row-wrapper flex w-full items-center justify-center border-l-4 border-b"
+            :style="updateBorderStyle(task.status.name)"
+            v-for="(task, index) in taskFiltered"
+            :key="index"
+            :class="{ 'slide-in': isVisible[index] }"
           >
-            <router-link
-              :to="{ name: 'TaskDetail', params: { taskId: task.id } }"
+            <td class="px-6 py-4 max-md:hidden w-[5%]">
+              {{ index + 1 }}
+            </td>
+
+            <td
+              class="h-full w-[30%] px-6 py-4 max-md:w-[65%] max-md:px-2 max-md:py-3 hover:bg-neutral-100"
             >
-              <div
-                class="cursor-pointer h-full w-full items-center flex break-all"
+              <router-link
+                :to="{ name: 'TaskDetail', params: { taskId: task.id } }"
               >
-                <span class="itbkk-title font-medium text-gray-900">
-                  {{ task.title }}
+                <div
+                  class="cursor-pointer h-full w-full items-center flex break-all"
+                >
+                  <span class="itbkk-title font-medium text-gray-900">
+                    {{ task.title }}
+                  </span>
+                </div>
+              </router-link>
+            </td>
+            <td
+              class="w-[20%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3 text-center"
+              :class="
+                task.assignees === null || task.assignees?.length === 0
+                  ? 'italic text-gray-600'
+                  : ''
+              "
+            >
+              <span class="itbkk-assignees">
+                {{
+                  task.assignees === null || task.assignees?.length === 0
+                    ? "Unassigned"
+                    : task.assignees
+                }}
+              </span>
+            </td>
+
+            <td
+              class="w-[20%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3 text-center"
+            >
+              <span class="itbkk-attachments">{{
+                task.attachments === null || task.attachments?.length === 0
+                  ? "-"
+                  : task.attachments?.length
+              }}</span>
+            </td>
+
+            <td class="w-[10%] px-2 py-4 max-md:hidden break-all">
+              <div
+                class="text-slate-50 rounded-md p-[0.1rem] text-center"
+                :style="{
+                  'background-color': statusStore.getColorStatus(
+                    task.status.name
+                  ),
+                  color: getTextColor(
+                    statusStore.getColorStatus(task.status.name)
+                  ),
+                }"
+              >
+                <span class="itbkk-status font-bold">
+                  {{ task.status.name }}
                 </span>
               </div>
-            </router-link>
-          </td>
-          <td
-            class="w-[20%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3 text-center"
-            :class="
-              task.assignees === null || task.assignees?.length === 0
-                ? 'italic text-gray-600'
-                : ''
-            "
-          >
-            <span class="itbkk-assignees">
-              {{
-                task.assignees === null || task.assignees?.length === 0
-                  ? "Unassigned"
-                  : task.assignees
-              }}
-            </span>
-          </td>
-
-          <td
-            class="w-[20%] px-6 py-4 break-all max-md:w-[40%] max-md:px-2 max-md:py-3 text-center"
-          >
-            <span class="itbkk-attachments">{{
-              task.attachments === null || task.attachments?.length === 0
-                ? "-"
-                : task.attachments?.length
-            }}</span>
-          </td>
-
-          <td class="w-[10%] px-2 py-4 max-md:hidden break-all">
-            <div
-              class="text-slate-50 rounded-md p-[0.1rem] text-center"
-              :style="{
-                'background-color': statusStore.getColorStatus(
-                  task.status.name
-                ),
-                color: getTextColor(
-                  statusStore.getColorStatus(task.status.name)
-                ),
-              }"
+            </td>
+            <td
+              class="itbkk-status w-[20%] px-4 py-4 max-md:w-[30%] max-md:px-2 max-md:py-3 cursor-pointer flex justify-center items-center"
             >
-              <span class="itbkk-status font-bold">
-                {{ task.status.name }}
+              <div
+                class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
+              >
+                <Action
+                  @edit="editTask(task.id)"
+                  @remove="$emit('removeTask', index)"
+                ></Action>
+              </div>
+            </td>
+          </tr>
+        </template>
+
+        <template #showErrorMSG>
+          <div v-if="showErrorMSG" class="flex h-[100%] items-center w-full">
+            <div
+              class="flex items-center justify-center max-md:border-l-4 h-full w-full"
+            >
+              <span class="text-lg text-slate-700 opacity-50">
+                Missing Load Resource
               </span>
             </div>
-          </td>
-          <td
-            class="itbkk-status w-[20%] px-4 py-4 max-md:w-[30%] max-md:px-2 max-md:py-3 cursor-pointer flex justify-center items-center"
-          >
-            <div
-              class="itbkk-button-action flex flex-row gap-4 max-sm:flex-col"
-            >
-              <!-- <div
-                :class="
-                  boardStore.isCanEdit
-                    ? ''
-                    : 'tooltip tooltip-bottom tooltip-hover'
-                "
-                data-tip="You need to be board owner or has write access to perform this action"
-              >
-                <div
-                  class="itbkk-button-edit"
-                  :class="
-                    boardStore.isCanEdit
-                      ? 'cursor-pointer'
-                      : 'cursor-not-allowed disabled'
-                  "
-                  @click="editTask(task.id)"
-                >
-                  <EditIcon
-                    class="fill-zinc-500"
-                    :class="
-                      boardStore.isCanEdit
-                        ? ' hover:fill-zinc-700'
-                        : ' hover:fill-zinc-500'
-                    "
-                  />
-                </div>
-              </div>
-               <div
-                :class="
-                  boardStore.isCanEdit
-                    ? ''
-                    : 'tooltip tooltip-bottom tooltip-hover'
-                "
-                data-tip="You need to be board owner or has write access to perform this action"
-              >
-                <div
-                  class="itbkk-button-delete"
-                  @click="$emit('removeTask', index)"
-                  :class="
-                    boardStore.isCanEdit
-                      ? 'cursor-pointer'
-                      : 'cursor-not-allowed disabled'
-                  "
-                >
-                  <DeleteIcon
-                    class="fill-rose-300"
-                    :class="
-                      boardStore.isCanEdit
-                        ? ' hover:fill-rose-400'
-                        : ' hover:fill-rose-300'
-                    "
-                  />
-                </div>
-              </div>  -->
-              <Action
-                @edit="editTask(task.id)"
-                @remove="$emit('removeTask', index)"
-              ></Action>
-            </div>
-          </td>
-        </tr>
-      </template>
-
-      <template #showErrorMSG>
-        <div v-if="showErrorMSG" class="flex h-[100%] items-center w-full">
+          </div>
+        </template>
+        <template #NoRecordFound>
           <div
-            class="flex items-center justify-center max-md:border-l-4 h-full w-full"
+            v-if="taskFiltered.length === 0 && !showLoading"
+            class="flex h-[100%] items-center"
           >
             <span class="text-lg text-slate-700 opacity-50">
-              Missing Load Resource
+              No Record Found
             </span>
           </div>
-        </div>
-      </template>
-      <template #NoRecordFound>
-        <div
-          v-if="taskFiltered.length === 0 && !showLoading"
-          class="flex h-[100%] items-center"
-        >
-          <span class="text-lg text-slate-700 opacity-50">
-            No Record Found
-          </span>
-        </div>
-      </template>
-    </TaskTable>
-  </div>
-    <!-- <div v-else> noop</div> -->
+        </template>
+      </TaskTable>
+    </div>
+    <!-- Card -->
     <div v-else class="card">
-    <TaskCard>
-      <template #eachStatus>
-        <div
-          class= "w-[319px] h-[38rem] flex flex-col  border-t-[5px] bg-gray-100 rounded-lg shadow-md shrink-0	  
-          snap-always snap-center
-          "
-
-          v-for="status in statusStore.allStatus"
-          :style="[
-              { 'border-color': statusStore.getColorStatus(status.name) },]"
-        >
-        
-          <div class=" font-medium bg-white min-h-min pb-2  pt-2 text-center border-b-2"    
-          ><p>{{ status.name }}</p></div>
-
-        <div class=" scroll-ml-4	 hover:overflow-y-auto  lg:overflow-y-auto
-        2xl:overflow-y-hidden overflow-x-hidden touch-auto gap-3 p-4 flex flex-col ">
-
+      <TaskCard>
+        <template #eachStatus>
           <div
-            v-for="(task, index) in taskFiltered.filter(
-              (e) => e.status.name === status.name
-            )"
-            class="rounded-lg p-0	drop-shadow-md"
-            
+            class="w-[319px] h-[38rem] flex flex-col border-t-[5px] bg-gray-100 rounded-lg shadow-md shrink-0 snap-always snap-center"
+            v-for="status in statusStore.allStatus"
+            :style="[
+              { 'border-color': statusStore.getColorStatus(status.name) },
+            ]"
           >
-           
-              <div class="bg-slate-50 rounded-lg p-4">
-                <p class="font-medium">{{ task.title }}</p>
-                <div>
-                  <span
-                    class="itbkk-assignees"
-                    :class="
-                      task.assignees === null || task.assignees?.length === 0
-                        ? 'italic text-gray-600'
-                        : ''
-                    "
-                  >
-                    {{
-                      task.assignees === null || task.assignees?.length === 0
-                        ? "Unassigned"
-                        : task.assignees
-                    }}</span
-                  >
-                </div>
-                <div class="action justify-self-end">
-                  <div
-                    class="itbkk-button-action flex flex-row gap-2 max-sm:flex-col "
-                  >
-                  <router-link
-              :to="{ name: 'TaskDetail', params: { taskId: task.id } }"
-            >       <div class="rotate-90">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="25"
-                      height="25"
-                      viewBox="0 0 1024 1024"
+            <div
+              class="font-medium bg-white min-h-min pb-2 pt-2 text-center border-b-2"
+            >
+              <p>{{ status.name }}</p>
+            </div>
+
+            <div
+              class="scroll-ml-4 hover:overflow-y-auto lg:overflow-y-auto 2xl:overflow-y-hidden overflow-x-hidden touch-auto gap-3 p-4 flex flex-col"
+            >
+              <div
+                v-for="(task, index) in taskFiltered.filter(
+                  (e) => e.status.name === status.name
+                )"
+                class="rounded-lg p-0 drop-shadow-md"
+              >
+                <div class="bg-slate-50 rounded-lg p-4">
+                  <p class="font-medium">{{ task.title }}</p>
+                  <div>
+                    <span
+                      class="itbkk-assignees"
+                      :class="
+                        task.assignees === null || task.assignees?.length === 0
+                          ? 'italic text-gray-600'
+                          : ''
+                      "
                     >
-                      <path
-                        fill="currentColor"
-                        d="M1014.64 969.04L703.71 656.207c57.952-69.408 
+                      {{
+                        task.assignees === null || task.assignees?.length === 0
+                          ? "Unassigned"
+                          : task.assignees
+                      }}</span
+                    >
+                  </div>
+                  <div class="action justify-self-end">
+                    <div
+                      class="itbkk-button-action flex flex-row gap-2 max-sm:flex-col"
+                    >
+                      <router-link
+                        :to="{
+                          name: 'TaskDetail',
+                          params: { taskId: task.id },
+                        }"
+                      >
+                        <div class="rotate-90">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="25"
+                            height="25"
+                            viewBox="0 0 1024 1024"
+                          >
+                            <path
+                              fill="currentColor"
+                              d="M1014.64 969.04L703.71 656.207c57.952-69.408 
                         92.88-158.704 92.88-256.208c0-220.912-179.088-400-400-400s-400 
                         179.088-400 400s179.088 400 400 400c100.368 0 192.048-37.056 
                         262.288-98.144l310.496 312.448c12.496 12.497 32.769 
@@ -409,23 +365,22 @@ console.log(userStore.theme === "table");
                         736.527c-185.856 0-336.528-150.672-336.528-336.528S210.734 
                         63.471 396.59 63.471s336.528 150.672 336.528 336.528S582.446
                         736.527 396.59 736.527"
-                      />
-                    
-                    </svg></div></router-link>
-                    <Action
-                      @edit="editTask(task.id)"
-                      @remove="$emit('removeTask', index)"
-                    ></Action>
+                            />
+                          </svg></div
+                      ></router-link>
+                      <Action
+                        @edit="editTask(task.id)"
+                        @remove="$emit('removeTask', index)"
+                      ></Action>
+                    </div>
                   </div>
                 </div>
               </div>
-            
             </div>
           </div>
-        </div>
-      </template>
-    </TaskCard>
-  </div>
+        </template>
+      </TaskCard>
+    </div>
   </div>
   <AuthzPopup v-if="showPopUp" />
 </template>
@@ -449,5 +404,4 @@ console.log(userStore.theme === "table");
   border-radius: 5px;
   background-color: #f1f0f0;
 } */
-
 </style>

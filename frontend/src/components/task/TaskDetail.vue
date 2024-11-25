@@ -12,7 +12,7 @@ import {
   removeURL,
 } from "../../lib/utill.js";
 import { useBoardStore } from "../../stores/boards.js";
-import AttachmentLoadingVue from "../loading/AttachmentLoading.vue"
+import AttachmentLoadingVue from "../loading/AttachmentLoading.vue";
 const router = useRouter();
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
@@ -24,7 +24,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+
   showLoading: {
+    type: Boolean,
+  },
+  showAttachment: {
+    type: Boolean,
+  },
+  showLoadingFile: {
     type: Boolean,
   },
   allTaskLimit: {
@@ -33,9 +40,6 @@ const props = defineProps({
   fileUrl: {
     type: Array,
   },
-  // fileURL2: {
-  //   type: Object,
-  // },
 });
 const statusStore = useStatusStore();
 const duplicateTask = ref({});
@@ -119,7 +123,6 @@ const fileCanPreview = (fileName) => {
     return "any";
   }
 };
-
 
 const invalidFile = ref({
   maxSize: {
@@ -223,12 +226,16 @@ function deleteFile(imgUrlObject, index, type, fileName) {
   if (type === "fileDelete") {
     fileChange.value = true;
     fileURL.value.splice(index, 1);
-    fileURL.length >= 10 ? disabledInput.value = true : disabledInput.value = false
+    fileURL.length >= 10
+      ? (disabledInput.value = true)
+      : (disabledInput.value = false);
     fileDetete.value.push(fileName);
     removeURL(imgUrlObject);
   } else {
     previewImagesURL.value.splice(index, 1);
-    previewImagesURL.length >= 10 ? disabledInput.value = true : disabledInput.value = false
+    previewImagesURL.length >= 10
+      ? (disabledInput.value = true)
+      : (disabledInput.value = false);
     removeURL(imgUrlObject);
   }
 
@@ -286,7 +293,7 @@ const limitThisTask = computed(() => {
       <div
         class="flex flex-col justify-start bg-white h-[80%] shadow-md overflow-y-auto overflow-x-hidden"
         :class="
-          !editMode || isEditPage
+          showAttachment
             ? 'w-[70rem] rounded-s-md'
             : ' rounded-s-md rounded-e-md w-[81rem]'
         "
@@ -294,7 +301,7 @@ const limitThisTask = computed(() => {
         <!-- Close Button Container with sticky positioning -->
         <div
           class="w-full flex justify-end sticky top-0 z-10 mb-2"
-          :class="!editMode || isEditPage ? 'hidden' : ''"
+          :class="showAttachment ? 'hidden' : ''"
         >
           <div
             class="cursor-pointer text-error text-2xl pt-5 pr-5"
@@ -303,9 +310,15 @@ const limitThisTask = computed(() => {
             <CloseIcon />
           </div>
         </div>
-        <div class="pl-10 pr-5 mt-10">
-          <div class="flex flex-row gap-5 items-end w-full rounded-b-lg">
+        <div class="pl-10 pr-5" :class="showAttachment ? 'mt-10' : ''">
+          <div class="font-bold text-sm">Title</div>
+          <div class="flex flex-row gap-5 items-end w-full rounded-b-lg mt-2">
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 rounded-md h-10 w-[90%]"
+            ></div>
             <textarea
+              v-else
               :readonly="!editMode"
               type="text"
               name="title"
@@ -317,7 +330,7 @@ const limitThisTask = computed(() => {
                     : validate.title.style
                   : 'border-b'
               "
-              class="itbkk-title text-xl rounded-md p-1 font-semibold break-all h-10 w-[90%] border border-gray-800 resize-none read-only:focus:outline-none placeholder:font-normal placeholder:italic"
+              class="itbkk-title text-xl rounded-md p-1 font-semibold break-all h-10 border-gray-800 w-[90%] border resize-none read-only:focus:outline-none placeholder:font-normal placeholder:italic"
               @dblclick="edit(task.id)"
               v-model="duplicateTask.title"
               placeholder="Insert Title Here"
@@ -331,20 +344,7 @@ const limitThisTask = computed(() => {
                   : 'tooltip tooltip-bottom tooltip-hover '
               "
               data-tip="You need to be board owner to perform this action."
-            >
-              <!-- <div
-                v-show="$route.path !== '/task/add'"
-                class="text-2xl hover:bg-gray-200 rounded-full"
-                :class="
-                  userStore.isCanEdit
-                    ? 'cursor-pointer'
-                    : 'cursor-not-allowed disabled'
-                "
-                @click="edit(task.id)"
-              >
-                <EditTaskIcon />
-              </div> -->
-            </div>
+            ></div>
             <div class="flex flex-col justify-center items-center">
               <p class="font-bold text-sm">Limit</p>
               <p
@@ -371,7 +371,12 @@ const limitThisTask = computed(() => {
         <div class="pl-10 pr-5 mt-3 flex gap-5">
           <div class="flex flex-col w-[50%]">
             <div class="font-bold text-sm">Assignees</div>
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 rounded-md h-[3rem] w-full"
+            ></div>
             <textarea
+              v-else
               class="itbkk-assignees read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 h-[3rem] w-full rounded-lg border border-gray-800 resize-none text-black"
               :class="
                 (editMode ? validate.assignees.style : 'border-b',
@@ -411,28 +416,41 @@ const limitThisTask = computed(() => {
 
           <div class="flex flex-col w-[30%]">
             <label for="category" class="font-bold text-sm">Status</label>
-            <select
-              v-show="editMode"
-              id="category"
-              :disabled="!editMode"
-              v-model="duplicateTask.status.name"
-              class="itbkk-status mt-2  border border-gray-300  text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block h-[3rem] w-full p-2.5"
-              :class="editMode? 'bg-gray-50 text-gray-900':'bg-gray-200 text-gray-900'"
-            >
-              <option
-                v-for="status in statusStore.allStatus"
-                :selected="
-                  duplicateTask.status.name === `${status.name}` ||
-                  duplicateTask.status.name === null
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 rounded-md h-[3rem] w-full"
+            ></div>
+            <div v-else>
+              <select
+                v-show="editMode"
+                id="category"
+                :disabled="!editMode"
+                v-model="duplicateTask.status.name"
+                class="itbkk-status mt-2 border border-gray-300 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block h-[3rem] w-full p-2.5"
+                :class="
+                  editMode
+                    ? 'bg-gray-50 text-gray-900'
+                    : 'bg-gray-200 text-gray-900'
                 "
-                :value="`${status.name}`"
               >
-                {{ status.name }}
-              </option>
-            </select>
+                <option
+                  v-for="status in statusStore.allStatus"
+                  :selected="
+                    duplicateTask.status.name === `${status.name}` ||
+                    duplicateTask.status.name === null
+                  "
+                  :value="`${status.name}`"
+                >
+                  {{ status.name }}
+                </option>
+              </select>
 
-            <div v-show="!editMode" class="bg-gray-200 text-gray-900 rounded-lg p-2.5">
-              <p>{{ duplicateTask.status.name }}</p>
+              <div
+                v-show="!editMode"
+                class="bg-gray-200 text-gray-900 rounded-lg p-2.5 mt-2"
+              >
+                <p>{{ duplicateTask.status.name }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -443,8 +461,13 @@ const limitThisTask = computed(() => {
 
         <div class="pl-10 pr-5 mt-3 flex flex-col h-full">
           <div class="font-bold text-sm">Description</div>
+          <div
+            v-if="showLoading"
+            class="animate-pulse bg-gray-300 rounded-md h-full w-full"
+          ></div>
           <textarea
-            class="itbkk-description read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-[100%] resize-none text-black"
+            v-else
+            class="itbkk-description read-only:focus:outline-none placeholder:text-gray-500 placeholder:italic break-all mt-2 p-2 rounded-lg border border-gray-800 h-full resize-none text-black"
             :class="
               (editMode ? validate.description.style : 'border-b',
               textShow(duplicateTask.description))
@@ -482,7 +505,7 @@ const limitThisTask = computed(() => {
         </div>
         <div
           class="pl-10 pr-5 mt-3 flex flex-col h-full"
-          :class="isEditPage ? '' : 'hidden'"
+          :class="editMode || isEditPage ? '' : 'hidden'"
         >
           <label class="font-bold text-sm" for="file_input">Upload file</label>
           <input
@@ -493,14 +516,16 @@ const limitThisTask = computed(() => {
             :class="
               disabledInput ||
               fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10 || previewImagesURL.length >= 10
+              fileURL.length + previewImagesURL.length >= 10 ||
+              previewImagesURL.length >= 10
                 ? 'bg-gray-500 cursor-not-allowed'
                 : ''
             "
             :disabled="
               disabledInput ||
               fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10 || previewImagesURL.length >= 10
+              fileURL.length + previewImagesURL.length >= 10 ||
+              previewImagesURL.length >= 10
             "
             @change="preview"
             multiple
@@ -515,7 +540,7 @@ const limitThisTask = computed(() => {
                 class="font-normal"
                 v-for="(name, index) in invalidFile?.maxSize?.filename"
                 :key="index"
-                >{{ index===0?"":"," }} {{ name }}
+                >{{ index === 0 ? "" : "," }} {{ name }}
               </span>
             </div>
             <div
@@ -527,7 +552,8 @@ const limitThisTask = computed(() => {
                 class="font-normal"
                 v-for="(name, index) in invalidFile?.maxFile?.filename"
                 :key="index"
-                >{{ index===0?"":"," }} {{ name }}</span>
+                >{{ index === 0 ? "" : "," }} {{ name }}</span
+              >
             </div>
             <div
               class="text-red-500 mt-1 text-sm font-medium"
@@ -538,7 +564,7 @@ const limitThisTask = computed(() => {
                 class="font-normal"
                 v-for="(name, index) in invalidFile?.dupFile?.filename"
                 :key="index"
-                >{{ index===0?"":"," }} {{ name }}
+                >{{ index === 0 ? "" : "," }} {{ name }}
               </span>
             </div>
           </div>
@@ -548,7 +574,6 @@ const limitThisTask = computed(() => {
               v-for="(file, index) in [...previewImagesURL]"
               :key="index"
               class="relative flex flex-col border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
-              
             >
               <!-- Delete Button Positioned at Top Right -->
               <div
@@ -557,7 +582,10 @@ const limitThisTask = computed(() => {
               >
                 <CloseIcon />
               </div>
-              <div class="flex flex-col items-center cursor-pointer" @click="openImageModal(previewBinary(file.url), file.name)">
+              <div
+                class="flex flex-col items-center cursor-pointer"
+                @click="openImageModal(previewBinary(file.url), file.name)"
+              >
                 <img
                   v-if="fileCanPreview(file.name) === 'img'"
                   :src="previewBinary(file.url)"
@@ -591,19 +619,31 @@ const limitThisTask = computed(() => {
         <div class="flex flex-row justify-end gap-3 pl-10 pr-5 my-5">
           <div class="flex flex-col" v-show="!editMode">
             <div class="font-bold text-sm">Timezone</div>
-            <div class="itbkk-timezone mt-2">
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 rounded-md h-6 w-28 mt-2"
+            ></div>
+            <div v-else class="itbkk-timezone mt-2">
               {{ Intl.DateTimeFormat().resolvedOptions().timeZone }}
             </div>
           </div>
           <div class="flex flex-col" v-show="!editMode">
             <div class="font-bold text-sm">Created On</div>
-            <div class="itbkk-created-on mt-2">
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 rounded-md h-6 w-36 mt-2"
+            ></div>
+            <div v-else class="itbkk-created-on mt-2">
               {{ createDate }}
             </div>
           </div>
           <div class="flex flex-col" v-show="!editMode">
             <div class="font-bold text-sm">Updated On</div>
-            <div class="itbkk-updated-on mt-2">
+            <div
+              v-if="showLoading"
+              class="animate-pulse bg-gray-300 rounded-md h-6 w-36 mt-2"
+            ></div>
+            <div v-else class="itbkk-updated-on mt-2">
               {{ updateDate }}
             </div>
           </div>
@@ -641,9 +681,8 @@ const limitThisTask = computed(() => {
 
       <div
         class="itbkk-modal-task bg-gray-100 rounded-e-md h-[80%] w-[11rem] shadow-md overflow-y-auto border-l"
-        :class="!editMode || isEditPage ? '' : 'hidden'"
+        :class="showAttachment ? '' : 'hidden'"
       >
-    
         <!-- Close Button Container with sticky positioning -->
         <div class="w-full flex justify-end sticky top-0 z-10 mb-2">
           <div
@@ -653,53 +692,50 @@ const limitThisTask = computed(() => {
             <CloseIcon />
           </div>
         </div>
-         <div v-show="true">
-        <div class="font-bold text-sm pl-2 mt-3">Attachments</div>
-        <!-- Scrollable Content Area -->
-        <div class=" ">
-          <div
-            v-for="(file, index) in fileURL"
-            :key="index"
-            v-show="fileURL"
-            class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2"
-            
-          >
-            <div class="flex flex-col items-center justify-between w-full cursor-pointer"
-            @click="openImageModal(file.url, file.name)">
-              <img
-                v-if="fileCanPreview(file.name) === 'img'"
-                :src="file.url"
-                alt="previewImagesURL"
-                class="h-10 w-10 mt-1"
-              />
-              <embed
-                v-else-if="fileCanPreview(file.name) === 'embed'"
-                :src="file.url"
-                alt="previewImagesURL"
-                class="h-10 w-10 mt-1"
-              />
-              <a v-else :href="file.url" :download="file.name" target="_blank"
-                ><FileIcon class="h-10 w-10 fill-gray-800" />
-              </a>
-              <p class="text-xs text-center truncate w-full mt-1">
-                {{ file.name }}
-              </p>
-            </div>
+        <div>
+          <div class="font-bold text-sm pl-2 mt-3">Attachments</div>
+          <AttachmentLoadingVue v-if="showLoadingFile" />
+          <!-- Scrollable Content Area -->
+          <div v-else>
             <div
-              :class="isEditPage ? 'block' : 'hidden'"
-              @click="deleteFile(file.url, index, 'fileDelete', file.name)"
-              class="bottom-1 right-1 cursor-pointer fill-rose-400 text-sm"
+              v-for="(file, index) in fileURL"
+              :key="index"
+              v-show="fileURL"
+              class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2"
             >
-              <DeleteIcon class="h-7 w-7" />
+              <div
+                class="flex flex-col items-center justify-between w-full cursor-pointer"
+                @click="openImageModal(file.url, file.name)"
+              >
+                <img
+                  v-if="fileCanPreview(file.name) === 'img'"
+                  :src="file.url"
+                  alt="previewImagesURL"
+                  class="h-10 w-10 mt-1"
+                />
+                <embed
+                  v-else-if="fileCanPreview(file.name) === 'embed'"
+                  :src="file.url"
+                  alt="previewImagesURL"
+                  class="h-10 w-10 mt-1"
+                />
+                <a v-else :href="file.url" :download="file.name" target="_blank"
+                  ><FileIcon class="h-10 w-10 fill-gray-800" />
+                </a>
+                <p class="text-xs text-center truncate w-full mt-1">
+                  {{ file.name }}
+                </p>
+              </div>
+              <div
+                :class="editMode || isEditPage ? 'block' : 'hidden'"
+                @click="deleteFile(file.url, index, 'fileDelete', file.name)"
+                class="bottom-1 right-1 cursor-pointer fill-rose-400 text-sm"
+              >
+                <DeleteIcon class="h-7 w-7" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div v-show="false">
-      <AttachmentLoadingVue />
-
-      </div>
       </div>
     </div>
   </div>

@@ -57,7 +57,9 @@ const isVisible = ref([]);
 // show component
 const showErrorMSG = ref(false);
 const showLoading = ref(true);
+const showLoadingFile = ref(true);
 const showDetail = ref(false);
+const showAttachments = ref(false);
 const showToast = ref(false);
 const showAddModal = ref(false);
 const showDeleteModal = ref(false);
@@ -99,6 +101,7 @@ function handleResponseError(responseCode) {
 }
 
 async function fetchData() {
+  showLoading.value = true;
   if (userStore.authToken !== null) {
     if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
@@ -112,28 +115,6 @@ async function fetchData() {
   }
   toggleVisibleActive.value = boardStore.visibilityPublic;
 
-  // boardName.value = userStore.findBoardById(boardId).name;
-  // watch(
-  //   () => userStore.boards,
-  //   (newBoards, oldBoards) => {
-  //     console.log(userStore.boards);
-  //     updateBoardName();
-  //   },
-  //   { immediate: true }
-  // );
-
-  // function updateBoardName() {
-  //   const board = userStore.findBoardById(boardId.value);
-  //   console.log(board);
-  //   if (board) {
-  //     boardName.value = board.name;
-  //   } else {
-  //     console.warn(`Board with id ${boardId.value} not found`);
-  //     boardName.value = "Loading...";
-  //   }
-  // }
-
-  //   const getLimit = await getLimit()
   const resTask = await getFilteredTask(boardId.value);
   if (resTask === undefined) {
     showErrorMSG.value = true;
@@ -170,31 +151,6 @@ async function fetchData() {
     showLoading.value = false;
   }
 }
-
-// async function handleBoardDetail() {
-//   const res = await getBoardsById(boardId.value);
-//   if (typeof res !== 'object') {
-//     handleResponseError(res);
-//   } else {
-//     userStore.updatevIsibilityPublic(
-//       res.visibility === "PUBLIC" ? true : false
-//     );
-//     toggleVisibleActive.value = userStore.visibilityPublic;
-//     boardName.value = res.name;
-
-//     // if(userStore.visibilityPublic === false){
-
-//     const oidByGet = res.owner.id;
-//     const oidByToken = userStore.authToken?.oid;
-//     console.log(oidByGet===oidByToken);
-//     userStore.updatevIsCanEdit(
-//       isNotDisable(userStore.visibilityPublic, oidByToken, oidByGet)
-//     );
-//     console.log(userStore.isCanEdit);
-
-//     // }
-//   }
-// }
 
 function countStatuses() {
   const countStatusKeys = Object.keys(countStatus);
@@ -247,11 +203,24 @@ watch(
         showPopUp.value = true;
         return;
       } else {
+        showDetail.value = true;
+        showAttachments.value = true;
+        if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
+          isEdit.value = true;
+        } else {
+          isEdit.value = false;
+        }
+        showLoading.value = true;
+        showLoadingFile.value = true;
         const res = await getTaskById(boardId.value, newId);
         if (typeof res !== "object") {
           handleResponseError(res);
         } else {
           task.value = res;
+          showLoading.value = false;
+          task.value.attachments?.length > 0
+            ? (showLoadingFile.value = true)
+            : (showLoadingFile.value = false);
           task.value.attachments.forEach(async (file) => {
             const resFile = await downloadfile(
               boardId.value,
@@ -268,19 +237,9 @@ watch(
                 url: "https://api.iconify.design/ic:baseline-sim-card-alert.svg",
               });
             }
+            showLoadingFile.value = false;
           });
-          // const resFile2 = await downloadfile(boardId.value,newId, task.value.attachments[0].filename)
-          // console.log(fileURL2.value);
-          // fileURL2.value = resFile2
-          if (route.path === `/board/${boardId.value}/task/${newId}/edit`) {
-            isEdit.value = true;
-            // console.log(isEdit.value);
-          } else {
-            isEdit.value = false;
-          }
-          showDetail.value = true;
         }
-        showLoading.value = false;
       }
     }
   },
@@ -348,11 +307,6 @@ async function confirmLimit(action) {
 }
 
 async function confirmVisibility(action) {
-  // console.log(
-  //   "bafore fetch",
-  //   toggleVisibleActive.value,
-  //   userStore.visibilityPublic
-  // );
   if (!(await isTokenValid(userStore.encodeToken))) {
     showPopUp.value = true;
     return;
@@ -366,9 +320,6 @@ async function confirmVisibility(action) {
         ? { visibility: "PUBLIC" }
         : { visibility: "PRIVATE" };
       const res = await toggleVisibility(boardId.value, visibility);
-      // console.log(res);
-      // console.log( "after fetch",toggleVisibleActive.value);
-
       if (res === 400 || res === 404) {
         typeToast.value = "warning";
         messageToast.value = `An error occurred enable visibility`;
@@ -384,8 +335,6 @@ async function confirmVisibility(action) {
       } else if (res === 401) {
         handleResponseError(res);
       } else {
-        // console.log(res.visibility);
-        // toggleVisibleActive.value = res.visibility ==="PUBLIC" ?  false : true
         boardStore.updatevIsibilityPublic(
           res.visibility === "PUBLIC" ? true : false
         );
@@ -394,10 +343,6 @@ async function confirmVisibility(action) {
           navigator.clipboard.writeText(window.location.href);
         }
         boardStore.setIsVisibilityCurrentBoard(res.visibility);
-        // console.log("200 fetch", toggleVisibleActive.value);
-
-        // typeToast.value = "success";
-        // messageToast.value = `The Kanban board now limits ${maximumTask.value} tasks in each status`;
       }
       showVisibilityModal.value = false;
     }
@@ -426,6 +371,7 @@ function ClickAdd() {
   showLoading.value = false;
   showDetail.value = true;
   isEdit.value = true;
+  showAttachments.value = false;
   task.value = {
     title: "",
     description: "",
@@ -597,7 +543,7 @@ async function removeTask(index, confirmDelete = false) {
               </svg>
             </button>
           </router-link>
-          <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold ">
+          <div class="itbkk-BoardName text-gray-600 text-[1.5rem] font-bold">
             {{
               boardStore.currentBoard.owner.id === userStore.authToken?.oid
                 ? boardStore.currentBoard.name + " Personal's Board"
@@ -663,7 +609,10 @@ async function removeTask(index, confirmDelete = false) {
                       "
                       data-tip="You need to be board owner to perform this action"
                     >
-                      <span class="font-bold visibility cursor-default mb-4" @click.stop>
+                      <span
+                        class="font-bold visibility cursor-default mb-4"
+                        @click.stop
+                      >
                         {{
                           boardStore.visibilityPublic ? "Public" : "Private"
                         }}</span
@@ -793,6 +742,8 @@ async function removeTask(index, confirmDelete = false) {
         :task="task"
         :isEdit="isEdit"
         :showLoading="showLoading"
+        :showLoadingFile="showLoadingFile"
+        :showAttachment="showAttachments"
         :allTaskLimit="allTaskLimit"
         :fileUrl="fileURL"
       >

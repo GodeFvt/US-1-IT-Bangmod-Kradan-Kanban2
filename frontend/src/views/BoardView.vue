@@ -286,9 +286,9 @@ function invitation(boardId) {
       <div
         class="itbkk-button-home flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
       >
-        <h2 class="text-[1.5rem] mt-5 mb-2 font-bold">Your Boards</h2>
+        <h2 class="text-[1.5rem] m-[2px] my-2 font-bold">Your Boards</h2>
       </div>
-      <div class="flex flex-col items-center h-full overflow-auto">
+      <div class="flex flex-col items-center h-full w-full overflow-auto">
         <div
           class="flex flex-col justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
         >

@@ -490,12 +490,12 @@ async function clickRemove(index) {
 </script>
 <template>
   <div class="flex flex-col w-full h-screen">
-    <div class="flex flex-col items-center h-full gap-5 mt-2">
+    <div class="flex flex-col items-center h-full gap-4 mt-2">
       <div
         class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
       >
         <!-- Task Status Count -->
-        <div class="m-[2px] flex sm:items-center items-end w-full">
+        <div class="m-[2px] flex sm:items-center items-end w-full my-2">
           <router-link :to="{ name: 'task' }">
             <button
               class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800"
@@ -516,7 +516,9 @@ async function clickRemove(index) {
               </svg>
             </button>
           </router-link>
-          <div class="itbkk-button-home text-gray-600 text-[1.5rem] font-bold">
+          <div
+            class="itbkk-button-home text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+          >
             {{
               boardStore.currentBoard.owner.id === userStore.authToken?.oid
                 ? boardStore.currentBoard.name + " Personal's Board"
@@ -525,7 +527,9 @@ async function clickRemove(index) {
           </div>
         </div>
         <!-- Filter -->
-        <div class="flex items-end w-full justify-end mb-2">
+      </div>
+      <div class="flex flex-row w-[95%] max-sm:w-full max-sm:px-2">
+        <div class="flex items-end w-full justify-end">
           <div
             class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
           >
@@ -565,9 +569,8 @@ async function clickRemove(index) {
           </div>
         </div>
       </div>
-
       <div
-        class="flex justify-center mt-4 gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
+        class="flex justify-center gap-3 w-[95%] max-sm:w-full max-sm:px-2 max-sm:gap-1"
       >
         <!-- Status Table -->
         <TaskStatusTable
