@@ -63,11 +63,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (requestTokenHeader.startsWith("Bearer ")) {
                     jwtToken = requestTokenHeader.substring(7);
                     try {
-                        if (jwtTokenUtil.isMicrosoftToken(jwtToken)) {
+                        if (!jwtTokenUtil.isTokenItbkk(jwtToken)) {
                             msUser = jwtTokenUtil.getMsUserFromToken(jwtToken);
-                            if (msUser == null) {
-                                throw new IllegalArgumentException("Invalid Microsoft Token");
-                            }
                         } else {
                             username = jwtTokenUtil.getSubjectFromToken(jwtToken, false);
                         }
@@ -93,7 +90,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     if (jwtTokenUtil.validateToken(jwtToken, (CustomUserDetails) userDetails, false)) {
                         authenticationToken(userDetails, request);
                     }
-                }else if (msUser != null) {
+                } else if (msUser != null) {
                     CustomUserDetails userDetails = jwtUserDetailsService.getUserDetailsMS(msUser);
                     authenticationToken(userDetails, request);
                 }

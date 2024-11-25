@@ -109,11 +109,18 @@ public class JwtTokenUtil implements Serializable {
         }
     }
 
+    public Boolean isTokenItbkk(String token) throws JsonProcessingException {
+        isTokenExpired(token);
+        try {
+            Claims claims = Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public MsUser getMsUserFromToken(String token) {
         Claims claims = getClaimsFromMicrosoftToken(token);
-        if (claims == null) {
-            return null;
-        }
         return new MsUser(
                 claims.get("oid", String.class),
                 claims.get("name", String.class),
@@ -140,11 +147,11 @@ public class JwtTokenUtil implements Serializable {
 
     private Claims getClaimsFromMicrosoftToken(String token) {
         try {
-            NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withIssuerLocation("https://login.microsoftonline.com/79845616-9df0-43e0-8842-e300feb2642a/v2.0").build();
+            NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuerMS).build();
             Jwt jwt = nimbusJwtDecoder.decode(token);
             return new DefaultClaims(jwt.getClaims());
         } catch (JwtException | IllegalArgumentException ex) {
-            return null;
+            throw new IllegalArgumentException(ex.getMessage());
         }
     }
 }
