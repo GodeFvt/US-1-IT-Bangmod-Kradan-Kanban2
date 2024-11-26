@@ -144,7 +144,7 @@ let collabIndex = boardStore.collabs.findIndex((collaborator) => {
     else if (res === 404) {
       //The user "${collab.email}" does not exists. ที่ addModal
       typeToast.value = "danger";
-      messageToast.value = `The user "${collab.email}" does not exists.`;
+      messageToast.value = `The user "${collab.email}" does not exists. or you need to Login as MS account.`;
       showToast.value = true;
       removeCollabByEmail(collab)
     } else if (res === 401) {
