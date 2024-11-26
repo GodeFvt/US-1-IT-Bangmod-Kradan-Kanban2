@@ -34,15 +34,8 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (user == null) {
             throw new InternalAuthenticationServiceException("Username or Password is incorrect.");
         }
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        GrantedAuthority grantedAuthority = new GrantedAuthority() {
-            @Override
-            public String getAuthority() {
-                return user.getRole().toString();
-            }
-        };
-        authorities.add(grantedAuthority);
-        return  new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole(), authorities);
+        List<GrantedAuthority> authorities = getAuthorities(user.getRole().toString());
+        return new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole(), authorities);
     }
 
     public CustomUserDetails loadUserByOid(String oid) throws UsernameNotFoundException {
@@ -50,20 +43,13 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (user.isEmpty()) {
             throw new InternalAuthenticationServiceException("Token is invalid.");
         }
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        GrantedAuthority grantedAuthority = new GrantedAuthority() {
-            @Override
-            public String getAuthority() {
-                return user.get().getRole().toString();
-            }
-        };
-        authorities.add(grantedAuthority);
+        List<GrantedAuthority> authorities = getAuthorities(user.get().getRole().toString());
         return new CustomUserDetails(user.get().getUsername(),user.get().getName(), user.get().getOid(),user.get().getEmail() ,user.get().getPassword(), user.get().getRole(), authorities);
     }
 
     public CustomUserDetails getUserDetailsMS(MsUser msUser) {
-        BoardUser user = boardUserRepository.findById(msUser.getOid()).orElse(null);
-        CustomUserDetails userItbkk_Shared = loadUserByOid(msUser.getOid());
+        BoardUser  user = boardUserRepository.findById(msUser.getOid()).orElse(null);
+        User userItbkk_Shared = userRepository.findById(msUser.getOid()).orElse(null);
         BoardUser newUser = new BoardUser();
         if (user == null) {
             if (userItbkk_Shared != null) {
@@ -83,7 +69,32 @@ public class JwtUserDetailsService implements UserDetailsService {
                 throw new InternalAuthenticationServiceException("Cannot create user.");
             }
         }
-        return userItbkk_Shared != null ? userItbkk_Shared : new CustomUserDetails(msUser.getName(), msUser.getName(), msUser.getOid(), msUser.getEmail(), "", null, List.of(() -> "ROLE_USER"));
+        return getCustomUserDetails(msUser, userItbkk_Shared);
+    }
+
+    private CustomUserDetails getCustomUserDetails(MsUser msUser, User userItbkk_Shared) {
+        CustomUserDetails userDetails;
+        List<GrantedAuthority> authorities;
+        if (userItbkk_Shared != null ){
+            authorities = getAuthorities(userItbkk_Shared.getRole().toString());
+            userDetails = new CustomUserDetails(userItbkk_Shared.getUsername(), userItbkk_Shared.getName(), userItbkk_Shared.getOid(), userItbkk_Shared.getEmail(), userItbkk_Shared.getPassword(), userItbkk_Shared.getRole(),authorities);
+        } else {
+            authorities = getAuthorities("USER");
+            userDetails = new CustomUserDetails(msUser.getName(), msUser.getName(), msUser.getOid(), msUser.getEmail(), "", null, authorities);
+        }
+        return userDetails;
+    }
+
+    private List<GrantedAuthority> getAuthorities(String role) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        GrantedAuthority grantedAuthority = new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return role;
+            }
+        };
+        authorities.add(grantedAuthority);
+        return authorities;
     }
 }
 

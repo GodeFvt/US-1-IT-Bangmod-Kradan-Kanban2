@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import sit.us1.backend.dtos.boardsDTO.CollaboratorResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleCollaboratorDTO;
 import sit.us1.backend.services.EmailService;
-import sit.us1.backend.services.SecurityUtil;
-import sit.us1.backend.validations.ValidationUtil;
+import sit.us1.backend.utils.ValidationUtil;
 import sit.us1.backend.services.CollaborationService;
 import sit.us1.backend.validations.ValidationGroups;
 

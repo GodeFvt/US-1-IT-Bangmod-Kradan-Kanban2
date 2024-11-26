@@ -14,7 +14,7 @@ import sit.us1.backend.dtos.limitsDTO.StatusLimitResponseDTO;
 import sit.us1.backend.dtos.statusesDTO.SimpleStatusDTO;
 import sit.us1.backend.dtos.statusesDTO.StatusValidDTO;
 import sit.us1.backend.entities.taskboard.TaskLimit;
-import sit.us1.backend.validations.ValidationUtil;
+import sit.us1.backend.utils.ValidationUtil;
 import sit.us1.backend.services.StatusService;
 import sit.us1.backend.validations.ValidationGroups;
 

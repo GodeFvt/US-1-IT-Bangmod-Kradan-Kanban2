@@ -61,7 +61,10 @@ onMounted(async () => {
       return;
     }
   }
+  
   if (userStore.authToken !== null) {
+    
+    
     if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
@@ -74,7 +77,8 @@ onMounted(async () => {
   }
   const res = await getCollabs(boardId.value);
   if (typeof res === "object") {
-    boardStore.setCollabs(res);
+    boardStore.setCollabs(res);console.log(boardStore.collabs); console.log(boardStore.currentBoard);
+    
   } else {
     handleResponseError(res);
   }
@@ -140,7 +144,7 @@ let collabIndex = boardStore.collabs.findIndex((collaborator) => {
     else if (res === 404) {
       //The user "${collab.email}" does not exists. ที่ addModal
       typeToast.value = "danger";
-      messageToast.value = `The user "${collab.email}" does not exists.`;
+      messageToast.value = `The user "${collab.email}" does not exists. or you need to Login as MS account.`;
       showToast.value = true;
       removeCollabByEmail(collab)
     } else if (res === 401) {

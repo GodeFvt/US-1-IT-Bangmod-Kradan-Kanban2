@@ -8,8 +8,8 @@ import { useUserStore } from "../stores/user.js";
 import {useBoardStore } from "../stores/boards.js";
 import { getBoardsById } from "../lib/fetchUtill.js";
 import {isTokenValid, isNotDisable,refreshTokenAndReturn } from "../lib/utill.js";
-import ManageCollabView from "../views/ManageCollab.vue"
-import Invitations from "../views/Invitations.vue"
+import ManageCollabView from "../views/ManageCollabView.vue";
+import Invitations from "../views/Invitations.vue";
 const routes = [
   {
     path: "/",
@@ -116,7 +116,7 @@ const cachedGetBoardsById = async (boardId) => {
   const graphToken = localStorage.getItem("graphAPI_token")
   let board;
   try{
-    if(!authToken && (refresh_token || userStore.isMicroSoftLogin)){
+    if(!authToken && (refresh_token || userStore.isMicroSoftLogin ==='MS')){
       await refreshTokenAndReturn()
     }
     else if(refresh_token || userStore.isMicroSoftLogin){

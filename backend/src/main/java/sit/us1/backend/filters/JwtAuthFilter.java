@@ -9,33 +9,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.account.MsUser;
-import sit.us1.backend.entities.account.User;
-import sit.us1.backend.entities.taskboard.BoardUser;
 import sit.us1.backend.exceptions.AccessDeniedException;
 import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.exceptions.UnauthorizedException;
-import sit.us1.backend.repositories.account.UserRepository;
-import sit.us1.backend.repositories.taskboard.BoardUserRepository;
-import sit.us1.backend.services.AuthenticationService;
-import sit.us1.backend.services.JwtTokenUtil;
+import sit.us1.backend.utils.JwtTokenUtil;
 import sit.us1.backend.services.JwtUserDetailsService;
 
 
 import java.io.IOException;
-import java.security.SignatureException;
-import java.util.Base64;
-import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {

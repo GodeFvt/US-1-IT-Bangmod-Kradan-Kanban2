@@ -6,11 +6,9 @@ import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import sit.us1.backend.dtos.JwtDTO.JwtRequestUser;
@@ -18,9 +16,9 @@ import sit.us1.backend.dtos.JwtDTO.JwtTokenResponseDTO;
 import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.BoardUser;
 import sit.us1.backend.exceptions.BadRequestException;
-import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.exceptions.UnauthorizedException;
 import sit.us1.backend.repositories.taskboard.BoardUserRepository;
+import sit.us1.backend.utils.JwtTokenUtil;
 
 import java.io.IOException;
 
