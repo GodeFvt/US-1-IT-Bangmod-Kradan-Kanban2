@@ -61,7 +61,10 @@ onMounted(async () => {
       return;
     }
   }
+  
   if (userStore.authToken !== null) {
+    
+    
     if (boardStore.boards.length === 0) {
       const resBoard = await getAllBoards();
       if (resBoard === 401 || resBoard === 404 || resBoard === 403) {
@@ -74,7 +77,8 @@ onMounted(async () => {
   }
   const res = await getCollabs(boardId.value);
   if (typeof res === "object") {
-    boardStore.setCollabs(res);
+    boardStore.setCollabs(res);console.log(boardStore.collabs); console.log(boardStore.currentBoard);
+    
   } else {
     handleResponseError(res);
   }

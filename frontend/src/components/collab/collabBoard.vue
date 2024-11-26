@@ -2,7 +2,7 @@
 import TaskTableLoading from "../loading/TaskTableLoading.vue";
 import { useUserStore } from "../../stores/user.js";
 import { useRoute, useRouter } from "vue-router";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import collabDetail from "./collabDetail.vue";
 import DeleteIcon from "../icon/DeleteIcon.vue";
 import { useBoardStore } from "../../stores/boards.js";
@@ -48,42 +48,57 @@ watch(
     }
   }
 );
+
+const isOwner = computed(() => {
+  return boardStore.currentBoard.owner.id === userStore.authToken?.oid;
+});
 </script>
 
 <template>
   <div class="flex flex-col w-full h-screen">
     <div class="flex flex-col items-center h-full gap-4 mt-2">
-      <div class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300">
-        <div class="m-[2px] my-2 flex sm:items-center items-end w-full flex-wrap">
+      <div
+        class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
+      >
+        <div
+          class="m-[2px] my-2 flex sm:items-center items-end w-full flex-wrap"
+        >
           <router-link :to="{ name: 'task' }">
-            <div class="itbkk-board-name text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold">
+            <div
+              class="itbkk-board-name text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+            >
               {{
-                boardStore.currentBoard.owner.id === userStore.authToken?.oid
+                isOwner
                   ? boardStore.currentBoard.name + " Personal's Board"
                   : boardStore.currentBoard.name + "Collaborate's Board"
               }}
             </div>
           </router-link>
-          <div class="flex items-center ">
-          <div
-            class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800 rotate-180"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <div class="flex items-center">
+            <div
+              class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800 rotate-180"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </div>
+            <div
+              class="text-gray-900 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+            >
+              Collaborater
+            </div>
           </div>
-          <div class="text-gray-900 text-2xl max-md:text-xl max-sm:text-sm font-bold">Collaborater</div></div>
         </div>
       </div>
       <div class="flex flex-row w-[95%] max-sm:w-full max-sm:px-2">
@@ -92,23 +107,13 @@ watch(
             class="flex sm:flex-row flex-col sm:items-center items-end gap-1 sm:gap-4"
           >
             <div
-              :class="
-                boardStore.currentBoard.owner.id === userStore.authToken?.oid
-                  ? ''
-                  : 'tooltip tooltip-bottom tooltip-hover'
-              "
+              :class="isOwner ? '' : 'tooltip tooltip-bottom tooltip-hover'"
               data-tip="You need to be board owner to perform this action."
             >
               <button
                 class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
-                :disabled="
-                  boardStore.currentBoard.owner.id !== userStore.authToken?.oid
-                "
-                :class="
-                  boardStore.currentBoard.owner.id === userStore.authToken?.oid
-                    ? 'cursor-pointer'
-                    : 'cursor-not-allowed'
-                "
+                :disabled="!isOwner"
+                :class="isOwner ? 'cursor-pointer' : 'cursor-not-allowed'"
                 @click="$emit('addCollab', true)"
               >
                 Add Collaborater
@@ -215,10 +220,7 @@ watch(
                   >
                     <div
                       :class="
-                        boardStore.currentBoard.owner.id ===
-                        userStore.authToken?.oid
-                          ? ''
-                          : 'tooltip tooltip-bottom tooltip-hover'
+                        isOwner ? '' : 'tooltip tooltip-bottom tooltip-hover'
                       "
                       data-tip="You need to be board owner to perform this action."
                     >
@@ -236,13 +238,9 @@ watch(
                               oldAccess
                             )
                           "
-                          :disabled="
-                            boardStore.currentBoard.owner.id !==
-                            userStore.authToken?.oid
-                          "
+                          :disabled="!isOwner || !collab.oid"
                           :class="
-                            boardStore.currentBoard.owner.id ===
-                            userStore.authToken?.oid
+                            isOwner && collab.oid
                               ? 'cursor-pointer'
                               : 'cursor-not-allowed disabled'
                           "
@@ -255,14 +253,19 @@ watch(
                     </div>
                   </td>
                   <td
-                    class="w-[20%] px-4 py-4 max-lg:w-[25%] max-lg:px-2 max-lg:py-3 cursor-pointer flex justify-center items-center"
+                    class="w-[20%] px-4 py-4 max-lg:w-[25%] max-lg:px-2 max-lg:py-3 flex justify-center items-center"
                   >
-                    <div class="flex flex-row gap-4 max-sm:flex-col">
+                    <div
+                      @click="
+                        (isChangeAccess = false),
+                          $emit('removeCollab', index, isChangeAccess, collab)
+                      "
+                      class="flex flex-row gap-4 max-sm:flex-col"
+                    >
                       <div>
                         <div
                           :class="
-                            boardStore.currentBoard.owner.id ===
-                            userStore.authToken?.oid
+                            isOwner
                               ? ''
                               : 'tooltip tooltip-bottom tooltip-hover'
                           "
@@ -271,60 +274,33 @@ watch(
                           <div
                             v-if="collab.isPending === false"
                             class="itbkk-collab-remove text-white fill-rose-300"
-                            @click="
-                              (isChangeAccess = false),
-                                $emit(
-                                  'removeCollab',
-                                  index,
-                                  isChangeAccess,
-                                  collab
-                                )
-                            "
-                            :disabled="
-                              boardStore.currentBoard.owner.id !==
-                              userStore.authToken?.oid
-                            "
+                            :disabled="!isOwner || !collab.oid"
                             :class="
-                              boardStore.currentBoard.owner.id ===
-                              userStore.authToken?.oid
+                              isOwner && collab.oid
                                 ? 'cursor-pointer'
                                 : 'cursor-not-allowed disabled'
                             "
                           >
                             <DeleteIcon
                               :class="
-                                boardStore.currentBoard.owner.id ===
-                                userStore.authToken?.oid
+                                isOwner && collab.oid
                                   ? ' hover:fill-red-500'
                                   : ' hover:fill-rose-300'
                               "
                             />
                           </div>
-                          <div
+                          <button
                             v-else
-                            class="text-white px-2 py-1 rounded cursor-pointer"
-                            @click="
-                              (isChangeAccess = false),
-                                $emit(
-                                  'removeCollab',
-                                  index,
-                                  isChangeAccess,
-                                  collab
-                                )
-                            "
-                            :disabled="
-                              boardStore.currentBoard.owner.id !==
-                              userStore.authToken?.oid
-                            "
+                            class="text-white px-2 py-1 rounded"
+                            :disabled="!isOwner || !collab.oid"
                             :class="
-                              boardStore.currentBoard.owner.id ===
-                              userStore.authToken?.oid
+                              isOwner && collab.oid
                                 ? 'cursor-pointer bg-red-500'
                                 : 'cursor-not-allowed disabled bg-gray-300'
                             "
                           >
                             Cancel
-                          </div>
+                          </button>
                         </div>
                       </div>
                     </div>
