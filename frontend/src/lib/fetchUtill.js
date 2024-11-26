@@ -652,7 +652,32 @@ async function downloadfile(boardId,taskId, filename) {
   // let result
   try {
     res = await fetch(
-      `${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}/attachments/${filename}?disposition=inline`,
+      `${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}/attachments/${filename}?disposition=attachment`,
+      {
+        method: "GET",
+        headers: tokenIsNull(token),
+      }
+    );
+    if (res.status === 200) {
+      const blob = await res.blob();
+      return  previewBinary(blob)
+    
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return "error";
+  }
+}
+
+async function previewfile(boardId,taskId, filename) {
+  let res;
+  const userStore = useUserStore();
+  const token = userStore.encodeToken;
+  // let result
+  try {
+    res = await fetch(
+      `${BASE_URL}/v3/boards/${boardId}/tasks/${taskId}/attachments/${filename}/preview?disposition=inline`,
       {
         method: "GET",
         headers: tokenIsNull(token),
@@ -700,4 +725,5 @@ export {
   responseInvite,
   addAttachments,
   downloadfile,
+  previewfile,
 };

@@ -10,17 +10,17 @@ const props = defineProps({
   fileurl: {
     type: String,
   },
-  canPreview: {
+  chooseFile: {
     type: Boolean,
-    default: true,
+    default: false,
   },
 });
 
 
 const fileCanPreview = (name) => {
-  if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(name)) {
+  if (/\.(png|jpeg|jpg|gif|bmp|svg|pdf)$/g.test(name)) {
     return "img";
-  } else if (/\.(txt|pdf)$/g.test(name)) {
+  } else if (/\.(txt|rtf)$/g.test(name)) {
     return "embed";
   } else {
     return "any";
@@ -46,17 +46,18 @@ const fileCanPreview = (name) => {
       class="h-10 w-10 mt-1"
     />
     <div v-else>
-      <a v-if="canPreview"
+      <a v-if="chooseFile"
         :href="fileurl"
         target="_blank"
         class="text-blue-500 underline"
         :download="filename"
         ><FileIcon class="h-10 w-10 fill-gray-800 mt-1"
-      /></a>
+      /></a> 
       <div v-else>
-        <FileIcon class="h-10 w-10 fill-gray-800 mt-1"
+         <FileIcon class="h-10 w-10 fill-gray-800 mt-1"
       />
       </div>
+      
     </div>
 
     <!-- Truncated File Name -->

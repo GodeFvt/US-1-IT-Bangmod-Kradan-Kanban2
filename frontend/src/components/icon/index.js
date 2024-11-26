@@ -17,6 +17,8 @@ export { default as SharpMenuIcon } from './SharpMenuIcon.vue';
 export { default as SharpSortIcon } from './SharpSortIcon.vue';
 export { default as MoreActionIconD } from './MoreActionIconD.vue';
 export { default as FileIcon } from './FileIcon.vue';
+export { default as DownloadIcon } from './DownloadIcon.vue';
+
 
 
 

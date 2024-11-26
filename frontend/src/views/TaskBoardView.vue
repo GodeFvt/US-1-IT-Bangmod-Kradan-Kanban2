@@ -15,6 +15,7 @@ import {
   getAllBoards,
   downloadfile,
   addAttachments,
+  previewfile,
 } from "../lib/fetchUtill.js";
 // import router
 import { useRoute, useRouter } from "vue-router";
@@ -219,7 +220,7 @@ watch(
             ? (showLoadingFile.value = true)
             : (showLoadingFile.value = false);
           task.value.attachments.forEach(async (file) => {
-            const resFile = await downloadfile(
+            const resFile = await previewfile(
               boardId.value,
               newId,
               file.filename
