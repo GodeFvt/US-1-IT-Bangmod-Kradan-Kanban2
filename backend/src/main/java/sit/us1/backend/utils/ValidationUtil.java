@@ -1,4 +1,4 @@
-package sit.us1.backend.validations;
+package sit.us1.backend.utils;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;

@@ -1,4 +1,4 @@
-package sit.us1.backend.services;
+package sit.us1.backend.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

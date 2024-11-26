@@ -1,8 +1,7 @@
-package sit.us1.backend.services;
+package sit.us1.backend.utils;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import sit.us1.backend.entities.account.CustomUserDetails;
 
 public class SecurityUtil {

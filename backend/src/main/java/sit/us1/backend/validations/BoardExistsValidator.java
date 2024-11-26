@@ -3,11 +3,8 @@ package sit.us1.backend.validations;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.Board;
-import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.repositories.taskboard.BoardRepository;
-import sit.us1.backend.services.SecurityUtil;
 
 import java.util.Optional;
 

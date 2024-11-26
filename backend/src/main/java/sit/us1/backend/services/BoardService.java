@@ -5,7 +5,6 @@ package sit.us1.backend.services;
 import com.soundicly.jnanoidenhanced.jnanoid.NanoIdUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sit.us1.backend.dtos.boardsDTO.AllBoardResponseDTO;
@@ -16,6 +15,7 @@ import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.repositories.account.UserRepository;
 import sit.us1.backend.repositories.taskboard.*;
+import sit.us1.backend.utils.SecurityUtil;
 
 
 import java.util.ArrayList;

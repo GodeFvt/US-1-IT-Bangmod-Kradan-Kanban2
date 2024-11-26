@@ -1,21 +1,19 @@
 package sit.us1.backend.filters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import sit.us1.backend.entities.account.CustomUserDetails;
 import sit.us1.backend.entities.taskboard.Collaboration;
 import sit.us1.backend.exceptions.AccessDeniedException;
-import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.exceptions.UnauthorizedException;
 import sit.us1.backend.services.*;
+import sit.us1.backend.utils.SecurityUtil;
 
 import java.io.IOException;
 

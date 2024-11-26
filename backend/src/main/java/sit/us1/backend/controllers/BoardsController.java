@@ -10,10 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import sit.us1.backend.dtos.boardsDTO.AllBoardResponseDTO;
 import sit.us1.backend.dtos.boardsDTO.BoardRequestDTO;
 import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
-import sit.us1.backend.validations.ValidationUtil;
+import sit.us1.backend.utils.ValidationUtil;
 import sit.us1.backend.services.BoardService;
-
-import java.util.List;
 
 @CrossOrigin(origins = {"http://localhost:5173", "https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
 @RestController
