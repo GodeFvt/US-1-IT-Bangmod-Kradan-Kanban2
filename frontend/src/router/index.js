@@ -116,7 +116,7 @@ const cachedGetBoardsById = async (boardId) => {
   const graphToken = localStorage.getItem("graphAPI_token")
   let board;
   try{
-    if(!authToken && (refresh_token || userStore.isMicroSoftLogin)){
+    if(!authToken && (refresh_token || userStore.isMicroSoftLogin ==='MS')){
       await refreshTokenAndReturn()
     }
     else if(refresh_token || userStore.isMicroSoftLogin){
