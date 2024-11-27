@@ -2,10 +2,16 @@
 import { computed, ref, watch } from "vue";
 import { toFormatDate } from "../../lib/utill";
 
-import { FileIcon, CloseIcon, DeleteIcon, EditTaskIcon ,DownloadIcon} from "../icon";
+import {
+  FileIcon,
+  CloseIcon,
+  DeleteIcon,
+  EditTaskIcon,
+  DownloadIcon,
+} from "../icon";
 import ImageViewer from "../ImageViewer.vue";
 import { useStatusStore } from "../../stores/statuses.js";
-import { useRouter ,useRoute} from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import {
   validateSizeInput,
   previewBinary,
@@ -65,7 +71,7 @@ const maximumTask = computed(() => statusStore.maximumTask);
 const noOftask = computed(() => statusStore.noOftask);
 const boardStore = useBoardStore();
 const isEditPage = ref(true);
-const fileChange = ref(false); //เป็น true เมื่อ file ที่มีอยู่แล้วเปลี่ยน 
+const fileChange = ref(false); //เป็น true เมื่อ file ที่มีอยู่แล้วเปลี่ยน
 const validate = ref({ title: {}, description: {}, assignees: {} });
 const fileDetete = ref({ fileName: [], fileUrl: [] });
 const disabledInput = ref(false);
@@ -86,7 +92,6 @@ const invalidFile = ref({
   },
 });
 
-
 watch(
   () => props.task,
   (newTask) => {
@@ -103,80 +108,89 @@ watch(
   { immediate: true }
 );
 
-watch([fileURL.value ,previewImagesURL.value], ([newfileURL,newpreviewImagesURL]) => {
-  console.log(`fileURL is ${fileURL.value}`)
-  console.log(`newfileURL is ${newfileURL}`)
-  console.log(`newpreviewImagesURL is ${newpreviewImagesURL}`)
-  if (newfileURL.length + newpreviewImagesURL.length >= 10|| newfileURL.length>=10 || newpreviewImagesURL.length>=10) {
-    //ขนาดfile เกินไม่ให้กด เลือก file เพิ่ม 
-    maxFile.value = true
-    disabledInput.value = true
-  } else {
-    maxFile.value = false
-    disabledInput.value = false
-  }
-},
+watch(
+  [fileURL.value, previewImagesURL.value],
+  ([newfileURL, newpreviewImagesURL]) => {
+    console.log(`fileURL is ${fileURL.value}`);
+    console.log(`newfileURL is ${newfileURL}`);
+    console.log(`newpreviewImagesURL is ${newpreviewImagesURL}`);
+    if (
+      newfileURL.length + newpreviewImagesURL.length >= 10 ||
+      newfileURL.length >= 10 ||
+      newpreviewImagesURL.length >= 10
+    ) {
+      //ขนาดfile เกินไม่ให้กด เลือก file เพิ่ม
+      maxFile.value = true;
+      disabledInput.value = true;
+    } else {
+      maxFile.value = false;
+      disabledInput.value = false;
+    }
+  },
   { immediate: true }
-)
+);
 
-async function downloadFile(filename) {
-  const resFile = await downloadfile(boardId.value,taskId.value,filename)
-  if (typeof resFile !== "number") {
-    console.log("download ได้");
-      const a = document.createElement("a");
-      a.href = resFile;
-      a.download = filename; // ชื่อไฟล์ที่ต้องการดาวน์โหลด
-      document.body.appendChild(a);
-      a.click(); // คลิกเพื่อเริ่มการดาวน์โหลด
-      //document.body.removeChild(a); // ลบ <a> ออกจาก DOM
-      a.remove();
-     //  URL.revokeObjectURL(resFile); // ลบ URL ชั่วคราวออกจากหน่วยความจำ
-       removeURL(resFile)
-      console.log("download สำเร็จ");
+const fileCanPreview = (fileName) => {
+  if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(fileName)) {
+    return "img";
+  } else if (/\.(txt|pdf)$/g.test(fileName)) {
+    return "embed";
   } else {
-  console.log("download ไม่ได้");
+    return "any";
   }
- 
+};
+
+async function downloadFile(filename,action) {
+  const resFile = await downloadfile(boardId.value, taskId.value, filename);
+  if (typeof resFile !== "number") {
+   
+    if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg)/g) && action === 'preview') {
+      console.log(1);
+      imageType.value = "image";
+      showImageModal.value = true;
+      selectedImage.value = resFile;
+    } else if (getFileType(filename).match(/(txt|pdf)/g)  && action === 'preview') {
+      console.log(2);
+        imageType.value = "embed";
+        showImageModal.value = true;
+        selectedImage.value = resFile;
+    } 
+    else {
+      console.log(3);
+       const a = document.createElement("a");
+       a.href = resFile;
+       a.download = filename; // ชื่อไฟล์ที่ต้องการดาวน์โหลด
+       document.body.appendChild(a);
+       a.click(); 
+       a.remove();
+       removeURL(resFile);
+      console.log("download สำเร็จ");
+      showImageModal.value = false;
+    }
+  } else {
+    console.log("download ไม่ได้");
+  }
 }
 
-function openImageModal(file, filename,action) {
-  // console.log(file);
-  // console.log(filename);
-
-  if (getFileType(filename).match(/(txt)/g)) {
-    imageType.value = "embed";
-    showImageModal.value = true;
-    selectedImage.value = file;
-  } else if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
-    imageType.value = "image";
-    showImageModal.value = true;
-    selectedImage.value = file;
-  } else if (getFileType(filename).match(/(pdf)/g)) {
-    if (action==="choose") {
-       imageType.value = "embed"; 
-    } else {
-      imageType.value = "image";
-    }
-    showImageModal.value = true;
-    selectedImage.value = file;
-  } 
-  else if (getFileType(filename).match(/(rtf)/g)) {
-    if (action==="choose") {
-      imageType.value = "otherType";
-    } else {
+function openImageModal(file, filename, action) {
+  if (action !== "choose") {
+    downloadFile(filename ,action);
+  } else {
+    if (getFileType(filename).match(/(txt|pdf)/g)) {
+      console.log(4);
       imageType.value = "embed";
+      showImageModal.value = true;
+      selectedImage.value = file;
+    } else if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
+      console.log(5);
+      imageType.value = "image";
+      showImageModal.value = true;
+      selectedImage.value = file;
+    }  else {
+      console.log(6);
+      imageType.value = "otherType";
+      showImageModal.value = false;
     }
-    showImageModal.value = true;
-    selectedImage.value = file;
-  } 
-  else {
-    console.log("other type");
-    imageType.value = "otherType";
-    if (action!=="choose") {
-      console.log("not choose can เฟช");
-      downloadFile(filename);
-    }
-    showImageModal.value = false;
   }
 }
 
@@ -204,15 +218,6 @@ const countAssignees = computed(() => {
   return duplicateTask.value.assignees?.trim()?.length;
 });
 
-const fileCanPreview = (fileName) => {
-  if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(fileName)) {
-    return "img";
-  } else if (/\.(txt|pdf)$/g.test(fileName)) {
-    return "embed";
-  } else {
-    return "any";
-  }
-};
 
 
 const preview = (event) => {
@@ -234,15 +239,13 @@ const preview = (event) => {
     ) {
       invalidFile.value?.maxFile.filename.push(element.name);
       return;
-    } 
-    else if (
+    } else if (
       fileURL.value.filter((e) => e.name === element.name).length >= 1 ||
       previewImagesURL.value.filter((e) => e.name === element.name).length >= 1
     ) {
       invalidFile.value?.dupFile.filename.push(element.name);
       return;
-    } 
-    else {
+    } else {
       previewImagesURL.value.push({
         name: element.name,
         url: element,
@@ -357,7 +360,7 @@ const limitThisTask = computed(() => {
 });
 
 function redoFile(userAction) {
-  if (userAction && maxFile.value===false) {
+  if (userAction && maxFile.value === false) {
     if (fileSelectRedo.value.length > 0) {
       let arr = {
         fileName: [...fileDetete.value.fileName],
@@ -626,14 +629,8 @@ function redoFile(userAction) {
             id="file_input"
             ref="fileInput"
             class="mt-2 file-input file-input-bordered file-input-sm w-full max-w-xs"
-            :class="
-              disabledInput 
-                ? 'bg-gray-500 cursor-not-allowed'
-                : ''
-            "
-            :disabled="
-              disabledInput 
-            "
+            :class="disabledInput ? 'bg-gray-500 cursor-not-allowed' : ''"
+            :disabled="disabledInput"
             @change="preview"
             multiple
           />
@@ -693,7 +690,9 @@ function redoFile(userAction) {
                 :filename="file.name"
                 :fileurl="previewBinary(file.url)"
                 :chooseFile="true"
-                @openImage="openImageModal(previewBinary(file.url), file.name ,'choose')"
+                @openImage="
+                  openImageModal(previewBinary(file.url), file.name, 'choose')
+                "
               ></FileList>
             </div>
           </div>
@@ -822,25 +821,22 @@ function redoFile(userAction) {
                 :fileurl="file.url"
                 @openImage="openImageModal(file.url, file.name, 'preview')"
               >
-             </FileList>
+              </FileList>
               <div class="flex flex-row items-center justify-center">
-              <button
-                :class="editMode || isEditPage ? 'block' : 'hidden'"
-                @click="
-                  deleteFile(file.url, index, 'fileDelete', file.name),
-                    (showRedoButton = true)
-                "
-                class="bottom-1 right-1 fill-rose-400 text-sm"
-              >
-               <DeleteIcon class="h-7 w-7" />
-              </button>
-              <button  
-                 @click="
-                  downloadFile(file.name)
-                ">
-             <DownloadIcon />
-              </button>
-            </div>
+                <button
+                  :class="editMode || isEditPage ? 'block' : 'hidden'"
+                  @click="
+                    deleteFile(file.url, index, 'fileDelete', file.name),
+                      (showRedoButton = true)
+                  "
+                  class="bottom-1 right-1 fill-rose-400 text-sm"
+                >
+                  <DeleteIcon class="h-7 w-7" />
+                </button>
+                <button @click="downloadFile(file.name)">
+                  <DownloadIcon />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -900,7 +896,6 @@ function redoFile(userAction) {
               <FileList
                 :filename="file.fileName"
                 :fileurl="file.fileUrl"
-            
               ></FileList>
             </div>
           </label>

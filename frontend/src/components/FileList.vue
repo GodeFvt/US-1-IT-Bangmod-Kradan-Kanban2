@@ -25,7 +25,7 @@ const fileCanPreview = (name) => {
   } 
   else if (/\.(rtf)$/g.test(name)) {
     if (props.chooseFile) {
-      return "other type"
+      return "any"
     } else {
       return "embed";
     }
