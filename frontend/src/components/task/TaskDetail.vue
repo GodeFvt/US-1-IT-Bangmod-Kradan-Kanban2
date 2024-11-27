@@ -375,10 +375,12 @@ function redoFile(userAction) {
     showToast.value = true;
     typeToast.value = "success";
     messageToast.value = "Redo file success";
-  } else {
+  } else if (userAction && maxFile.value) {
     showToast.value = true;
     typeToast.value = "warning";
-    messageToast.value = "Not Redo";
+    messageToast.value = "Can not Redo file .You have already max 10 file ";
+  } else {
+    showToast.value = false;
   }
   if (fileDetete.value.fileName.length <= 0) {
     showRedoButton.value = false;

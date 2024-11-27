@@ -137,7 +137,7 @@ public class TasksController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(resourceFile.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"" + resourceFile.getFileName() + "\"")
-                .body(resourceFile.getFile());
+                .body(resourceFile.getFile());  
     }
 
     @GetMapping("/{taskId}/attachments/{filename:.+}/preview")
