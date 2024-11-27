@@ -18,7 +18,8 @@ export { default as SharpSortIcon } from './SharpSortIcon.vue';
 export { default as MoreActionIconD } from './MoreActionIconD.vue';
 export { default as FileIcon } from './FileIcon.vue';
 export { default as DownloadIcon } from './DownloadIcon.vue';
-
-
-
-
+export { default as ResetIcon } from './ResetIcon.vue';
+export { default as ZoomInIcon } from './ZoomInIcon.vue';
+export { default as ZoomOutIcon } from './ZoomOutIcon.vue';
+export { default as RotateLeftIcon } from './RotateLeftIcon.vue';
+export { default as RotateRightIcon } from './RotateRightIcon.vue';

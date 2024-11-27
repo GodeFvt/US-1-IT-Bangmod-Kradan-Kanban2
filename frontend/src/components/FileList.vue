@@ -16,28 +16,24 @@ const props = defineProps({
   },
 });
 
-
 const fileCanPreview = (name) => {
   if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(name)) {
     return "img";
   } else if (/\.(txt)$/g.test(name)) {
     return "embed";
-  } 
-  else if (/\.(rtf)$/g.test(name)) {
+  } else if (/\.(rtf)$/g.test(name)) {
     if (props.chooseFile) {
-      return "any"
+      return "any";
     } else {
       return "embed";
     }
-  }
-  else if (/\.(pdf)$/g.test(name)) {
+  } else if (/\.(pdf)$/g.test(name)) {
     if (props.chooseFile) {
-      return "embed"
+      return "embed";
     } else {
       return "img";
     }
-  }
-  else {
+  } else {
     return "any";
   }
 };
@@ -52,7 +48,7 @@ const fileCanPreview = (name) => {
       v-if="fileCanPreview(filename) === 'img'"
       :src="fileurl"
       alt="previewImagesURL"
-      class="h-10 w-10 mt-1"
+      class="h-10 w-10 mt-1 object-cover"
     />
     <embed
       v-else-if="fileCanPreview(filename) === 'embed'"
@@ -61,18 +57,17 @@ const fileCanPreview = (name) => {
       class="h-10 w-10 mt-1"
     />
     <div v-else>
-      <a v-if="chooseFile"
+      <a
+        v-if="chooseFile"
         :href="fileurl"
         target="_blank"
         class="text-blue-500 underline"
         :download="filename"
         ><FileIcon class="h-10 w-10 fill-gray-800 mt-1"
-      /></a> 
+      /></a>
       <div v-else>
-         <FileIcon class="h-10 w-10 fill-gray-800 mt-1"
-      />
+        <FileIcon class="h-10 w-10 fill-gray-800 mt-1" />
       </div>
-      
     </div>
 
     <!-- Truncated File Name -->

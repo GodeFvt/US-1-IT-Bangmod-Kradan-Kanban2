@@ -22,6 +22,7 @@ import AttachmentLoadingVue from "../loading/AttachmentLoading.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue";
 import FileList from "../FileList.vue";
 import { downloadfile } from "../../lib/fetchUtill.js";
+import Toast from "../modal/Toasts.vue";
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
   task: {
@@ -49,7 +50,10 @@ const props = defineProps({
     type: Array,
   },
 });
-
+const showToast = ref(false);
+const typeToast = ref("");
+const messageToast = ref("");
+const showLoadingImage = ref(false);
 const fileURL = ref(props.fileUrl);
 const showRedo = ref(false);
 const fileSelectRedo = ref([]);
@@ -111,9 +115,6 @@ watch(
 watch(
   [fileURL.value, previewImagesURL.value],
   ([newfileURL, newpreviewImagesURL]) => {
-    console.log(`fileURL is ${fileURL.value}`);
-    console.log(`newfileURL is ${newfileURL}`);
-    console.log(`newpreviewImagesURL is ${newpreviewImagesURL}`);
     if (
       newfileURL.length + newpreviewImagesURL.length >= 10 ||
       newfileURL.length >= 10 ||
@@ -140,54 +141,54 @@ const fileCanPreview = (fileName) => {
   }
 };
 
-async function downloadFile(filename,action) {
+async function downloadFile(filename, action) {
+  const fileType = getFileType(filename);
+  if (
+    action === "preview" &&
+    fileType.match(/(png|jpeg|jpg|gif|bmp|svg|txt|pdf)/g)
+  ) {
+    showImageModal.value = true;
+  }
+  showLoadingImage.value = true;
   const resFile = await downloadfile(boardId.value, taskId.value, filename);
+  showLoadingImage.value = false;
   if (typeof resFile !== "number") {
-   
-    if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg)/g) && action === 'preview') {
-      console.log(1);
+    if (fileType.match(/(png|jpeg|jpg|gif|bmp|svg)/g) && action === "preview") {
       imageType.value = "image";
-      showImageModal.value = true;
       selectedImage.value = resFile;
-    } else if (getFileType(filename).match(/(txt|pdf)/g)  && action === 'preview') {
-      console.log(2);
-        imageType.value = "embed";
-        showImageModal.value = true;
-        selectedImage.value = resFile;
-    } 
-    else {
-      console.log(3);
-       const a = document.createElement("a");
-       a.href = resFile;
-       a.download = filename; // ชื่อไฟล์ที่ต้องการดาวน์โหลด
-       document.body.appendChild(a);
-       a.click(); 
-       a.remove();
-       removeURL(resFile);
-      console.log("download สำเร็จ");
+    } else if (fileType.match(/(txt|pdf)/g) && action === "preview") {
+      imageType.value = "embed";
+      selectedImage.value = resFile;
+    } else {
+      const a = document.createElement("a");
+      a.href = resFile;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      removeURL(resFile);
       showImageModal.value = false;
     }
   } else {
-    console.log("download ไม่ได้");
+    showToast.value = true;
+    typeToast.value = "danger";
+    messageToast.value = "Download file failed";
   }
 }
 
 function openImageModal(file, filename, action) {
   if (action !== "choose") {
-    downloadFile(filename ,action);
+    downloadFile(filename, action);
   } else {
     if (getFileType(filename).match(/(txt|pdf)/g)) {
-      console.log(4);
       imageType.value = "embed";
       showImageModal.value = true;
       selectedImage.value = file;
     } else if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
-      console.log(5);
       imageType.value = "image";
       showImageModal.value = true;
       selectedImage.value = file;
-    }  else {
-      console.log(6);
+    } else {
       imageType.value = "otherType";
       showImageModal.value = false;
     }
@@ -217,8 +218,6 @@ const countDescription = computed(() => {
 const countAssignees = computed(() => {
   return duplicateTask.value.assignees?.trim()?.length;
 });
-
-
 
 const preview = (event) => {
   event.target.files.length >= 10
@@ -299,18 +298,10 @@ function deleteFile(imgUrlObject, index, type, fileName) {
   if (type === "fileDelete") {
     fileChange.value = true;
     fileURL.value.splice(index, 1);
-    // fileURL.length >= 10
-    //   ? (disabledInput.value = true)
-    //   : (disabledInput.value = false);
-    // fileDetete.value.push({fileName:[],fileUrl:imgUrlObject});
     fileDetete.value.fileName.push(fileName);
     fileDetete.value.fileUrl.push(imgUrlObject);
-    // removeURL(imgUrlObject);
   } else {
     previewImagesURL.value.splice(index, 1);
-    // previewImagesURL.length >= 10
-    //   ? (disabledInput.value = true)
-    //   : (disabledInput.value = false);
     removeURL(imgUrlObject);
   }
 
@@ -381,8 +372,13 @@ function redoFile(userAction) {
         }
       }
     }
+    showToast.value = true;
+    typeToast.value = "success";
+    messageToast.value = "Redo file success";
   } else {
-    console.log("-.-");
+    showToast.value = true;
+    typeToast.value = "warning";
+    messageToast.value = "Not Redo";
   }
   if (fileDetete.value.fileName.length <= 0) {
     showRedoButton.value = false;
@@ -843,12 +839,6 @@ function redoFile(userAction) {
       </div>
     </div>
   </div>
-  <ImageViewer
-    :imageSrc="selectedImage"
-    :visible="showImageModal"
-    :imageType="imageType"
-    @close="showImageModal = false"
-  />
 
   <ConfirmModal
     v-if="showRedo"
@@ -903,6 +893,24 @@ function redoFile(userAction) {
       </div>
     </template>
   </ConfirmModal>
+  <ImageViewer
+    :imageSrc="selectedImage"
+    :visible="showImageModal"
+    :imageType="imageType"
+    :showLoadingImage="showLoadingImage"
+    @close="showImageModal = false"
+  />
+
+  <div
+    class="z-50 absolute bottom-[1%] right-0 flex items-center justify-end mr-5 w-full"
+    v-if="showToast"
+  >
+    <Toast :toast="typeToast" @close-toast="showToast = false">
+      <template #message>
+        <span class="itbkk-message break-all">{{ messageToast }}</span>
+      </template>
+    </Toast>
+  </div>
 </template>
 
 <style scoped>
