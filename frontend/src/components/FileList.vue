@@ -18,11 +18,26 @@ const props = defineProps({
 
 
 const fileCanPreview = (name) => {
-  if (/\.(png|jpeg|jpg|gif|bmp|svg|pdf)$/g.test(name)) {
+  if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(name)) {
     return "img";
-  } else if (/\.(txt|rtf)$/g.test(name)) {
+  } else if (/\.(txt)$/g.test(name)) {
     return "embed";
-  } else {
+  } 
+  else if (/\.(rtf)$/g.test(name)) {
+    if (props.chooseFile) {
+      return "other type"
+    } else {
+      return "embed";
+    }
+  }
+  else if (/\.(pdf)$/g.test(name)) {
+    if (props.chooseFile) {
+      return "embed"
+    } else {
+      return "img";
+    }
+  }
+  else {
     return "any";
   }
 };

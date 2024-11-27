@@ -16,46 +16,6 @@ import AttachmentLoadingVue from "../loading/AttachmentLoading.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue";
 import FileList from "../FileList.vue";
 import { downloadfile } from "../../lib/fetchUtill.js";
-const showRedo = ref(false);
-const fileSelectRedo = ref([]);
-const showRedoButton = ref(false);
-const router = useRouter();
-const route = useRoute();
-const boardId = ref(route.params.boardId);
-const taskId = ref(route.params.taskId);
-const previewImagesURL = ref([]);
-const selectedImage = ref(null);
-const showImageModal = ref(false);
-const imageType = ref("pdf");
-const statusStore = useStatusStore();
-const duplicateTask = ref({});
-const editMode = ref(props.isEdit);
-const isLimit = computed(() => statusStore.isLimit);
-const allTaskLimit = ref(props.allTaskLimit);
-const maximumTask = computed(() => statusStore.maximumTask);
-const noOftask = computed(() => statusStore.noOftask);
-const boardStore = useBoardStore();
-const isEditPage = ref(true);
-const fileChange = ref(false);
-const validate = ref({ title: {}, description: {}, assignees: {} });
-const fileDetete = ref({ fileName: [], fileUrl: [] });
-const disabledInput = ref(false);
-const fileInput = ref(null);
-const invalidFile = ref({
-  maxSize: {
-    msg: "Each file cannot be larger than 20 MB. The following files are not added",
-    filename: [],
-  },
-  maxFile: {
-    msg: "Each task can have at most 10 files. The following files are not added",
-    filename: [],
-  },
-  dupFile: {
-    msg: "File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file",
-    filename: [],
-  },
-});
-
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
   task: {
@@ -85,6 +45,48 @@ const props = defineProps({
 });
 
 const fileURL = ref(props.fileUrl);
+const showRedo = ref(false);
+const fileSelectRedo = ref([]);
+const showRedoButton = ref(false);
+const router = useRouter();
+const route = useRoute();
+const boardId = ref(route.params.boardId);
+const taskId = ref(route.params.taskId);
+const previewImagesURL = ref([]);
+const selectedImage = ref(null);
+const showImageModal = ref(false);
+const imageType = ref("pdf");
+const statusStore = useStatusStore();
+const duplicateTask = ref({});
+const editMode = ref(props.isEdit);
+const isLimit = computed(() => statusStore.isLimit);
+const allTaskLimit = ref(props.allTaskLimit);
+const maximumTask = computed(() => statusStore.maximumTask);
+const noOftask = computed(() => statusStore.noOftask);
+const boardStore = useBoardStore();
+const isEditPage = ref(true);
+const fileChange = ref(false); //เป็น true เมื่อ file ที่มีอยู่แล้วเปลี่ยน 
+const validate = ref({ title: {}, description: {}, assignees: {} });
+const fileDetete = ref({ fileName: [], fileUrl: [] });
+const disabledInput = ref(false);
+const fileInput = ref(null);
+const maxFile = ref(false); // false คือ < 10
+const invalidFile = ref({
+  maxSize: {
+    msg: "Each file cannot be larger than 20 MB. The following files are not added",
+    filename: [],
+  },
+  maxFile: {
+    msg: "Each task can have at most 10 files. The following files are not added",
+    filename: [],
+  },
+  dupFile: {
+    msg: "File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file",
+    filename: [],
+  },
+});
+
+
 watch(
   () => props.task,
   (newTask) => {
@@ -101,7 +103,21 @@ watch(
   { immediate: true }
 );
 
-
+watch([fileURL.value ,previewImagesURL.value], ([newfileURL,newpreviewImagesURL]) => {
+  console.log(`fileURL is ${fileURL.value}`)
+  console.log(`newfileURL is ${newfileURL}`)
+  console.log(`newpreviewImagesURL is ${newpreviewImagesURL}`)
+  if (newfileURL.length + newpreviewImagesURL.length >= 10|| newfileURL.length>=10 || newpreviewImagesURL.length>=10) {
+    //ขนาดfile เกินไม่ให้กด เลือก file เพิ่ม 
+    maxFile.value = true
+    disabledInput.value = true
+  } else {
+    maxFile.value = false
+    disabledInput.value = false
+  }
+},
+  { immediate: true }
+)
 
 async function downloadFile(filename) {
   const resFile = await downloadfile(boardId.value,taskId.value,filename)
@@ -127,15 +143,33 @@ function openImageModal(file, filename,action) {
   // console.log(file);
   // console.log(filename);
 
-  if (getFileType(filename).match(/(txt|rtf)/g)) {
+  if (getFileType(filename).match(/(txt)/g)) {
     imageType.value = "embed";
     showImageModal.value = true;
     selectedImage.value = file;
-  } else if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg|pdf)/g)) {
+  } else if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
     imageType.value = "image";
     showImageModal.value = true;
     selectedImage.value = file;
-  } else {
+  } else if (getFileType(filename).match(/(pdf)/g)) {
+    if (action==="choose") {
+       imageType.value = "embed"; 
+    } else {
+      imageType.value = "image";
+    }
+    showImageModal.value = true;
+    selectedImage.value = file;
+  } 
+  else if (getFileType(filename).match(/(rtf)/g)) {
+    if (action==="choose") {
+      imageType.value = "otherType";
+    } else {
+      imageType.value = "embed";
+    }
+    showImageModal.value = true;
+    selectedImage.value = file;
+  } 
+  else {
     console.log("other type");
     imageType.value = "otherType";
     if (action!=="choose") {
@@ -188,29 +222,32 @@ const preview = (event) => {
   invalidFile.value.maxSize.filename = [];
   invalidFile.value.maxFile.filename = [];
   invalidFile.value.dupFile.filename = [];
-  let countElement = 1;
+  // let countElement = 1;
   [...event.target.files].forEach((element, index) => {
     if (element.size > 20 * 1024 * 1024) {
       invalidFile.value?.maxSize.filename.push(element.name);
       return;
     } else if (
-      fileURL.value.length >= 10 ||
-      countElement + fileURL.value.length > 10
+      // fileURL.value.length >= 10 ||
+      // countElement + fileURL.value.length > 10
+      maxFile.value
     ) {
       invalidFile.value?.maxFile.filename.push(element.name);
       return;
-    } else if (
+    } 
+    else if (
       fileURL.value.filter((e) => e.name === element.name).length >= 1 ||
       previewImagesURL.value.filter((e) => e.name === element.name).length >= 1
     ) {
       invalidFile.value?.dupFile.filename.push(element.name);
       return;
-    } else {
+    } 
+    else {
       previewImagesURL.value.push({
         name: element.name,
         url: element,
       });
-      countElement++;
+      // countElement++;
     }
   });
 };
@@ -259,18 +296,18 @@ function deleteFile(imgUrlObject, index, type, fileName) {
   if (type === "fileDelete") {
     fileChange.value = true;
     fileURL.value.splice(index, 1);
-    fileURL.length >= 10
-      ? (disabledInput.value = true)
-      : (disabledInput.value = false);
+    // fileURL.length >= 10
+    //   ? (disabledInput.value = true)
+    //   : (disabledInput.value = false);
     // fileDetete.value.push({fileName:[],fileUrl:imgUrlObject});
     fileDetete.value.fileName.push(fileName);
     fileDetete.value.fileUrl.push(imgUrlObject);
     // removeURL(imgUrlObject);
   } else {
     previewImagesURL.value.splice(index, 1);
-    previewImagesURL.length >= 10
-      ? (disabledInput.value = true)
-      : (disabledInput.value = false);
+    // previewImagesURL.length >= 10
+    //   ? (disabledInput.value = true)
+    //   : (disabledInput.value = false);
     removeURL(imgUrlObject);
   }
 
@@ -320,7 +357,7 @@ const limitThisTask = computed(() => {
 });
 
 function redoFile(userAction) {
-  if (userAction) {
+  if (userAction && maxFile.value===false) {
     if (fileSelectRedo.value.length > 0) {
       let arr = {
         fileName: [...fileDetete.value.fileName],
@@ -341,6 +378,8 @@ function redoFile(userAction) {
         }
       }
     }
+  } else {
+    console.log("-.-");
   }
   if (fileDetete.value.fileName.length <= 0) {
     showRedoButton.value = false;
@@ -588,18 +627,12 @@ function redoFile(userAction) {
             ref="fileInput"
             class="mt-2 file-input file-input-bordered file-input-sm w-full max-w-xs"
             :class="
-              disabledInput ||
-              fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10 ||
-              previewImagesURL.length >= 10
+              disabledInput 
                 ? 'bg-gray-500 cursor-not-allowed'
                 : ''
             "
             :disabled="
-              disabledInput ||
-              fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10 ||
-              previewImagesURL.length >= 10
+              disabledInput 
             "
             @change="preview"
             multiple
@@ -843,7 +876,6 @@ function redoFile(userAction) {
     </template>
     <template #body>
       <div class="mb-2">Select the file which you need redo</div>
-
       <div class="flex flex-row gap-3 flex-wrap justify-center">
         <div
           v-for="(file, index) of fileDetete.fileName.map((name, i) => ({
