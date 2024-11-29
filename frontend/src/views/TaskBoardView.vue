@@ -502,7 +502,7 @@ async function removeTask(index, confirmDelete = false) {
         <div class="m-[2px] flex sm:items-center items-end w-full my-2">
           <router-link :to="{ name: 'board' }">
             <button
-              class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800"
+              class="flex items-center mx-2 text-gray-600 hover:text-gray-800"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

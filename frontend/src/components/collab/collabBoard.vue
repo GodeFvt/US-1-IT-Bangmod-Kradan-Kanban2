@@ -76,7 +76,7 @@ const isOwner = computed(() => {
           </router-link>
           <div class="flex items-center">
             <div
-              class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800 rotate-180"
+              class="flex items-center mx-2 text-gray-600 hover:text-gray-800 rotate-180"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -101,6 +101,7 @@ const isOwner = computed(() => {
           </div>
         </div>
       </div>
+
       <div class="flex flex-row w-[95%] max-sm:w-full max-sm:px-2">
         <div class="flex items-end w-full justify-end">
           <div
