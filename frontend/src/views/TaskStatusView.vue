@@ -478,11 +478,23 @@ async function clickRemove(index) {
       <div
         class="flex flex-row w-[95%] mt-5 max-sm:w-full max-sm:px-2 border-b border-gray-300"
       >
-        <!-- Task Status Count -->
-        <div class="m-[2px] flex sm:items-center items-end w-full my-2">
+        <div
+          class="m-[2px] my-2 flex sm:items-center items-end w-full flex-wrap"
+        >
           <router-link :to="{ name: 'task' }">
-            <button
-              class="flex items-center mr-2 mt-2 text-gray-600 hover:text-gray-800"
+            <div
+              class="itbkk-board-name text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+            >
+              {{
+                boardStore.currentBoard.owner.id === userStore.authToken?.oid
+                  ? boardStore.currentBoard.name + " Personal's Board"
+                  : boardStore.currentBoard.name + "Collaborate's Board"
+              }}
+            </div>
+          </router-link>
+          <div class="flex items-center">
+            <div
+              class="flex items-center mx-2 text-gray-600 hover:text-gray-800 rotate-180"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -498,19 +510,14 @@ async function clickRemove(index) {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-            </button>
-          </router-link>
-          <div
-            class="itbkk-button-home text-gray-600 text-2xl max-md:text-xl max-sm:text-sm font-bold"
-          >
-            {{
-              boardStore.currentBoard.owner.id === userStore.authToken?.oid
-                ? boardStore.currentBoard.name + " Personal's Board"
-                : boardStore.currentBoard.name + "Collaborate's Board"
-            }}
+            </div>
+            <div
+              class="text-gray-900 text-2xl max-md:text-xl max-sm:text-sm font-bold"
+            >
+              Manage Status
+            </div>
           </div>
         </div>
-        <!-- Filter -->
       </div>
       <div class="flex flex-row w-[95%] max-sm:w-full max-sm:px-2">
         <div class="flex items-end w-full justify-end">

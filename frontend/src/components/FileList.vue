@@ -10,18 +10,29 @@ const props = defineProps({
   fileurl: {
     type: String,
   },
-  canPreview: {
+  chooseFile: {
     type: Boolean,
-    default: true,
+    default: false,
   },
 });
-
 
 const fileCanPreview = (name) => {
   if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(name)) {
     return "img";
-  } else if (/\.(txt|pdf)$/g.test(name)) {
+  } else if (/\.(txt)$/g.test(name)) {
     return "embed";
+  } else if (/\.(rtf)$/g.test(name)) {
+    if (props.chooseFile) {
+      return "any";
+    } else {
+      return "embed";
+    }
+  } else if (/\.(pdf)$/g.test(name)) {
+    if (props.chooseFile) {
+      return "embed";
+    } else {
+      return "img";
+    }
   } else {
     return "any";
   }
@@ -37,7 +48,7 @@ const fileCanPreview = (name) => {
       v-if="fileCanPreview(filename) === 'img'"
       :src="fileurl"
       alt="previewImagesURL"
-      class="h-10 w-10 mt-1"
+      class="h-10 w-10 mt-1 object-cover"
     />
     <embed
       v-else-if="fileCanPreview(filename) === 'embed'"
@@ -46,7 +57,8 @@ const fileCanPreview = (name) => {
       class="h-10 w-10 mt-1"
     />
     <div v-else>
-      <a v-if="canPreview"
+      <a
+        v-if="chooseFile"
         :href="fileurl"
         target="_blank"
         class="text-blue-500 underline"
@@ -54,8 +66,7 @@ const fileCanPreview = (name) => {
         ><FileIcon class="h-10 w-10 fill-gray-800 mt-1"
       /></a>
       <div v-else>
-        <FileIcon class="h-10 w-10 fill-gray-800 mt-1"
-      />
+        <FileIcon class="h-10 w-10 fill-gray-800 mt-1" />
       </div>
     </div>
 

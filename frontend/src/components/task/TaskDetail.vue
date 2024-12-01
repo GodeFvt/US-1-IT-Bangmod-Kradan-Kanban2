@@ -2,10 +2,16 @@
 import { computed, ref, watch } from "vue";
 import { toFormatDate } from "../../lib/utill";
 
-import { FileIcon, CloseIcon, DeleteIcon, EditTaskIcon } from "../icon";
+import {
+  FileIcon,
+  CloseIcon,
+  DeleteIcon,
+  EditTaskIcon,
+  DownloadIcon,
+} from "../icon";
 import ImageViewer from "../ImageViewer.vue";
 import { useStatusStore } from "../../stores/statuses.js";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import {
   validateSizeInput,
   previewBinary,
@@ -15,11 +21,8 @@ import { useBoardStore } from "../../stores/boards.js";
 import AttachmentLoadingVue from "../loading/AttachmentLoading.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue";
 import FileList from "../FileList.vue";
-
-const showRedo = ref(false);
-const fileSelectRedo = ref([]);
-const showRedoButton = ref(false);
-const router = useRouter();
+import { downloadfile } from "../../lib/fetchUtill.js";
+import Toast from "../modal/Toasts.vue";
 defineEmits(["userAction", "addEdit"]);
 const props = defineProps({
   task: {
@@ -47,6 +50,22 @@ const props = defineProps({
     type: Array,
   },
 });
+const showToast = ref(false);
+const typeToast = ref("");
+const messageToast = ref("");
+const showLoadingImage = ref(false);
+const fileURL = ref(props.fileUrl);
+const showRedo = ref(false);
+const fileSelectRedo = ref([]);
+const showRedoButton = ref(false);
+const router = useRouter();
+const route = useRoute();
+const boardId = ref(route.params.boardId);
+const taskId = ref(route.params.taskId);
+const previewImagesURL = ref([]);
+const selectedImage = ref(null);
+const showImageModal = ref(false);
+const imageType = ref("pdf");
 const statusStore = useStatusStore();
 const duplicateTask = ref({});
 const editMode = ref(props.isEdit);
@@ -56,9 +75,27 @@ const maximumTask = computed(() => statusStore.maximumTask);
 const noOftask = computed(() => statusStore.noOftask);
 const boardStore = useBoardStore();
 const isEditPage = ref(true);
-const fileChange = ref(false);
+const fileChange = ref(false); //เป็น true เมื่อ file ที่มีอยู่แล้วเปลี่ยน
+const validate = ref({ title: {}, description: {}, assignees: {} });
+const fileDetete = ref({ fileName: [], fileUrl: [] });
+const disabledInput = ref(false);
+const fileInput = ref(null);
+const maxFile = ref(false); // false คือ < 10
+const invalidFile = ref({
+  maxSize: {
+    msg: "Each file cannot be larger than 20 MB. The following files are not added",
+    filename: [],
+  },
+  maxFile: {
+    msg: "Each task can have at most 10 files. The following files are not added",
+    filename: [],
+  },
+  dupFile: {
+    msg: "File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file",
+    filename: [],
+  },
+});
 
-const fileURL = ref(props.fileUrl);
 watch(
   () => props.task,
   (newTask) => {
@@ -75,20 +112,86 @@ watch(
   { immediate: true }
 );
 
-const selectedImage = ref(null);
-const showImageModal = ref(false);
-const imageType = ref("pdf");
-function openImageModal(file, fileType) {
-  if (getFileType(fileType).match(/(pdf|txt)/g)) {
-    imageType.value = "embed";
-    showImageModal.value = true;
-    selectedImage.value = file;
-  } else if (getFileType(fileType).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
-    imageType.value = "image";
-    showImageModal.value = true;
-    selectedImage.value = file;
+watch(
+  [fileURL.value, previewImagesURL.value],
+  ([newfileURL, newpreviewImagesURL]) => {
+    if (
+      newfileURL.length + newpreviewImagesURL.length >= 10 ||
+      newfileURL.length >= 10 ||
+      newpreviewImagesURL.length >= 10
+    ) {
+      //ขนาดfile เกินไม่ให้กด เลือก file เพิ่ม
+      maxFile.value = true;
+      disabledInput.value = true;
+    } else {
+      maxFile.value = false;
+      disabledInput.value = false;
+    }
+  },
+  { immediate: true }
+);
+
+const fileCanPreview = (fileName) => {
+  if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(fileName)) {
+    return "img";
+  } else if (/\.(txt|pdf)$/g.test(fileName)) {
+    return "embed";
   } else {
-    showImageModal.value = false;
+    return "any";
+  }
+};
+
+async function downloadFile(filename, action) {
+  const fileType = getFileType(filename);
+  if (
+    action === "preview" &&
+    fileType.match(/(png|jpeg|jpg|gif|bmp|svg|txt|pdf)/g)
+  ) {
+    showImageModal.value = true;
+  }
+  showLoadingImage.value = true;
+  const resFile = await downloadfile(boardId.value, taskId.value, filename);
+  showLoadingImage.value = false;
+  if (typeof resFile !== "number") {
+    if (fileType.match(/(png|jpeg|jpg|gif|bmp|svg)/g) && action === "preview") {
+      imageType.value = "image";
+      selectedImage.value = resFile;
+    } else if (fileType.match(/(txt|pdf)/g) && action === "preview") {
+      imageType.value = "embed";
+      selectedImage.value = resFile;
+    } else {
+      const a = document.createElement("a");
+      a.href = resFile;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      removeURL(resFile);
+      showImageModal.value = false;
+    }
+  } else {
+    showToast.value = true;
+    typeToast.value = "danger";
+    messageToast.value = "Download file failed";
+  }
+}
+
+function openImageModal(file, filename, action) {
+  if (action !== "choose") {
+    downloadFile(filename, action);
+  } else {
+    if (getFileType(filename).match(/(txt|pdf)/g)) {
+      imageType.value = "embed";
+      showImageModal.value = true;
+      selectedImage.value = file;
+    } else if (getFileType(filename).match(/(png|jpeg|jpg|gif|bmp|svg)/g)) {
+      imageType.value = "image";
+      showImageModal.value = true;
+      selectedImage.value = file;
+    } else {
+      imageType.value = "otherType";
+      showImageModal.value = false;
+    }
   }
 }
 
@@ -116,36 +219,6 @@ const countAssignees = computed(() => {
   return duplicateTask.value.assignees?.trim()?.length;
 });
 
-const validate = ref({ title: {}, description: {}, assignees: {} });
-const previewImagesURL = ref([]);
-const fileDetete = ref({ fileName: [], fileUrl: [] });
-
-const fileCanPreview = (fileName) => {
-  if (/\.(png|jpeg|jpg|gif|bmp|svg)$/g.test(fileName)) {
-    return "img";
-  } else if (/\.(txt|pdf)$/g.test(fileName)) {
-    return "embed";
-  } else {
-    return "any";
-  }
-};
-
-const invalidFile = ref({
-  maxSize: {
-    msg: "Each file cannot be larger than 20 MB. The following files are not added",
-    filename: [],
-  },
-  maxFile: {
-    msg: "Each task can have at most 10 files. The following files are not added",
-    filename: [],
-  },
-  dupFile: {
-    msg: "File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file",
-    filename: [],
-  },
-});
-
-const disabledInput = ref(false);
 const preview = (event) => {
   event.target.files.length >= 10
     ? (disabledInput.value = true)
@@ -153,14 +226,15 @@ const preview = (event) => {
   invalidFile.value.maxSize.filename = [];
   invalidFile.value.maxFile.filename = [];
   invalidFile.value.dupFile.filename = [];
-  let countElement = 1;
+  // let countElement = 1;
   [...event.target.files].forEach((element, index) => {
     if (element.size > 20 * 1024 * 1024) {
       invalidFile.value?.maxSize.filename.push(element.name);
       return;
     } else if (
-      fileURL.value.length >= 10 ||
-      countElement + fileURL.value.length > 10
+      // fileURL.value.length >= 10 ||
+      // countElement + fileURL.value.length > 10
+      maxFile.value
     ) {
       invalidFile.value?.maxFile.filename.push(element.name);
       return;
@@ -175,7 +249,7 @@ const preview = (event) => {
         name: element.name,
         url: element,
       });
-      countElement++;
+      // countElement++;
     }
   });
 };
@@ -219,24 +293,15 @@ const disabledSave = computed(() => {
     return false;
   }
 });
-const fileInput = ref(null);
 function deleteFile(imgUrlObject, index, type, fileName) {
   invalidFile.value.maxFile.filename = [];
   if (type === "fileDelete") {
     fileChange.value = true;
     fileURL.value.splice(index, 1);
-    fileURL.length >= 10
-      ? (disabledInput.value = true)
-      : (disabledInput.value = false);
-    // fileDetete.value.push({fileName:[],fileUrl:imgUrlObject});
     fileDetete.value.fileName.push(fileName);
     fileDetete.value.fileUrl.push(imgUrlObject);
-    // removeURL(imgUrlObject);
   } else {
     previewImagesURL.value.splice(index, 1);
-    previewImagesURL.length >= 10
-      ? (disabledInput.value = true)
-      : (disabledInput.value = false);
     removeURL(imgUrlObject);
   }
 
@@ -286,7 +351,7 @@ const limitThisTask = computed(() => {
 });
 
 function redoFile(userAction) {
-  if (userAction) {
+  if (userAction && maxFile.value === false) {
     if (fileSelectRedo.value.length > 0) {
       let arr = {
         fileName: [...fileDetete.value.fileName],
@@ -307,6 +372,15 @@ function redoFile(userAction) {
         }
       }
     }
+    showToast.value = true;
+    typeToast.value = "success";
+    messageToast.value = "Redo file success";
+  } else if (userAction && maxFile.value) {
+    showToast.value = true;
+    typeToast.value = "warning";
+    messageToast.value = "Can not Redo file .You have already max 10 file ";
+  } else {
+    showToast.value = false;
   }
   if (fileDetete.value.fileName.length <= 0) {
     showRedoButton.value = false;
@@ -553,20 +627,8 @@ function redoFile(userAction) {
             id="file_input"
             ref="fileInput"
             class="mt-2 file-input file-input-bordered file-input-sm w-full max-w-xs"
-            :class="
-              disabledInput ||
-              fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10 ||
-              previewImagesURL.length >= 10
-                ? 'bg-gray-500 cursor-not-allowed'
-                : ''
-            "
-            :disabled="
-              disabledInput ||
-              fileURL.length >= 10 ||
-              fileURL.length + previewImagesURL.length >= 10 ||
-              previewImagesURL.length >= 10
-            "
+            :class="disabledInput ? 'bg-gray-500 cursor-not-allowed' : ''"
+            :disabled="disabledInput"
             @change="preview"
             multiple
           />
@@ -625,7 +687,10 @@ function redoFile(userAction) {
               <FileList
                 :filename="file.name"
                 :fileurl="previewBinary(file.url)"
-                @openImage="openImageModal(previewBinary(file.url), file.name)"
+                :chooseFile="true"
+                @openImage="
+                  openImageModal(previewBinary(file.url), file.name, 'choose')
+                "
               ></FileList>
             </div>
           </div>
@@ -752,17 +817,23 @@ function redoFile(userAction) {
                 class="w-[8rem]"
                 :filename="file.name"
                 :fileurl="file.url"
-                @openImage="openImageModal(file.url, file.name)"
-              ></FileList>
-              <div
-                :class="editMode || isEditPage ? 'block' : 'hidden'"
-                @click="
-                  deleteFile(file.url, index, 'fileDelete', file.name),
-                    (showRedoButton = true)
-                "
-                class="bottom-1 right-1 cursor-pointer fill-rose-400 text-sm"
+                @openImage="openImageModal(file.url, file.name, 'preview')"
               >
-                <DeleteIcon class="h-7 w-7" />
+              </FileList>
+              <div class="flex flex-row items-center justify-center">
+                <button
+                  :class="editMode || isEditPage ? 'block' : 'hidden'"
+                  @click="
+                    deleteFile(file.url, index, 'fileDelete', file.name),
+                      (showRedoButton = true)
+                  "
+                  class="bottom-1 right-1 fill-rose-400 text-sm"
+                >
+                  <DeleteIcon class="h-7 w-7" />
+                </button>
+                <button @click="downloadFile(file.name)">
+                  <DownloadIcon />
+                </button>
               </div>
             </div>
           </div>
@@ -770,12 +841,6 @@ function redoFile(userAction) {
       </div>
     </div>
   </div>
-  <ImageViewer
-    :imageSrc="selectedImage"
-    :visible="showImageModal"
-    :imageType="imageType"
-    @close="showImageModal = false"
-  />
 
   <ConfirmModal
     v-if="showRedo"
@@ -799,7 +864,6 @@ function redoFile(userAction) {
     </template>
     <template #body>
       <div class="mb-2">Select the file which you need redo</div>
-
       <div class="flex flex-row gap-3 flex-wrap justify-center">
         <div
           v-for="(file, index) of fileDetete.fileName.map((name, i) => ({
@@ -824,7 +888,6 @@ function redoFile(userAction) {
               <FileList
                 :filename="file.fileName"
                 :fileurl="file.fileUrl"
-                :canPreview="false"
               ></FileList>
             </div>
           </label>
@@ -832,6 +895,24 @@ function redoFile(userAction) {
       </div>
     </template>
   </ConfirmModal>
+  <ImageViewer
+    :imageSrc="selectedImage"
+    :visible="showImageModal"
+    :imageType="imageType"
+    :showLoadingImage="showLoadingImage"
+    @close="showImageModal = false"
+  />
+
+  <div
+    class="z-50 absolute bottom-[1%] right-0 flex items-center justify-end mr-5 w-full"
+    v-if="showToast"
+  >
+    <Toast :toast="typeToast" @close-toast="showToast = false">
+      <template #message>
+        <span class="itbkk-message break-all">{{ messageToast }}</span>
+      </template>
+    </Toast>
+  </div>
 </template>
 
 <style scoped>

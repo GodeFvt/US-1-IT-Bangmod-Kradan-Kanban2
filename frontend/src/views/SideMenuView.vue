@@ -320,26 +320,25 @@ function changeTheme(useraction) {
           href="#"
           class="flex items-center gap-2 bg-gray-800 p-4 hover:bg-gray-700 w-full h-full"
         >
-          <img
-            alt=""
-            src="https://minotar.net/helm/sorrapong2521/64"
-            class="size-10 rounded-full object-cover"
-            :class="{ 'size-9': !open }"
-          />
-          <div v-if="open">
-            <p class="text-xs">
-              <strong class="itbkk-fullname block font-medium">{{
-                userStore.authToken?.name || "Anonymous"
-              }}</strong>
-
-              <span>
+          <div class="user-info flex items-center gap-2">
+            <img
+              alt="Profile"
+              src="https://minotar.net/helm/sorrapong2521/64"
+              class="size-10 rounded-full object-cover"
+              :class="{ 'size-9': !open }"
+            />
+            <div v-if="open" class="text-xs max-w-[10rem] truncate">
+              <strong class="block font-medium" title="Full name">
+                {{ userStore.authToken?.name || "Anonymous" }}
+              </strong>
+              <span class="block truncate text-gray-400" title="Full email">
                 {{
                   userStore.authToken?.email ||
                   userStore.authToken?.preferred_username ||
                   ""
                 }}
               </span>
-            </p>
+            </div>
           </div>
         </a>
       </transition>
