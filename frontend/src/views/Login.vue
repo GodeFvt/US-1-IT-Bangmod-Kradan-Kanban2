@@ -27,6 +27,7 @@ const miniTaskBoardAnimate = ref("");
 const kanbanAnimate = ref("");
 const textAnimation = ref("");
 const showLoading = ref(false);
+const redirectTo = ref(null);
 let intervalId;
 let timeoutId;
 
@@ -45,6 +46,7 @@ const initialize = async () => {
 };
 
 onMounted(async () => {
+  redirectTo.value = router.currentRoute.value.query.redirectTo;
   await initialize();
   await handleRedirect(router);
 
@@ -111,10 +113,9 @@ async function signInOnClick(userLogin) {
       userStore.setAuthToken(res.access_token);
       const resBoard = await getAllBoards();
       boardStore.setAllBoard(resBoard);
-      const redirectTo = router.currentRoute.value.query.redirectTo;
-      if (redirectTo) {
+      if (redirectTo.value) {
         // ถ้ามี redirectTo ให้ไปที่หน้านั้น
-        router.push(redirectTo);
+        router.push(redirectTo.value);
       } else if (
         boardStore.boards.length === 1 &&
         boardStore.boards[0].owner.id === userStore.authToken.oid
