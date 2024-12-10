@@ -774,7 +774,7 @@ async function removeTask(index, confirmDelete = false) {
         @user-action="confirmLimit"
         :width="'w-[60vh]'"
         :canEdit="boardStore.isCanEdit"
-        :disabled="maximumTask > 30 || maximumTask <= 0"
+        :disabled="maximumTask > 10 || maximumTask <= 0"
         class="itbkk-modal-setting z-50"
       >
         <template #header>
@@ -812,10 +812,10 @@ async function removeTask(index, confirmDelete = false) {
               v-model="maximumTask"
             />
             <div
-              v-if="maximumTask > 30 || maximumTask <= 0"
+              v-if="maximumTask > 10 || maximumTask <= 0"
               class="text-red-500"
             >
-              <p>maximumTask must be lees then 30 and more than 0</p>
+              <p>maximumTask must be lees then 10 and more than 0</p>
             </div>
           </div>
         </template>
