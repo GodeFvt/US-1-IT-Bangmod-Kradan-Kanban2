@@ -208,10 +208,10 @@ async function downloadFile(filename, action) {
 }
 
 function openImageModal(file, filename, action) {
-  if (action !== "choose") {
+  if (action !== "choose" && /\.(rtf)$/g.test(filename) === false) {
     downloadFile(filename, action);
   } else {
-    if (getFileType(filename).match(/(txt|pdf)/g)) {
+    if (getFileType(filename).match(/(txt|pdf|rtf)/g)) {
       imageType.value = "embed";
       showImageModal.value = true;
       selectedImage.value = file;
@@ -645,7 +645,7 @@ function redoFile(userAction) {
         </div>
         <div
           class="pl-10 pr-5 mt-3 flex flex-col h-full"
-          :class="editMode || isEditPage ? '' : 'hidden'"
+          :class="isEditPage ? '' : 'hidden'"
         >
           <label class="font-bold text-base mb-2" for="file_input">File</label>
           <!-- <p class="font-bold text-sm">
@@ -831,7 +831,7 @@ function redoFile(userAction) {
               <li
                 v-for="(file, index) in [...previewImagesURL]"
                 :key="index"
-                class="w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/6 xl:w-1/8 h-24 m-auto"
+                class="w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/6 xl:w-1/8 h-24 mr-2"
               >
                 <div
                   class="w-full h-full rounded-md focus:outline-none focus:shadow-outline bg-gray-100 cursor-pointer relative shadow-sm"
@@ -1063,7 +1063,7 @@ function redoFile(userAction) {
                 @openImage="openImageModal(file.url, file.name, 'preview')"
               >
               </FileList>
-              <div class="flex flex-row items-center justify-center">
+              <div class="flex flex-row items-center justify-center gap-3">
                 <button
                   :class="editMode || isEditPage ? 'block' : 'hidden'"
                   @click="
