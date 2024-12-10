@@ -250,6 +250,7 @@ const countAssignees = computed(() => {
   return duplicateTask.value.assignees?.trim()?.length;
 });
 
+let countElement = 0;
 const preview = (files) => {
   files?.length >= 10
     ? (disabledInput.value = true)
@@ -257,7 +258,7 @@ const preview = (files) => {
   invalidFile.value.maxSize.filename = [];
   invalidFile.value.maxFile.filename = [];
   invalidFile.value.dupFile.filename = [];
-  let countElement = 0;
+
   [...files].forEach((element, index) => {
     if (element.size > 20 * 1024 * 1024) {
       invalidFile.value?.maxSize.filename.push(element.name);
@@ -335,6 +336,7 @@ function deleteFile(imgUrlObject, index, type, fileName) {
     fileDetete.value.fileUrl.push(imgUrlObject);
   } else {
     previewImagesURL.value.splice(index, 1);
+    --countElement
     removeURL(imgUrlObject);
   }
 
@@ -404,7 +406,6 @@ function redoFile(userAction) {
           fileDetete.value.fileUrl.splice(i, 1);
         }
       }
-    }
     showToast.value = true;
     typeToast.value = "success";
     messageToast.value = "Redo file success";
