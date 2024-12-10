@@ -115,8 +115,8 @@ public class TasksController {
     }
 
     @DeleteMapping("/{taskId}/attachments/{filename:.+}")
-    public ResponseEntity<TaskAttachment> deleteFile(@PathVariable Integer taskId, @PathVariable String filename) {
-        AttachmentResponseDTO taskAttachmentResponse = fileService.removeTaskResource(taskId, filename);
+    public ResponseEntity<TaskAttachment> deleteFile(@PathVariable String boardId,@PathVariable Integer taskId, @PathVariable String filename) {
+        AttachmentResponseDTO taskAttachmentResponse = fileService.removeTaskResource(boardId,taskId, filename);
         if (!taskAttachmentResponse.getFilesErrors().isEmpty()) {
             throw new NotFoundException(taskAttachmentResponse.getFilesErrors().get(0).getMessage());
         }else {

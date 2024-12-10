@@ -73,7 +73,7 @@ public class StatusController {
     }
 
     @PatchMapping("/statuses/all/maximum-task")
-    public ResponseEntity<List<StatusLimitResponseDTO>> updateLimitMaxiMunTask(@PathVariable String boardId, @RequestParam @Min(0) @Max(30) Integer maximumTask, @RequestParam Boolean isLimit) {
+    public ResponseEntity<List<StatusLimitResponseDTO>> updateLimitMaxiMunTask(@PathVariable String boardId, @RequestParam @Min(0) @Max(10) Integer maximumTask, @RequestParam Boolean isLimit) {
         List<StatusLimitResponseDTO> status = statusService.updateLimitMaxiMunTask(boardId, maximumTask, isLimit);
         return ResponseEntity.ok(status);
     }

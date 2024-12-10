@@ -149,7 +149,7 @@ public class TaskService {
         if (filesToDelete != null && !filesToDelete.isEmpty()) {
 
             for (String filename : filesToDelete) {
-                AttachmentResponseDTO taskAttachmentDelete = fileService.removeTaskResource(taskId, filename);
+                AttachmentResponseDTO taskAttachmentDelete = fileService.removeTaskResource(boardId,taskId, filename);
                 newTaskResponse.getAttachments().stream().filter(attachment -> attachment.getFilename().equals(filename)).findFirst().ifPresent(newTaskResponse.getAttachments()::remove);
                 errors.addAll(taskAttachmentDelete.getFilesErrors());
             }
