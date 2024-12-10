@@ -385,6 +385,8 @@ const limitThisTask = computed(() => {
   }
 });
 
+const numberFileCanAdd = computed( ()=>{return 10 - (fileSelectRedo.value.length + fileURL.value.length + previewImagesURL.value.length)})
+
 function redoFile(userAction) {
   if (userAction && maxFile.value === false) {
     if (fileSelectRedo.value.length > 0) {
@@ -409,6 +411,7 @@ function redoFile(userAction) {
     showToast.value = true;
     typeToast.value = "success";
     messageToast.value = "Redo file success";
+    }
   } else if (userAction && maxFile.value) {
     showToast.value = true;
     typeToast.value = "warning";
@@ -423,6 +426,7 @@ function redoFile(userAction) {
   fileSelectRedo.value = [];
   showRedo.value = false;
 }
+
 </script>
 
 <template>
@@ -738,7 +742,7 @@ function redoFile(userAction) {
                 "
               >
                 <span>Max file : 10 </span>,<span>
-                  Your can add : {{ 10 - fileURL.length }} file</span
+                  Your can add : {{ numberFileCanAdd }} file</span
                 >
               </p>
               <p
@@ -1090,6 +1094,7 @@ function redoFile(userAction) {
     v-if="showRedo"
     :width="'w-[60vh]'"
     :canEdit="boardStore.isCanEdit"
+    :canShow="numberFileCanAdd > 0"
     @userAction="redoFile"
     class="z-50"
   >
@@ -1108,6 +1113,7 @@ function redoFile(userAction) {
     </template>
     <template #body>
       <div class="mb-2">Select the file which you need redo</div>
+      <div> The maximum number of files you can redo is {{ numberFileCanAdd  }} </div>
       <div class="flex flex-row gap-3 flex-wrap justify-center">
         <div
           v-for="(file, index) of fileDetete.fileName.map((name, i) => ({
@@ -1120,6 +1126,7 @@ function redoFile(userAction) {
             type="checkbox"
             :id="file.fileName"
             :value="{ name: file.fileName, url: file.fileUrl }"
+            :disabled="fileSelectRedo.length >= numberFileCanAdd"
             v-model="fileSelectRedo"
             class="hidden peer"
           />
