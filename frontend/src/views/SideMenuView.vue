@@ -30,6 +30,15 @@ const countBoard = computed(() => {
   return boardStore.boards.length;
 });
 
+const boards = computed(() => {
+  return boardStore.boards.filter(
+    (board) =>
+      !board.collaborators.find(
+        (collab) => collab.oid === userStore.authToken?.oid
+      )?.isPending === true
+  );
+});
+
 const handleLogout = async () => {
   if (userStore.isMicroSoftLogin === "MS") {
     userStore.isMicroSoftLogin = "Guest";
@@ -56,7 +65,7 @@ const showChangeThemes = ref(false);
 const themeSelect = ref("");
 const updateSidebarState = () => {
   const screenWidth = window.innerWidth;
-  open.value = screenWidth >= 1000;
+  open.value = screenWidth >= 1500;
 };
 
 onMounted(() => {
@@ -165,7 +174,7 @@ function changeTheme(useraction) {
                     :class="{ 'mr-2 mb-1': open, 'ml-[0.1rem]': !open }"
                   />
                   <transition name="text-fade">
-                    <span v-if="open"> All Boards ({{ countBoard }}) </span>
+                    <span v-if="open"> All Boards ({{ boards?.length }}) </span>
                   </transition>
                 </div>
                 <transition name="text-fade">
@@ -179,7 +188,7 @@ function changeTheme(useraction) {
               </summary>
             </transition>
             <ul class="mt-2 space-y-1 px-4" v-if="open">
-              <li v-for="board in boardStore.boards" :key="board.id">
+              <li v-for="board in boards" :key="board.id">
                 <router-link
                   :to="{ name: 'task', params: { boardId: board.id } }"
                   :class="{

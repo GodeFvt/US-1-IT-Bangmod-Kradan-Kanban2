@@ -307,10 +307,7 @@ function invitation(boardId) {
 
           <!-- Collab Board -->
           <div class="mb-12"></div>
-          <h2
-            class="itbkk-collab-board font-bold text-2xl mb-6"
-            
-          >
+          <h2 class="itbkk-collab-board font-bold text-2xl mb-6">
             Collab Board
           </h2>
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

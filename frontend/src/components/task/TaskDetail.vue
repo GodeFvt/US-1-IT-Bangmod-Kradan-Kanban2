@@ -21,6 +21,7 @@ import { useBoardStore } from "../../stores/boards.js";
 import AttachmentLoadingVue from "../loading/AttachmentLoading.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue";
 import FileList from "../FileList.vue";
+import FilePreView from "../FilePreView.vue";
 import { downloadfile } from "../../lib/fetchUtill.js";
 import Toast from "../modal/Toasts.vue";
 defineEmits(["userAction", "addEdit"]);
@@ -95,6 +96,36 @@ const invalidFile = ref({
     filename: [],
   },
 });
+const isDraggedOver = ref(false);
+
+const handleFileChange = (event) => {
+  if (!disabledInput.value) {
+    preview(event.target.files);
+  }
+};
+
+const dropHandler = (event) => {
+  if (!disabledInput.value) {
+    preview(event.dataTransfer.files);
+    isDraggedOver.value = false;
+  }
+};
+
+const dragEnterHandler = () => {
+  if (!disabledInput.value) {
+    isDraggedOver.value = true;
+  }
+};
+
+const dragLeaveHandler = () => {
+  if (!disabledInput.value) {
+    isDraggedOver.value = false;
+  }
+};
+
+const fileInputClick = () => {
+  fileInput.value.click();
+};
 
 watch(
   () => props.task,
@@ -177,10 +208,10 @@ async function downloadFile(filename, action) {
 }
 
 function openImageModal(file, filename, action) {
-  if (action !== "choose") {
+  if (action !== "choose" && /\.(rtf)$/g.test(filename) === false) {
     downloadFile(filename, action);
   } else {
-    if (getFileType(filename).match(/(txt|pdf)/g)) {
+    if (getFileType(filename).match(/(txt|pdf|rtf)/g)) {
       imageType.value = "embed";
       showImageModal.value = true;
       selectedImage.value = file;
@@ -219,21 +250,21 @@ const countAssignees = computed(() => {
   return duplicateTask.value.assignees?.trim()?.length;
 });
 
-const preview = (event) => {
-  event.target.files.length >= 10
+const preview = (files) => {
+  files?.length >= 10
     ? (disabledInput.value = true)
     : (disabledInput.value = false);
   invalidFile.value.maxSize.filename = [];
   invalidFile.value.maxFile.filename = [];
   invalidFile.value.dupFile.filename = [];
-  // let countElement = 1;
-  [...event.target.files].forEach((element, index) => {
+  let countElement = 0;
+  [...files].forEach((element, index) => {
     if (element.size > 20 * 1024 * 1024) {
       invalidFile.value?.maxSize.filename.push(element.name);
       return;
     } else if (
-      // fileURL.value.length >= 10 ||
-      // countElement + fileURL.value.length > 10
+      fileURL.value.length >= 10 ||
+      countElement + fileURL.value.length >= 10 ||
       maxFile.value
     ) {
       invalidFile.value?.maxFile.filename.push(element.name);
@@ -245,11 +276,13 @@ const preview = (event) => {
       invalidFile.value?.dupFile.filename.push(element.name);
       return;
     } else {
+      console.log(maxFile.value);
+
       previewImagesURL.value.push({
         name: element.name,
         url: element,
       });
-      // countElement++;
+      countElement++;
     }
   });
 };
@@ -461,7 +494,7 @@ function redoFile(userAction) {
             </div>
           </div>
           <div
-            class="pl-9 pr-5 flex flex-col justify-end items-end w-[90%]"
+            class="pl-9 pr-5 flex flex-col justify-end items-end w-[91%]"
             v-if="editMode"
           >
             <span class="text-xs border-0" :class="validate.title.style"
@@ -612,17 +645,227 @@ function redoFile(userAction) {
         </div>
         <div
           class="pl-10 pr-5 mt-3 flex flex-col h-full"
-          :class="editMode || isEditPage ? '' : 'hidden'"
+          :class="isEditPage ? '' : 'hidden'"
         >
-          <label class="font-bold text-base" for="file_input"
-            >Upload file</label
-          >
-          <p class="font-bold text-sm">
+          <label class="font-bold text-base mb-2" for="file_input">File</label>
+          <!-- <p class="font-bold text-sm">
             Max file : 10
             <span>, Number file you can add : {{ 10 - fileURL.length }}</span>
-          </p>
+          </p> -->
 
-          <input
+          <div class="w-full h-full flex flex-col">
+            <div
+              class="border-dashed border-2 border-gray-400 py-10 flex flex-col justify-center items-center rounded-md"
+              @drop.prevent="dropHandler"
+              @dragover.prevent
+              @dragleave="dragLeaveHandler"
+              @dragenter="dragEnterHandler"
+              @click="fileInputClick"
+              :class="
+                disabledInput || showLoadingFile
+                  ? 'bg-gray-200 cursor-not-allowed'
+                  : ' ' || (isDraggedOver && !showLoadingFile)
+                  ? 'bg-gray-100 cursor-pointer hover:bg-gray-200'
+                  : ''
+              "
+            >
+              <!-- overlay -->
+              <div
+                id="overlay"
+                class="w-full h-full pointer-events-none z-50 flex flex-col items-center justify-center"
+                :class="
+                  isDraggedOver && !disabledInput && !showLoadingFile
+                    ? 'draggedover'
+                    : ''
+                "
+              >
+                <i>
+                  <svg
+                    class="fill-current w-16 h-16 mb-3 text-blue-700"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M19.479 10.092c-.212-3.951-3.473-7.092-7.479-7.092-4.005 0-7.267 3.141-7.479 7.092-2.57.463-4.521 2.706-4.521 5.408 0 3.037 2.463 5.5 5.5 5.5h13c3.037 0 5.5-2.463 5.5-5.5 0-2.702-1.951-4.945-4.521-5.408zm-7.479-1.092l4 4h-3v4h-2v-4h-3l4-4z"
+                    />
+                  </svg>
+                </i>
+                <p class="text-lg text-blue-700">Drop files to upload</p>
+              </div>
+
+              <!-- <div class="flex flex-col items-center">
+                <img
+                  alt="File Icon"
+                  class="mb-3"
+                  src="https://img.icons8.com/dusk/64/000000/file.png"
+                />
+                <span class="block text-gray-500 font-semibold"
+                  >Drag &amp; drop your files here</span
+                >
+                <span class="block text-gray-400 font-normal mt-1"
+                  >or click to upload</span
+                >
+              </div>
+
+              <input
+                name=""
+                class="h-full w-full opacity-0 cursor-pointer"
+                type="file"
+              /> -->
+              <svg
+                class="fill-current w-16 h-16"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                v-show="!isDraggedOver || disabledInput || showLoadingFile"
+                :class="
+                  disabledInput || showLoadingFile
+                    ? 'text-gray-400'
+                    : 'text-gray-700'
+                "
+              >
+                <path
+                  d="M19.479 10.092c-.212-3.951-3.473-7.092-7.479-7.092-4.005 0-7.267 3.141-7.479 7.092-2.57.463-4.521 2.706-4.521 5.408 0 3.037 2.463 5.5 5.5 5.5h13c3.037 0 5.5-2.463 5.5-5.5 0-2.702-1.951-4.945-4.521-5.408zm-7.479-1.092l4 4h-3v4h-2v-4h-3l4-4z"
+                />
+              </svg>
+              <p
+                class="font-semibold flex flex-wrap text-base justify-center"
+                v-show="!isDraggedOver || disabledInput || showLoadingFile"
+                :class="
+                  disabledInput || showLoadingFile
+                    ? 'text-gray-400'
+                    : 'text-gray-600'
+                "
+              >
+                <span>Max file : 10 </span>,<span>
+                  Your can add : {{ 10 - fileURL.length }} file</span
+                >
+              </p>
+              <p
+                class="font-semibold flex flex-wrap text-base justify-center"
+                v-show="!isDraggedOver || disabledInput || showLoadingFile"
+                :class="
+                  disabledInput || showLoadingFile
+                    ? 'text-gray-400'
+                    : 'text-gray-600'
+                "
+              >
+                <span>Drag and drop your</span>&nbsp;<span
+                  >files anywhere or</span
+                >
+              </p>
+              <input
+                ref="fileInput"
+                type="file"
+                multiple
+                class="hidden"
+                :disabled="disabledInput"
+                @change="handleFileChange"
+                v-show="!isDraggedOver || disabledInput || showLoadingFile"
+              />
+              <p
+                class="text-gray-400 font-normal text-base flex flex-wrap justify-center"
+                v-show="!isDraggedOver || disabledInput || showLoadingFile"
+                :class="
+                  disabledInput || showLoadingFile
+                    ? 'text-gray-400'
+                    : 'text-gray-500'
+                "
+              >
+                <span>or click to upload</span>
+              </p>
+              <div>
+                <div
+                  class="text-red-500 text-sm mt-1 mx-8 font-medium"
+                  v-if="invalidFile?.maxSize?.filename?.length > 0"
+                >
+                  {{ invalidFile?.maxSize?.msg }} :
+                  <span
+                    class="font-normal"
+                    v-for="(name, index) in invalidFile?.maxSize?.filename"
+                    :key="index"
+                    >{{ index === 0 ? "" : "," }} {{ name }}
+                  </span>
+                </div>
+                <div
+                  class="text-red-500 text-sm mt-1 mx-8 font-medium"
+                  v-if="invalidFile?.maxFile?.filename?.length > 0"
+                >
+                  {{ invalidFile?.maxFile?.msg }} :
+                  <span
+                    class="font-normal"
+                    v-for="(name, index) in invalidFile?.maxFile?.filename"
+                    :key="index"
+                    >{{ index === 0 ? "" : "," }} {{ name }}</span
+                  >
+                </div>
+                <div
+                  class="text-red-500 mt-1 mx-8 text-sm font-medium"
+                  v-if="invalidFile?.dupFile?.filename?.length > 0"
+                >
+                  {{ invalidFile?.dupFile?.msg }} :
+                  <span
+                    class="font-normal"
+                    v-for="(name, index) in invalidFile?.dupFile?.filename"
+                    :key="index"
+                    >{{ index === 0 ? "" : "," }} {{ name }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <h1 class="py-2 font-bold sm:text-base text-gray-900">To Upload</h1>
+
+            <ul class="flex gap-2 flex-wrap">
+              <li
+                v-if="previewImagesURL?.length === 0"
+                class="h-full w-full text-center flex flex-col items-center justify-center"
+              >
+                <img
+                  class="mx-auto w-32"
+                  src="https://user-images.githubusercontent.com/507615/54591670-ac0a0180-4a65-11e9-846c-e55ffce0fe7b.png"
+                  alt="no data"
+                />
+                <span class="text-small text-gray-500">No files selected</span>
+              </li>
+
+              <li
+                v-for="(file, index) in [...previewImagesURL]"
+                :key="index"
+                class="w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/6 xl:w-1/8 h-24 mr-2"
+              >
+                <div
+                  class="w-full h-full rounded-md focus:outline-none focus:shadow-outline bg-gray-100 cursor-pointer relative shadow-sm"
+                >
+                  <FilePreView
+                    :filename="file.name"
+                    :fileurl="previewBinary(file.url)"
+                    :chooseFile="true"
+                    @openImage="
+                      openImageModal(
+                        previewBinary(file.url),
+                        file.name,
+                        'choose'
+                      )
+                    "
+                  ></FilePreView>
+
+                  <div
+                    class="flex text-xs w-full absolute bottom-0 items-end justify-between bg-gray-100 rounded-b-md"
+                  >
+                    <h1 class="text-gray-900 truncate p-1">{{ file.name }}</h1>
+                    <button
+                      class="focus:outline-none hover:bg-gray-300 fill-rose-500 hover:rounded-br-md"
+                      @click="deleteFile(file.url, index, 'selectFile')"
+                    >
+                      <DeleteIcon class="h-7 w-7" />
+                    </button>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- <input
             type="file"
             id="file_input"
             ref="fileInput"
@@ -631,8 +874,8 @@ function redoFile(userAction) {
             :disabled="disabledInput"
             @change="preview"
             multiple
-          />
-          <div>
+          /> -->
+          <!-- <div>
             <div
               class="text-red-500 text-sm mt-1 font-medium"
               v-if="invalidFile?.maxSize?.filename?.length > 0"
@@ -669,16 +912,16 @@ function redoFile(userAction) {
                 >{{ index === 0 ? "" : "," }} {{ name }}
               </span>
             </div>
-          </div>
+          </div> -->
           <!-- Preview Images Section -->
-          <div class="flex flex-wrap gap-4 mt-4">
+          <!-- <div class="flex flex-wrap gap-4 mt-4">
             <div
               v-for="(file, index) in [...previewImagesURL]"
               :key="index"
               class="relative flex flex-col border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
-            >
-              <!-- Delete Button Positioned at Top Right -->
-              <div
+            > -->
+          <!-- Delete Button Positioned at Top Right -->
+          <!-- <div
                 class="absolute top-1 right-1 cursor-pointer text-red-500 text-sm"
                 @click="deleteFile(file.url, index, 'selectFile')"
               >
@@ -693,7 +936,7 @@ function redoFile(userAction) {
                 "
               ></FileList>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <div class="flex flex-row justify-end gap-3 pl-10 pr-5 my-5">
@@ -730,10 +973,10 @@ function redoFile(userAction) {
         </div>
 
         <div
-          class="w-full flex justify-end mb-3"
+          class="w-full flex justify-end sticky bottom-0 z-10 bg-white"
           :class="editMode ? 'block ' : 'hidden'"
         >
-          <div class="flex mr-5 gap-2">
+          <div class="flex mr-5 my-2 gap-2">
             <button
               :disabled="disabledSave"
               class="itbkk-button-confirm text-white inline-flex items-center focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-gray-300"
@@ -820,14 +1063,14 @@ function redoFile(userAction) {
                 @openImage="openImageModal(file.url, file.name, 'preview')"
               >
               </FileList>
-              <div class="flex flex-row items-center justify-center">
+              <div class="flex flex-row items-center justify-center gap-3">
                 <button
                   :class="editMode || isEditPage ? 'block' : 'hidden'"
                   @click="
                     deleteFile(file.url, index, 'fileDelete', file.name),
                       (showRedoButton = true)
                   "
-                  class="bottom-1 right-1 fill-rose-400 text-sm"
+                  class="bottom-1 right-1 fill-rose-500 text-sm"
                 >
                   <DeleteIcon class="h-7 w-7" />
                 </button>
@@ -920,5 +1163,16 @@ function redoFile(userAction) {
   .max-h-800px {
     height: 65%;
   }
+}
+
+.draggedover {
+}
+
+#overlay {
+  display: none;
+}
+
+#overlay.draggedover {
+  display: flex;
 }
 </style>

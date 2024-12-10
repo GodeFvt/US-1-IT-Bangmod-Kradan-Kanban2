@@ -44,7 +44,15 @@ public class StatusService {
     private String[] nonEditableStatuses;
 
     public boolean isStatusExist(String boardId, Integer statusId) {
-        return statusRepository.existsByBoardIdAndId(boardId,statusId);
+        Board board = boardRepository.findById(boardId).orElse(null);
+        if (board == null) {
+            return false;
+        }
+        if(board.getIsCustomStatus()){
+            return statusRepository.existsByBoardIdAndId(boardId,statusId);
+        }else{
+            return statusRepository.existsById(statusId);
+        }
     }
 
     public List<SimpleStatusDTO> getAllStatus(String boardId) {

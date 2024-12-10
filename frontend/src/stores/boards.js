@@ -57,6 +57,10 @@ export const useBoardStore = defineStore("useBoard", {
     updateAccessCollab(index, access) {
       this.collabs[index].access = access;
     },
+    updateIsCustomizeStatus(id, isCustomizeStatus) {
+      this.boards.find((board) => board.id === id).isCustomStatus =
+        isCustomizeStatus;
+    },
   },
 });
 if (import.meta.hot) {

@@ -5,15 +5,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import sit.us1.backend.dtos.tasksDTO.AttachmentResponseDTO;
 import sit.us1.backend.dtos.tasksDTO.ErrorAttachmentDTO;
 import sit.us1.backend.dtos.tasksDTO.ResourceFileDTO;
 import sit.us1.backend.entities.taskboard.TaskAttachment;
+import sit.us1.backend.entities.taskboard.TaskList;
 import sit.us1.backend.exceptions.BadRequestException;
 import sit.us1.backend.exceptions.NotFoundException;
 import sit.us1.backend.properties.FileStorageProperties;
 import sit.us1.backend.repositories.taskboard.TaskAttachmentRepository;
+import sit.us1.backend.repositories.taskboard.TaskListRepository;
 
 
 import java.io.FileNotFoundException;
@@ -38,6 +41,8 @@ public class TaskAttachmentService {
 
     @Autowired
     private TaskAttachmentRepository taskAttachmentRepository;
+    @Autowired
+    private TaskListRepository taskRepository;
 
     @Autowired
     public TaskAttachmentService(FileStorageProperties fileStorageProperties) {
@@ -54,44 +59,11 @@ public class TaskAttachmentService {
         }
     }
 
-//    public List<Attachment> saveTaskAttachment(String boardId, Integer taskId, MultipartFile[] files) {
-//        List<Attachment> attachments = new ArrayList<>();
-//
-//        for (MultipartFile file : files) {
-//            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-//
-//            if (taskAttachmentRepository.existsByTaskIdAndFilename(taskId, fileName)) {
-//                throw new ConflictException("File name already exists in this task");
-//            }
-//
-//            try {
-//                if (fileName.contains("..")) {
-//                    throw new RuntimeException("Sorry! Filename contains invalid path sequence " + fileName);
-//                }
-//                String storedName = "task" + taskId + "_" + fileName;
-//                Path targetLocation = this.fileStorageLocation.resolve(storedName);
-//                Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-//
-//                Attachment newAttachment = new Attachment();
-//                newAttachment.setFilename(fileName);
-//                newAttachment.setContentType(file.getContentType());
-//                newAttachment.setDownloadUrl("https://" + hostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=attachment");
-//                newAttachment.setPreviewUrl("https://" + hostName + "/us1" + "/v3/boards/" + boardId + "/tasks/" + taskId + "/attachments/" + fileName + "?disposition=inline");
-//                attachments.add(newAttachment);
-//                taskAttachmentRepository.save(new TaskAttachment(taskId, fileName, storedName, file.getContentType()));
-//
-//            } catch (Exception ex) {
-//                throw new BadRequestException("Could not store file " + fileName + ". Please try again!" + ex);
-//            }
-//        }
-//
-//        return attachments;
-//    }
-
+    @Transactional
     public AttachmentResponseDTO saveTaskAttachment(String boardId, Integer taskId, List<MultipartFile> files) {
+        taskRepository.findByBoardIdAndId(boardId, taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         List<ErrorAttachmentDTO> errorMessages = new ArrayList<>();
         List<TaskAttachment> addedFiles = new ArrayList<>();
-
         long MAX_FILE_SIZE = maxFileSize * 1024 * 1024;
         long MAX_TOTAL_SIZE = ((long) maxFilePerTask * maxFileSize) * 1024 * 1024;
 
@@ -113,8 +85,6 @@ public class TaskAttachmentService {
 
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
-            System.out.println(MAX_FILE_SIZE);
-            System.out.println(file.getSize());
             // ตรวจสอบขนาดของแต่ละไฟล์
             if (file.getSize() > MAX_FILE_SIZE) {
                 errorMessages.add(new ErrorAttachmentDTO("File exceeds " + maxFileSize + " MB", fileName, file.getContentType()));
@@ -172,8 +142,9 @@ public class TaskAttachmentService {
             throw new BadRequestException("File operation error: " + fileName);
         }
     }
-
-    public AttachmentResponseDTO removeTaskResource(Integer taskId, String fileName) {
+    @Transactional
+    public AttachmentResponseDTO removeTaskResource(String boardId,Integer taskId, String fileName) {
+        taskRepository.findByBoardIdAndId(boardId, taskId).orElseThrow(() -> new NotFoundException("the specified task does not exist"));
         TaskAttachment taskAttachment = taskAttachmentRepository.findByTaskIdAndFilename(taskId, fileName);
         List<ErrorAttachmentDTO> errorMessages = new ArrayList<>();
         List<TaskAttachment> addedFiles = new ArrayList<>();
@@ -198,7 +169,9 @@ public class TaskAttachmentService {
         return new AttachmentResponseDTO(errorMessages, addedFiles);
     }
 
+    @Transactional
     public void removeAllTaskResource(Integer taskId) {
+        List<Path> deletedFiles = new ArrayList<>();
         try {
             List<TaskAttachment> taskAttachment = taskAttachmentRepository.findAllByTaskId(taskId);
             taskAttachmentRepository.deleteAll(taskAttachment);
@@ -207,12 +180,20 @@ public class TaskAttachmentService {
                     Path filePath = this.fileStorageLocation.resolve(attachment.getStoredName()).normalize();
                     if (Files.exists(filePath)) {
                         Files.delete(filePath);
+                        deletedFiles.add(filePath);
                     } else {
                         throw new FileNotFoundException("File not found " + attachment.getFilename());
                     }
                 }
             }
         } catch (Exception ex) {
+            for (Path filePath : deletedFiles) {
+                try {
+                    Files.copy(filePath, this.fileStorageLocation.resolve(filePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException ioEx) {
+                    throw new BadRequestException("Failed to restore file: " + filePath.getFileName());
+                }
+            }
             throw new BadRequestException("File operation error: " + taskId);
         }
     }
