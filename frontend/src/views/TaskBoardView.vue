@@ -58,6 +58,7 @@ const isVisible = ref([]);
 // show component
 const showErrorMSG = ref(false);
 const showLoading = ref(true);
+const showLoadingDetail = ref(true);
 const showLoadingFile = ref(true);
 const showDetail = ref(false);
 const showAttachments = ref(false);
@@ -189,6 +190,14 @@ watch(
   }
 );
 
+const fileCanPreview = (name) => {
+  if (/\.(png|jpeg|jpg|gif|bmp|svg|txt|rtf|pdf)$/g.test(name)) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
 // react to route changes
 watch(
   () => route.params.taskId,
@@ -208,32 +217,40 @@ watch(
         } else {
           isEdit.value = false;
         }
-        showLoading.value = true;
+        showLoadingDetail.value = true;
         showLoadingFile.value = true;
         const res = await getTaskById(boardId.value, newId);
         if (typeof res !== "object") {
           handleResponseError(res);
         } else {
           task.value = res;
-          showLoading.value = false;
+          showLoadingDetail.value = false;
           task.value.attachments?.length > 0
             ? (showLoadingFile.value = true)
             : (showLoadingFile.value = false);
           task.value.attachments.forEach(async (file) => {
-            const resFile = await previewfile(
-              boardId.value,
-              newId,
-              file.filename
-            );
-            if (typeof resFile !== "number") {
-              fileURL.value.push({ name: file.filename, url: resFile });
+            if (fileCanPreview(file.filename)) {
+              const resFile = await previewfile(
+                boardId.value,
+                newId,
+                file.filename
+              );
+              if (typeof resFile !== "number") {
+                fileURL.value.push({ name: file.filename, url: resFile });
+              } else {
+                fileURL.value.push({
+                  name: file.filename,
+                  url: "https://api.iconify.design/ic:baseline-sim-card-alert.svg",
+                });
+              }
+              showLoadingFile.value = false;
             } else {
               fileURL.value.push({
                 name: file.filename,
                 url: "https://api.iconify.design/ic:baseline-sim-card-alert.svg",
               });
+              showLoadingFile.value = false;
             }
-            showLoadingFile.value = false;
           });
         }
       }
@@ -364,7 +381,7 @@ function closeTask(action) {
 }
 
 function ClickAdd() {
-  showLoading.value = false;
+  showLoadingDetail.value = false;
   showDetail.value = true;
   isEdit.value = true;
   showAttachments.value = false;
@@ -717,7 +734,7 @@ async function removeTask(index, confirmDelete = false) {
         @addEdit="addEditTask"
         :task="task"
         :isEdit="isEdit"
-        :showLoading="showLoading"
+        :showLoading="showLoadingDetail"
         :showLoadingFile="showLoadingFile"
         :showAttachment="showAttachments"
         :allTaskLimit="allTaskLimit"

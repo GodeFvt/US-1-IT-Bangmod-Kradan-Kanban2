@@ -49,7 +49,7 @@ function getCollaborator(board) {
   </boardCard>
 
   <boardCard
-    v-else 
+    v-else
     v-for="board in allBoard"
     :key="board.id"
     customClass="relative group"
@@ -109,10 +109,10 @@ function getCollaborator(board) {
         class="flex flex-col w-[75%] text-center mt-1 place-items-start ml-3 mb-2"
       >
         <p class="itbkk-owner-name text-sm font-medium">
-          Owner :: {{ board.owner.username }}
+          Owner : {{ board.owner.username }}
         </p>
         <p class="itbkk-access-right text-sm font-medium">
-          Access Right :: {{ getCollaborator(board).accessRight }}
+          Access Right : {{ getCollaborator(board).accessRight }}
         </p>
         <div
           v-if="getCollaborator(board)?.isPending"
@@ -128,17 +128,18 @@ function getCollaborator(board) {
         <button
           v-if="getCollaborator(board)?.isPending"
           @click="$emit('invitation', board.id)"
-          class="inline-flex items-center justify-center mt-3 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input border-green-500 hover:bg-green-400 hover:text-accent-foreground h-10 px-4 py-2 w-full"
+          class="inline-flex items-center justify-center mt-3 rounded-md text-sm font-medium border border-gray-700 hover:bg-gray-700 hover:text-white h-10 px-4 py-2 w-full"
         >
-          <p class="text-green-900">Accept/</p>
-          <p class="text-red-500">Decline</p>
+          <!-- <p class="text-green-900">Accept/</p>
+          <p class="text-red-500">Decline</p> -->
+          Open Invitation
         </button>
 
         <!-- Open Board Button (Shown Only If Not Pending) -->
         <button
           v-else
           @click="$emit('openBoard', board.id)"
-          class="inline-flex items-center justify-center mt-3 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
+          class="inline-flex items-center justify-center mt-3 rounded-md text-sm font-medium border border-gray-700 hover:bg-gray-700 hover:text-white h-10 px-4 py-2 w-full"
         >
           Open Board
         </button>
@@ -183,7 +184,7 @@ function getCollaborator(board) {
                   cx="13"
                   cy="13"
                   r="13"
-                  class="fill-rose-300 hover:fill-rose-400"
+                  class="fill-rose-400 hover:fill-rose-300"
                   mask="url(#pepiconsPencilLeaveCircleFilled0)"
                 />
               </g>

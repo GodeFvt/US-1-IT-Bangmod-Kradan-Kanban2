@@ -237,9 +237,14 @@ function ClickAdd() {
 }
 
 async function addEditStatus(newStatus) {
-  const indexToCheck = allStatus.value.findIndex(
+  console.log(newStatus);
+
+  const indexToCheck = statusStore.allStatus.findIndex(
     (status) => status.id === newStatus.id
   );
+  console.table(statusStore.allStatus);
+
+  console.log(indexToCheck);
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
     await editStatus(newStatus);
@@ -270,8 +275,10 @@ async function addStatus(newStatus) {
       } else {
         typeToast.value = "success";
         statusStore.addStatus(res);
-        if (boardStore.findBoardById(boardId.value).isCustomStatus === false) {
+        const board = boardStore.findBoardById(boardId.value);
+        if (board?.isCustomStatus === false) {
           const resStatus = await getAllStatus(boardId.value);
+          boardStore.updateIsCustomizeStatus(boardId.value, true);
           statusStore.setAllStatus(resStatus);
         }
         messageToast.value = `The status has been added`;
@@ -298,8 +305,10 @@ async function editStatus(editedStatus) {
         (status) => status.id === editedStatus.id
       );
       statusStore.editStatus(indexToUpdate, res);
-      if (boardStore.findBoardById(boardId.value).isCustomStatus === false) {
+      const board = boardStore.findBoardById(boardId.value);
+      if (board?.isCustomStatus === false) {
         const resStatus = await getAllStatus(boardId.value);
+        boardStore.updateIsCustomizeStatus(boardId.value, true);
         statusStore.setAllStatus(resStatus);
       }
       messageToast.value = `The status has been updated`;
@@ -422,8 +431,10 @@ async function removeStatus(index, confirmDelete = false) {
           messageToast.value = `The status has been deleted`;
         }
         statusStore.deleteStatus(index);
-        if (boardStore.findBoardById(boardId.value).isCustomStatus === false) {
+        const board = boardStore.findBoardById(boardId.value);
+        if (board?.isCustomStatus === false) {
           const resStatus = await getAllStatus(boardId.value);
+          boardStore.updateIsCustomizeStatus(boardId.value, true);
           statusStore.setAllStatus(resStatus);
         }
       } else if (res === 404 || res === 400) {
