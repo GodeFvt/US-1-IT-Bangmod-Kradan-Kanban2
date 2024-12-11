@@ -14,7 +14,7 @@ import {
 import { useBoardStore } from "../../stores/boards.js";
 import AttachmentLoadingVue from "../loading/AttachmentLoading.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue";
-import FilePreView from "../FilePreView.vue";
+import FilePreViewList from "../FilePreViewList.vue";
 import { downloadfile } from "../../lib/fetchUtill.js";
 import Toast from "../modal/Toasts.vue";
 defineEmits(["userAction", "addEdit"]);
@@ -653,11 +653,6 @@ function redoFile(userAction) {
           :class="isEditPage ? '' : 'hidden'"
         >
           <label class="font-bold text-base mb-2" for="file_input">File</label>
-          <!-- <p class="font-bold text-sm">
-            Max file : 10
-            <span>, Number file you can add : {{ 10 - fileURL.length }}</span>
-          </p> -->
-
           <div class="w-full h-full flex flex-col">
             <div
               class="border-dashed border-2 border-gray-400 py-10 flex flex-col justify-center items-center rounded-md"
@@ -698,25 +693,6 @@ function redoFile(userAction) {
                 <p class="text-lg text-blue-700">Drop files to upload</p>
               </div>
 
-              <!-- <div class="flex flex-col items-center">
-                <img
-                  alt="File Icon"
-                  class="mb-3"
-                  src="https://img.icons8.com/dusk/64/000000/file.png"
-                />
-                <span class="block text-gray-500 font-semibold"
-                  >Drag &amp; drop your files here</span
-                >
-                <span class="block text-gray-400 font-normal mt-1"
-                  >or click to upload</span
-                >
-              </div>
-
-              <input
-                name=""
-                class="h-full w-full opacity-0 cursor-pointer"
-                type="file"
-              /> -->
               <svg
                 class="fill-current w-16 h-16"
                 xmlns="http://www.w3.org/2000/svg"
@@ -838,7 +814,7 @@ function redoFile(userAction) {
                 :key="index"
                 class="w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/6 xl:w-1/8 h-24 mr-2"
               >
-                <FilePreView
+                <FilePreViewList
                   :filename="file.name"
                   :fileurl="previewBinary(file.url)"
                   :chooseFile="true"
@@ -847,7 +823,7 @@ function redoFile(userAction) {
                     openImageModal(previewBinary(file.url), file.name, 'choose')
                   "
                   @deleteFile="deleteFile(file.url, index, 'selectFile')"
-                ></FilePreView>
+                ></FilePreViewList>
               </li>
             </ul>
           </div>
@@ -973,7 +949,7 @@ function redoFile(userAction) {
                 v-show="fileURL"
                 class="flex flex-col w-full h-24 mb-3 px-2"
               >
-                <FilePreView
+                <FilePreViewList
                   :filename="file.name"
                   :fileurl="file.url"
                   :isDeleteFile="editMode || isEditPage"
@@ -984,7 +960,7 @@ function redoFile(userAction) {
                       (numberFileCanRedo = numberFileCanAdd))
                   "
                   @downloadFile="downloadFile(file.name)"
-                ></FilePreView>
+                ></FilePreViewList>
               </div>
             </div>
           </div>
@@ -1016,8 +992,8 @@ function redoFile(userAction) {
     </template>
     <template #body>
       <div class="text-gray-800">Select the file which you need redo</div>
-      <div class="mb-3 text-gray-600">
-        Number can redo : {{ numberFileCanAdd }}
+      <div class="mb-3 text-gray-500 text-sm">
+        ** Files that cannot be redo due to duplicates or more than 10 files in total.
       </div>
       <div class="flex flex-row gap-3 flex-wrap justify-center">
         <div
@@ -1041,14 +1017,20 @@ function redoFile(userAction) {
 
           <label
             :for="file.fileName"
-            class="inline-flex items-center justify-between w-[8rem] h-[6rem] p-2 text-gray-500 bg-white border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-600 hover:text-gray-600 peer-checked:text-gray-600 hover:bg-gray-50"
+            class="inline-flex items-center justify-between w-[8rem] h-[6rem] text-gray-500 bg-white border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-600 hover:text-gray-600 peer-checked:text-gray-600 hover:bg-gray-50"
+            :class="
+              fileSelectRedo.length > numberFileCanRedo ||
+              previewImagesURL.find((e) => e.name === file.fileName)
+                ? 'cursor-not-allowed opacity-50'
+                : ''
+            "
           >
-            <div class="block w-full h-full mt-2">
-              <FileList
-                :filename="file.fileName"
-                :fileurl="file.fileUrl"
-              ></FileList>
-            </div>
+            <FilePreViewList
+              class="w-full h-full"
+              :filename="file.fileName"
+              :fileurl="file.fileUrl"
+              :redofile="true"
+            ></FilePreViewList>
           </label>
         </div>
       </div>
