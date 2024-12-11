@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, computed, nextTick } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 // import lib
 import {
   deleteTask,
@@ -657,8 +657,8 @@ async function removeTask(index, confirmDelete = false) {
                           :disabled="!boardStore.isCanEdit"
                           :class="
                             boardStore.isCanEdit
-                              ? 'cursor-pointer'
-                              : 'cursor-not-allowed disabled'
+                              ? 'cursor-pointer bg-gray-800'
+                              : 'cursor-not-allowed disabled bg-gray-500'
                           "
                         >
                           Add Task
