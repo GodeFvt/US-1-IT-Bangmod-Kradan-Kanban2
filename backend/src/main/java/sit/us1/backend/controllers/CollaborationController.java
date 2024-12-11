@@ -18,7 +18,7 @@ import sit.us1.backend.validations.ValidationGroups;
 
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:5173", "https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("/v3/boards/{boardId}")
 public class CollaborationController {

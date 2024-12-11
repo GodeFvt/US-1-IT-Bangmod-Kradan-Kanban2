@@ -112,6 +112,7 @@ const isOwner = computed(() => {
               data-tip="You need to be board owner to perform this action."
             >
               <button
+                v-if="isOwner"
                 class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
                 :disabled="!isOwner"
                 :class="isOwner ? 'cursor-pointer' : 'cursor-not-allowed'"

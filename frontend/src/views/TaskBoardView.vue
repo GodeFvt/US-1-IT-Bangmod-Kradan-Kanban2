@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, computed, nextTick } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 // import lib
 import {
   deleteTask,
@@ -657,8 +657,8 @@ async function removeTask(index, confirmDelete = false) {
                           :disabled="!boardStore.isCanEdit"
                           :class="
                             boardStore.isCanEdit
-                              ? 'cursor-pointer'
-                              : 'cursor-not-allowed disabled'
+                              ? 'cursor-pointer bg-gray-800'
+                              : 'cursor-not-allowed disabled bg-gray-500'
                           "
                         >
                           Add Task
@@ -850,7 +850,7 @@ async function removeTask(index, confirmDelete = false) {
               v-if="maximumTask > 10 || maximumTask <= 0"
               class="text-red-500"
             >
-              <p>maximumTask must be lees then 10 and more than 0</p>
+              <p>maximumTask must be less then or equal 10 and more then 0</p>
             </div>
           </div>
         </template>

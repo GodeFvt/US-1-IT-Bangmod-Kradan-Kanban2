@@ -237,14 +237,10 @@ function ClickAdd() {
 }
 
 async function addEditStatus(newStatus) {
-  console.log(newStatus);
-
   const indexToCheck = statusStore.allStatus.findIndex(
     (status) => status.id === newStatus.id
   );
   console.table(statusStore.allStatus);
-
-  console.log(indexToCheck);
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
     await editStatus(newStatus);
@@ -462,7 +458,7 @@ async function clickRemove(index) {
       ? (showDeleteModal.value = true)
       : (showDeleteModal.value = false);
     if (showDeleteModal.value) {
-      status.value = allStatus.value[index];
+      status.value = statusStore.allStatus[index];
       indexToRemove.value = index;
       const res = await getTaskByStatus(boardId.value, status.value.id);
       if (res === 400 || res === 404 || res === 500) {
@@ -550,8 +546,8 @@ async function clickRemove(index) {
                     :disabled="!boardStore.isCanEdit"
                     :class="
                       boardStore.isCanEdit
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
+                        ? 'cursor-pointer bg-gray-800'
+                        : 'cursor-not-allowed disabled bg-gray-500'
                     "
                   >
                     Add Status
@@ -705,7 +701,7 @@ async function clickRemove(index) {
             v-model="maximumTask"
           />
           <div v-if="maximumTask > 10 || maximumTask <= 0" class="text-red-500">
-            <p>maximumTask must be lees then 10 and more than 0</p>
+            <p>maximumTask must be less then or equal 10 and more then 0</p>
           </div>
         </div>
       </template>
