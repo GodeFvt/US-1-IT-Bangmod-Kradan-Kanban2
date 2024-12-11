@@ -270,8 +270,6 @@ const preview = (files) => {
       invalidFile.value?.dupFile.filename.push(element.name);
       return;
     } else {
- 
-
       previewImagesURL.value.push({
         name: element.name,
         url: element,
@@ -917,7 +915,7 @@ function redoFile(userAction) {
             <div class="font-bold text-base pl-2 mb-1">Attachments</div>
 
             <button
-              @click="showRedo = true"
+              @click="(showRedo = true), (numberFileCanRedo = numberFileCanAdd)"
               v-show="showRedoButton"
               class="mb-1 pr-2"
             >
@@ -956,8 +954,7 @@ function redoFile(userAction) {
                   @openImage="openImageModal(file.url, file.name, 'preview')"
                   @deleteFile="
                     deleteFile(file.url, index, 'fileDelete', file.name),
-                      ((showRedoButton = true),
-                      (numberFileCanRedo = numberFileCanAdd))
+                      (showRedoButton = true)
                   "
                   @downloadFile="downloadFile(file.name)"
                 ></FilePreViewList>
@@ -993,7 +990,8 @@ function redoFile(userAction) {
     <template #body>
       <div class="text-gray-800">Select the file which you need redo</div>
       <div class="mb-3 text-gray-500 text-sm">
-        ** Files that cannot be redo due to duplicates or more than 10 files in total.
+        ** Files that cannot be redo due to duplicates or more than 10 files in
+        total.
       </div>
       <div class="flex flex-row gap-3 flex-wrap justify-center">
         <div
@@ -1008,8 +1006,9 @@ function redoFile(userAction) {
             :id="file.fileName"
             :value="{ name: file.fileName, url: file.fileUrl }"
             :disabled="
-              fileSelectRedo.length > numberFileCanRedo ||
-              previewImagesURL.find((e) => e.name === file.fileName)
+              (fileSelectRedo.length >= numberFileCanRedo ||
+                previewImagesURL.find((e) => e.name === file.fileName)) &&
+              !fileSelectRedo.find((e) => e.name === file.fileName)
             "
             v-model="fileSelectRedo"
             class="hidden peer"
@@ -1019,8 +1018,9 @@ function redoFile(userAction) {
             :for="file.fileName"
             class="inline-flex items-center justify-between w-[8rem] h-[6rem] text-gray-500 bg-white border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-600 hover:text-gray-600 peer-checked:text-gray-600 hover:bg-gray-50"
             :class="
-              fileSelectRedo.length > numberFileCanRedo ||
-              previewImagesURL.find((e) => e.name === file.fileName)
+              (fileSelectRedo.length >= numberFileCanRedo ||
+                previewImagesURL.find((e) => e.name === file.fileName)) &&
+              !fileSelectRedo.find((e) => e.name === file.fileName)
                 ? 'cursor-not-allowed opacity-50'
                 : ''
             "
