@@ -112,7 +112,16 @@ function getCollaborator(board) {
           Owner : {{ board.owner.username }}
         </p>
         <p class="itbkk-access-right text-sm font-medium">
-          Access Right : {{ getCollaborator(board).accessRight }}
+          Access Right :
+          <span
+            class = 'rounded-md w-[25%] text-center mt-1 px-1'
+            :class="{
+              'text-white bg-blue-500': getCollaborator(board).accessRight === 'READ',
+              'text-white bg-green-600': getCollaborator(board).accessRight === 'WRITE',
+            }"
+          >
+            {{ getCollaborator(board).accessRight }}
+          </span>
         </p>
         <div
           v-if="getCollaborator(board)?.isPending"
