@@ -850,7 +850,7 @@ async function removeTask(index, confirmDelete = false) {
               v-if="maximumTask > 10 || maximumTask <= 0"
               class="text-red-500"
             >
-              <p>maximumTask must be lees then 10 and more than 0</p>
+              <p>maximumTask must be less then or equal 10 and more then 0</p>
             </div>
           </div>
         </template>
