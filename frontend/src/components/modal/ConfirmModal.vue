@@ -38,7 +38,6 @@ const props = defineProps({
       </div>
       <div class="mt-6 flex justify-center gap-2" v-if="canEdit">
         <button
-        v-show="canShow"
           type="submit"
           class="itbkk-button-confirm text-white inline-flex items-center focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center"
           @click="$emit('userAction', true), $emit('confirm', index, true)"
@@ -53,7 +52,6 @@ const props = defineProps({
         </button>
 
         <button
-        v-show="canShow"
           type="Cancel"
           class="itbkk-button-cancel text-white inline-flex items-center bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
           @click="$emit('userAction', false)"

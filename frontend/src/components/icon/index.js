@@ -23,3 +23,5 @@ export { default as ZoomInIcon } from './ZoomInIcon.vue';
 export { default as ZoomOutIcon } from './ZoomOutIcon.vue';
 export { default as RotateLeftIcon } from './RotateLeftIcon.vue';
 export { default as RotateRightIcon } from './RotateRightIcon.vue';
+export { default as LoaderFile } from './LoaderFile.vue';
+export { default as EyeTrackingIcon } from './EyeTrackingIcon.vue';

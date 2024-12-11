@@ -271,24 +271,6 @@ function changeTheme(useraction) {
             <transition name="fade">
               <ul class="mt-2 space-y-1 px-4 duration-300" v-if="open">
                 <li>
-                  <a
-                    href="#"
-                    class="block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700"
-                  >
-                    Details
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#"
-                    class="block rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-gray-700"
-                  >
-                    Security
-                  </a>
-                </li>
-
-                <li>
                   <form action="#">
                     <button
                       type="submit"
@@ -330,13 +312,13 @@ function changeTheme(useraction) {
           class="flex items-center gap-2 bg-gray-800 p-4 hover:bg-gray-700 w-full h-full"
         >
           <div class="user-info flex items-center gap-2">
-            <img
+            <!-- <img
               alt="Profile"
               src="https://minotar.net/helm/sorrapong2521/64"
               class="size-10 rounded-full object-cover"
               :class="{ 'size-9': !open }"
-            />
-            <div v-if="open" class="text-xs max-w-[10rem] truncate">
+            /> -->
+            <div v-if="open" class="text-xs max-w-auto truncate">
               <strong class="block font-medium" title="Full name">
                 {{ userStore.authToken?.name || "Anonymous" }}
               </strong>
