@@ -548,10 +548,10 @@ async function clickRemove(index) {
                     class="itbkk-button-add bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-[0.9rem] max-sm:text-[0.89rem]"
                     :disabled="!boardStore.isCanEdit"
                     :class="
-                      boardStore.isCanEdit
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed disabled'
-                    "
+                            boardStore.isCanEdit
+                              ? 'cursor-pointer bg-gray-800'
+                              : 'cursor-not-allowed disabled bg-gray-500'
+                          "
                   >
                     Add Status
                   </button>
