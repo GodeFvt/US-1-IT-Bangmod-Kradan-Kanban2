@@ -13,7 +13,7 @@ import sit.us1.backend.dtos.boardsDTO.SimpleBoardDTO;
 import sit.us1.backend.utils.ValidationUtil;
 import sit.us1.backend.services.BoardService;
 
-@CrossOrigin(origins = {"http://localhost:5173", "https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("/v3/boards")
 public class BoardsController {

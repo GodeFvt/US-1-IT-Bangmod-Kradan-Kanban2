@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:5173", "https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"https://ip23us1.sit.kmutt.ac.th", "https://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("/v3/boards/{boardId}/tasks")
 public class TasksController {
