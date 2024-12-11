@@ -18,6 +18,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  redofile: {
+    type: Boolean,
+    default: false
+  },
 });
 
 const fileCanPreview = (name) => {
@@ -51,13 +55,13 @@ const fileCanPreview = (name) => {
       v-if="fileCanPreview(filename) === 'img'"
       :src="fileurl"
       alt="upload preview"
-      class="w-full h-full object-cover rounded-md z-20 hover:opacity-80"
+      class="w-full h-full object-cover rounded-md z-20"
     />
     <embed
       v-else-if="fileCanPreview(filename) === 'embed'"
       :src="fileurl"
       alt="previewImagesURL"
-      class="w-full h-full object-cover rounded-md hover:opacity-80"
+      class="w-full h-full object-cover rounded-md"
     />
     <div v-else class="items-center justify-center flex w-full h-full pb-6">
       <a
@@ -80,20 +84,20 @@ const fileCanPreview = (name) => {
       <button
         class="hover:bg-gray-300 text-white hover:text-gray-800 h-7 w-7 pl-[1.5px]"
         @click="$emit('deleteFile')"
-        v-if="!chooseFile"
+        v-if="!chooseFile && !redofile"
       >
         <DownloadIcon class="h-5 w-5" @click="$emit('downloadFile')" />
       </button>
       <button
         class="hover:bg-gray-300 fill-rose-500 hover:rounded-br-md h-7 w-7"
         @click="$emit('deleteFile')"
-        v-if="isDeleteFile"
+        v-if="isDeleteFile && !redofile"
       >
         <DeleteIcon class="h-[26px] w-[26px]" />
       </button>
     </div>
 
-    <div class="group/item">
+    <div class="group/item" v-if="!redofile">
       <div
         v-if="fileCanPreview(filename) != 'any'"
         class="w-full h-full absolute top-0 group-hover/item:bg-black group-hover/item:bg-opacity-15 p-2 rounded-md invisible group/edit group-hover/item:visible z-10 gap-2"
@@ -138,4 +142,12 @@ const fileCanPreview = (name) => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+embed {
+  overflow: hidden;
+  scrollbar-width: none; /* สำหรับ Firefox */
+}
+embed::-webkit-scrollbar {
+  display: none; /* สำหรับ Chrome และ Edge */
+}
+</style>
