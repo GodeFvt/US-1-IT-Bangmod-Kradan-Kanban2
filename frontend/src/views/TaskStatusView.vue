@@ -237,14 +237,13 @@ function ClickAdd() {
 }
 
 async function addEditStatus(newStatus) {
-  console.log(newStatus);
+
 
   const indexToCheck = statusStore.allStatus.findIndex(
     (status) => status.id === newStatus.id
   );
   console.table(statusStore.allStatus);
 
-  console.log(indexToCheck);
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
     await editStatus(newStatus);

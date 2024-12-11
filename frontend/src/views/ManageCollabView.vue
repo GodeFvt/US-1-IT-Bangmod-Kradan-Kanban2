@@ -77,7 +77,7 @@ onMounted(async () => {
   }
   const res = await getCollabs(boardId.value);
   if (typeof res === "object") {
-    boardStore.setCollabs(res);console.log(boardStore.collabs); console.log(boardStore.currentBoard);
+    boardStore.setCollabs(res);
     
   } else {
     handleResponseError(res);

@@ -270,7 +270,7 @@ const preview = (files) => {
       invalidFile.value?.dupFile.filename.push(element.name);
       return;
     } else {
-      console.log(maxFile.value);
+ 
 
       previewImagesURL.value.push({
         name: element.name,
