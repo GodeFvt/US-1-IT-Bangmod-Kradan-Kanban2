@@ -2,13 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { toFormatDate } from "../../lib/utill";
 
-import {
-  FileIcon,
-  CloseIcon,
-  DeleteIcon,
-  EditTaskIcon,
-  DownloadIcon,
-} from "../icon";
+import { CloseIcon } from "../icon";
 import ImageViewer from "../ImageViewer.vue";
 import { useStatusStore } from "../../stores/statuses.js";
 import { useRouter, useRoute } from "vue-router";
@@ -20,7 +14,6 @@ import {
 import { useBoardStore } from "../../stores/boards.js";
 import AttachmentLoadingVue from "../loading/AttachmentLoading.vue";
 import ConfirmModal from "../modal/ConfirmModal.vue";
-import FileList from "../FileList.vue";
 import FilePreView from "../FilePreView.vue";
 import { downloadfile } from "../../lib/fetchUtill.js";
 import Toast from "../modal/Toasts.vue";
@@ -250,6 +243,7 @@ const countAssignees = computed(() => {
   return duplicateTask.value.assignees?.trim()?.length;
 });
 
+let countElement = 0;
 const preview = (files) => {
   files?.length >= 10
     ? (disabledInput.value = true)
@@ -257,7 +251,7 @@ const preview = (files) => {
   invalidFile.value.maxSize.filename = [];
   invalidFile.value.maxFile.filename = [];
   invalidFile.value.dupFile.filename = [];
-  let countElement = 0;
+
   [...files].forEach((element, index) => {
     if (element.size > 20 * 1024 * 1024) {
       invalidFile.value?.maxSize.filename.push(element.name);
@@ -335,6 +329,7 @@ function deleteFile(imgUrlObject, index, type, fileName) {
     fileDetete.value.fileUrl.push(imgUrlObject);
   } else {
     previewImagesURL.value.splice(index, 1);
+    --countElement;
     removeURL(imgUrlObject);
   }
 
@@ -383,9 +378,19 @@ const limitThisTask = computed(() => {
   }
 });
 
+const numberFileCanAdd = computed(() => {
+  return (
+    10 -
+    (fileSelectRedo.value.length +
+      fileURL.value.length +
+      previewImagesURL.value.length)
+  );
+});
+
+const numberFileCanRedo = ref(0);
 function redoFile(userAction) {
   if (userAction && maxFile.value === false) {
-    if (fileSelectRedo.value.length > 0) {
+    if (fileSelectRedo.value.length >= 0) {
       let arr = {
         fileName: [...fileDetete.value.fileName],
         fileUrl: [...fileDetete.value.fileUrl],
@@ -404,10 +409,10 @@ function redoFile(userAction) {
           fileDetete.value.fileUrl.splice(i, 1);
         }
       }
+      showToast.value = true;
+      typeToast.value = "success";
+      messageToast.value = "Redo file success";
     }
-    showToast.value = true;
-    typeToast.value = "success";
-    messageToast.value = "Redo file success";
   } else if (userAction && maxFile.value) {
     showToast.value = true;
     typeToast.value = "warning";
@@ -737,7 +742,7 @@ function redoFile(userAction) {
                 "
               >
                 <span>Max file : 10 </span>,<span>
-                  Your can add : {{ 10 - fileURL.length }} file</span
+                  Your can add : {{ numberFileCanAdd }} file</span
                 >
               </p>
               <p
@@ -833,110 +838,19 @@ function redoFile(userAction) {
                 :key="index"
                 class="w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/6 xl:w-1/8 h-24 mr-2"
               >
-                <div
-                  class="w-full h-full rounded-md focus:outline-none focus:shadow-outline bg-gray-100 cursor-pointer relative shadow-sm"
-                >
-                  <FilePreView
-                    :filename="file.name"
-                    :fileurl="previewBinary(file.url)"
-                    :chooseFile="true"
-                    @openImage="
-                      openImageModal(
-                        previewBinary(file.url),
-                        file.name,
-                        'choose'
-                      )
-                    "
-                  ></FilePreView>
-
-                  <div
-                    class="flex text-xs w-full absolute bottom-0 items-end justify-between bg-gray-100 rounded-b-md"
-                  >
-                    <h1 class="text-gray-900 truncate p-1">{{ file.name }}</h1>
-                    <button
-                      class="focus:outline-none hover:bg-gray-300 fill-rose-500 hover:rounded-br-md"
-                      @click="deleteFile(file.url, index, 'selectFile')"
-                    >
-                      <DeleteIcon class="h-7 w-7" />
-                    </button>
-                  </div>
-                </div>
+                <FilePreView
+                  :filename="file.name"
+                  :fileurl="previewBinary(file.url)"
+                  :chooseFile="true"
+                  :isDeleteFile="true"
+                  @openImage="
+                    openImageModal(previewBinary(file.url), file.name, 'choose')
+                  "
+                  @deleteFile="deleteFile(file.url, index, 'selectFile')"
+                ></FilePreView>
               </li>
             </ul>
           </div>
-
-          <!-- <input
-            type="file"
-            id="file_input"
-            ref="fileInput"
-            class="mt-2 file-input file-input-bordered file-input-sm w-full max-w-xs"
-            :class="disabledInput ? 'bg-gray-500 cursor-not-allowed' : ''"
-            :disabled="disabledInput"
-            @change="preview"
-            multiple
-          /> -->
-          <!-- <div>
-            <div
-              class="text-red-500 text-sm mt-1 font-medium"
-              v-if="invalidFile?.maxSize?.filename?.length > 0"
-            >
-              {{ invalidFile?.maxSize?.msg }} :
-              <span
-                class="font-normal"
-                v-for="(name, index) in invalidFile?.maxSize?.filename"
-                :key="index"
-                >{{ index === 0 ? "" : "," }} {{ name }}
-              </span>
-            </div>
-            <div
-              class="text-red-500 text-sm mt-1 font-medium"
-              v-if="invalidFile?.maxFile?.filename?.length > 0"
-            >
-              {{ invalidFile?.maxFile?.msg }} :
-              <span
-                class="font-normal"
-                v-for="(name, index) in invalidFile?.maxFile?.filename"
-                :key="index"
-                >{{ index === 0 ? "" : "," }} {{ name }}</span
-              >
-            </div>
-            <div
-              class="text-red-500 mt-1 text-sm font-medium"
-              v-if="invalidFile?.dupFile?.filename?.length > 0"
-            >
-              {{ invalidFile?.dupFile?.msg }} :
-              <span
-                class="font-normal"
-                v-for="(name, index) in invalidFile?.dupFile?.filename"
-                :key="index"
-                >{{ index === 0 ? "" : "," }} {{ name }}
-              </span>
-            </div>
-          </div> -->
-          <!-- Preview Images Section -->
-          <!-- <div class="flex flex-wrap gap-4 mt-4">
-            <div
-              v-for="(file, index) in [...previewImagesURL]"
-              :key="index"
-              class="relative flex flex-col border border-gray-200 p-2 w-[8rem] h-[6rem] justify-between"
-            > -->
-          <!-- Delete Button Positioned at Top Right -->
-          <!-- <div
-                class="absolute top-1 right-1 cursor-pointer text-red-500 text-sm"
-                @click="deleteFile(file.url, index, 'selectFile')"
-              >
-                <CloseIcon />
-              </div>
-              <FileList
-                :filename="file.name"
-                :fileurl="previewBinary(file.url)"
-                :chooseFile="true"
-                @openImage="
-                  openImageModal(previewBinary(file.url), file.name, 'choose')
-                "
-              ></FileList>
-            </div>
-          </div> -->
         </div>
 
         <div class="flex flex-row justify-end gap-3 pl-10 pr-5 my-5">
@@ -1008,26 +922,28 @@ function redoFile(userAction) {
       </div>
 
       <div
-        class="itbkk-modal-task bg-gray-100 rounded-e-md h-[80%] w-[11rem] shadow-md overflow-y-auto border-l"
+        class="itbkk-modal-task bg-gray-100 rounded-e-md h-[80%] w-[11rem] shadow-md border-l"
         :class="showAttachment ? '' : 'hidden'"
       >
-        <!-- Close Button Container with sticky positioning -->
-        <div class="w-full flex justify-end sticky top-0 z-10 mb-2">
-          <div
-            class="cursor-pointer text-error text-2xl pt-5 pr-5"
-            @click="$emit('userAction', false)"
-          >
-            <CloseIcon />
+        <div class="h-full relative">
+          <!-- Close Button Container with sticky positioning -->
+          <div class="absolute top-5 right-5 z-10">
+            <div
+              class="cursor-pointer text-error text-2xl h-[5%]"
+              @click="$emit('userAction', false)"
+            >
+              <CloseIcon />
+            </div>
           </div>
-        </div>
-        <div>
-          <div class="flex flex-row items-center justify-between">
-            <div class="font-bold text-base pl-2 mt-3">Attachments</div>
+          <div
+            class="flex flex-row items-end justify-between border-b sticky w-full h-[10%] shadow-sm"
+          >
+            <div class="font-bold text-base pl-2 mb-1">Attachments</div>
 
             <button
               @click="showRedo = true"
               v-show="showRedoButton"
-              class="mt-3 pr-2"
+              class="mb-1 pr-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1047,36 +963,28 @@ function redoFile(userAction) {
               </svg>
             </button>
           </div>
-          <AttachmentLoadingVue v-if="showLoadingFile" />
-          <!-- Scrollable Content Area -->
-          <div v-else>
-            <div
-              v-for="(file, index) in fileURL"
-              :key="index"
-              v-show="fileURL"
-              class="flex flex-col items-center justify-between w-full border-b border-gray-200 p-2"
-            >
-              <FileList
-                class="w-[8rem]"
-                :filename="file.name"
-                :fileurl="file.url"
-                @openImage="openImageModal(file.url, file.name, 'preview')"
+          <div class="overflow-y-auto h-[90%] pt-3">
+            <AttachmentLoadingVue v-if="showLoadingFile" />
+            <!-- Scrollable Content Area -->
+            <div v-else>
+              <div
+                v-for="(file, index) in fileURL"
+                :key="index"
+                v-show="fileURL"
+                class="flex flex-col w-full h-24 mb-3 px-2"
               >
-              </FileList>
-              <div class="flex flex-row items-center justify-center gap-3">
-                <button
-                  :class="editMode || isEditPage ? 'block' : 'hidden'"
-                  @click="
+                <FilePreView
+                  :filename="file.name"
+                  :fileurl="file.url"
+                  :isDeleteFile="editMode || isEditPage"
+                  @openImage="openImageModal(file.url, file.name, 'preview')"
+                  @deleteFile="
                     deleteFile(file.url, index, 'fileDelete', file.name),
-                      (showRedoButton = true)
+                      ((showRedoButton = true),
+                      (numberFileCanRedo = numberFileCanAdd))
                   "
-                  class="bottom-1 right-1 fill-rose-500 text-sm"
-                >
-                  <DeleteIcon class="h-7 w-7" />
-                </button>
-                <button @click="downloadFile(file.name)">
-                  <DownloadIcon />
-                </button>
+                  @downloadFile="downloadFile(file.name)"
+                ></FilePreView>
               </div>
             </div>
           </div>
@@ -1089,13 +997,14 @@ function redoFile(userAction) {
     v-if="showRedo"
     :width="'w-[60vh]'"
     :canEdit="boardStore.isCanEdit"
+    :disabled="!fileSelectRedo.length > 0"
     @userAction="redoFile"
     class="z-50"
   >
     <template #header>
       <div
-        class="flex flex-col justify-items-end place-items-end cursor-pointer"
-        @click="showRedo = false"
+        class="flex flex-col justify-items-end place-items-end cursor-pointer text-rose-500"
+        @click="redoFile(false)"
       >
         <CloseIcon />
       </div>
@@ -1106,7 +1015,10 @@ function redoFile(userAction) {
       </div>
     </template>
     <template #body>
-      <div class="mb-2">Select the file which you need redo</div>
+      <div class="text-gray-800">Select the file which you need redo</div>
+      <div class="mb-3 text-gray-600">
+        Number can redo : {{ numberFileCanAdd }}
+      </div>
       <div class="flex flex-row gap-3 flex-wrap justify-center">
         <div
           v-for="(file, index) of fileDetete.fileName.map((name, i) => ({
@@ -1119,6 +1031,10 @@ function redoFile(userAction) {
             type="checkbox"
             :id="file.fileName"
             :value="{ name: file.fileName, url: file.fileUrl }"
+            :disabled="
+              fileSelectRedo.length > numberFileCanRedo ||
+              previewImagesURL.find((e) => e.name === file.fileName)
+            "
             v-model="fileSelectRedo"
             class="hidden peer"
           />

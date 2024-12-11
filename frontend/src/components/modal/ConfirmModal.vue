@@ -16,7 +16,11 @@ const props = defineProps({
   canEdit:{
     type: Boolean,
     default:true,
-  }
+  },
+  canShow:{
+    type: Boolean,
+    default:true,
+  },
 });
 </script>
 

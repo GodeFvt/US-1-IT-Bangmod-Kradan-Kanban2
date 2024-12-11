@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed, nextTick } from "vue";
 // import lib
 import {
   deleteTask,
@@ -37,6 +37,7 @@ import { useBoardStore } from "../stores/boards.js";
 import { isTokenValid, isNotDisable } from "../lib/utill.js";
 import Toggle from "../components/icon/Toggle.vue";
 import Themes from "../components/icon/Themes.vue";
+import LoaderFile from "../components/icon/LoaderFile.vue";
 // import HeaderView from "./HeaderView.vue";
 // import SideMenuView from "./SideMenuView.vue";
 const userStore = useUserStore();
@@ -51,6 +52,8 @@ const messageToast = ref("");
 const typeToast = ref("");
 const isEdit = ref(false);
 const indexToRemove = ref(-1);
+const controller = ref(null);
+const showLoadingUpload = ref(false);
 
 const task = ref({});
 const isVisible = ref([]);
@@ -228,7 +231,7 @@ watch(
           task.value.attachments?.length > 0
             ? (showLoadingFile.value = true)
             : (showLoadingFile.value = false);
-          task.value.attachments.forEach(async (file) => {
+          const promises = task.value.attachments.map(async (file) => {
             if (fileCanPreview(file.filename)) {
               const resFile = await previewfile(
                 boardId.value,
@@ -243,15 +246,17 @@ watch(
                   url: "https://api.iconify.design/ic:baseline-sim-card-alert.svg",
                 });
               }
-              showLoadingFile.value = false;
             } else {
               fileURL.value.push({
                 name: file.filename,
                 url: "https://api.iconify.design/ic:baseline-sim-card-alert.svg",
               });
-              showLoadingFile.value = false;
             }
           });
+
+          // รอให้ promises ทั้งหมดทำงานเสร็จ
+          await Promise.all(promises);
+          showLoadingFile.value = false;
         }
       }
     }
@@ -399,10 +404,18 @@ async function addEditTask(newTask, file, fileName) {
   );
 
   if (indexToCheck !== -1 && indexToCheck !== undefined) {
+    showLoadingUpload.value = true;
     await editTask(newTask, file, fileName);
+    showLoadingUpload.value = false;
   } else {
     await addTask(newTask);
   }
+}
+
+function cancelFetch() {
+  controller.value.abort();
+  controller.value = null;
+  showLoadingUpload.value = false;
 }
 
 async function addTask(newTask) {
@@ -443,11 +456,15 @@ async function editTask(editedTask, files, fileName) {
     return;
   } else {
     editedTask.status = editedTask.status.name;
+    controller.value = new AbortController();
+    const signal = controller.value.signal;
+
     const res = await updateTask(
       boardId.value,
       editedTask,
       files.map((e) => e.url),
-      fileName
+      fileName,
+      signal
     );
 
     if (res === 422 || res === 400 || res === 500 || res === 404) {
@@ -741,7 +758,25 @@ async function removeTask(index, confirmDelete = false) {
         :fileUrl="fileURL"
       >
       </TaskDetail>
-
+      <div
+        class="absolute left-0 right-0 m-auto top-0 bg-black h-screen w-screen bg-opacity-50 z-50"
+        v-if="showLoadingUpload"
+      >
+        <div class="itbkk-modal-task flex h-full items-center justify-center">
+          <div
+            class="itbkk-modal-task bg-gray-100 rounded-e-md h-[50%] w-[30rem] shadow-md overflow-y-auto border-l items-center justify-center flex flex-col gap-2 rounded-md relative"
+          >
+            <LoaderFile />
+            <span>Uploading...</span>
+            <div
+              @click="cancelFetch()"
+              class="absolute top-3 right-3 text-rose-600 hover:text-rose-400 cursor-pointer"
+            >
+              <CloseIcon />
+            </div>
+          </div>
+        </div>
+      </div>
       <ConfirmModal
         v-if="showDeleteModal"
         @user-action="showDeleteModal = false"
@@ -774,7 +809,7 @@ async function removeTask(index, confirmDelete = false) {
         @user-action="confirmLimit"
         :width="'w-[60vh]'"
         :canEdit="boardStore.isCanEdit"
-        :disabled="maximumTask > 30 || maximumTask <= 0"
+        :disabled="maximumTask > 10 || maximumTask <= 0"
         class="itbkk-modal-setting z-50"
       >
         <template #header>
@@ -812,10 +847,10 @@ async function removeTask(index, confirmDelete = false) {
               v-model="maximumTask"
             />
             <div
-              v-if="maximumTask > 30 || maximumTask <= 0"
+              v-if="maximumTask > 10 || maximumTask <= 0"
               class="text-red-500"
             >
-              <p>maximumTask must be lees then 30 and more than 0</p>
+              <p>maximumTask must be lees then 10 and more than 0</p>
             </div>
           </div>
         </template>

@@ -147,7 +147,7 @@ async function createTask(boardId, task) {
   }
 }
 
-async function updateTask(boardId, task , files ,fileNameToDelete ="") {
+async function updateTask(boardId, task , files ,fileNameToDelete ="" , signal) {
     let res;
     const userStore = useUserStore();
     const token = userStore.encodeToken;
@@ -166,6 +166,7 @@ async function updateTask(boardId, task , files ,fileNameToDelete ="") {
   
     try {
       res = await fetch(`${BASE_URL}/v3/boards/${boardId}/tasks/${task.id}`, {
+        signal: signal,
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

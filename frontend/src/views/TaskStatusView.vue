@@ -667,7 +667,7 @@ async function clickRemove(index) {
       @user-action="confirmLimit"
       :canEdit="boardStore.isCanEdit"
       :width="'w-[60vh]'"
-      :disabled="maximumTask > 30 || maximumTask <= 0"
+      :disabled="maximumTask > 10 || maximumTask <= 0"
       class="itbkk-modal-setting z-50"
     >
       <template #header>
@@ -704,8 +704,8 @@ async function clickRemove(index) {
             class="itbkk-max-task border border-black rounded-md px-1"
             v-model="maximumTask"
           />
-          <div v-if="maximumTask > 30 || maximumTask <= 0" class="text-red-500">
-            <p>maximumTask must be lees then 30 and more than 0</p>
+          <div v-if="maximumTask > 10 || maximumTask <= 0" class="text-red-500">
+            <p>maximumTask must be lees then 10 and more than 0</p>
           </div>
         </div>
       </template>

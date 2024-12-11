@@ -48,7 +48,7 @@ public class JwtUserDetailsService implements UserDetailsService {
     }
 
     public CustomUserDetails getUserDetailsMS(MsUser msUser) {
-        BoardUser  user = boardUserRepository.findById(msUser.getOid()).orElse(null);
+        BoardUser user = boardUserRepository.findById(msUser.getOid()).orElse(null);
         User userItbkk_Shared = userRepository.findById(msUser.getOid()).orElse(null);
         BoardUser newUser = new BoardUser();
         if (user == null) {

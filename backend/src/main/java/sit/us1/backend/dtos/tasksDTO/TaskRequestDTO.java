@@ -6,11 +6,10 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import sit.us1.backend.validations.ValidTaskStatusLimit;
 
-import java.beans.PropertyEditorSupport;
 
 @ValidTaskStatusLimit
 @Data
-public class TaskRequestDTO extends PropertyEditorSupport {
+public class TaskRequestDTO  {
     private Integer id;
 
     @NotBlank
