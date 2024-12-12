@@ -107,7 +107,7 @@ public class TaskAttachmentService {
             String storedName = "task" + taskId + "_" + fileName;
 
             try {
-                Path targetLocation = this.fileStorageLocation.resolve(storedName);
+                Path targetLocation = this.fileStorageLocation.resolve(storedName).normalize();
                 Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
                 TaskAttachment newAttachment =new TaskAttachment(taskId, fileName, storedName, file.getContentType(), file.getSize());
                 taskAttachmentRepository.save(newAttachment);
