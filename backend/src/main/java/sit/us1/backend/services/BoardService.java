@@ -3,6 +3,7 @@ package sit.us1.backend.services;
 
 
 import com.soundicly.jnanoidenhanced.jnanoid.NanoIdUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.List;
 import static sit.us1.backend.entities.taskboard.Board.Visibility.*;
 
 @Service
+@Slf4j
 public class BoardService {
     @Autowired
     private BoardRepository boardRepository;
@@ -106,18 +108,9 @@ public class BoardService {
 
     @Transactional
     public SimpleBoardDTO createBoard(BoardRequestDTO newBoard) {
-        BoardUser owner = new BoardUser();
-        owner.setId(SecurityUtil.getCurrentUserDetails().getOid());
-        owner.setUsername(SecurityUtil.getCurrentUserDetails().getUsername());
-        owner.setName(SecurityUtil.getCurrentUserDetails().getName());
-        owner.setEmail(SecurityUtil.getCurrentUserDetails().getEmail());
-        try {
-            if (boardUserRepository.findById(owner.getId()).isEmpty()) {
-                boardUserRepository.save(owner);
-            }
-        } catch (Exception e) {
-            throw new BadRequestException("Cannot create user");
-        }
+        var currentUser = SecurityUtil.getCurrentUserDetails();
+        BoardUser owner = boardUserRepository.findById(currentUser.getOid())
+                .orElseThrow(() -> new BadRequestException("Cannot find authenticated user"));
         Board board = mapper.map(newBoard, Board.class);
         try {
             String boardId;
@@ -132,9 +125,10 @@ public class BoardService {
             TaskLimit taskLimit = new TaskLimit();
             taskLimit.setIsLimit(false);
             taskLimit.setMaximumTask(10);
-            taskLimit.setBoardId(boardRepository.save(board).getId());
-            taskLimitRepository.save(taskLimit);
+            taskLimit.setBoardId(boardRepository.saveAndFlush(board).getId());
+            taskLimitRepository.saveAndFlush(taskLimit);
         } catch (Exception e) {
+            log.error("Cannot create board for user {}", currentUser.getOid(), e);
             throw new BadRequestException("Cannot create board");
         }
         return mapper.map(board, SimpleBoardDTO.class);
