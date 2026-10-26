@@ -5,7 +5,7 @@ RUN npm install
 COPY . .
 ARG VITE_CLIENT_ID
 ARG VITE_AUTHORITY
-RUN node ./node_modules/vite/bin/vite.js build --base=/us1/
+RUN node ./node_modules/vite/bin/vite.js build
 
 FROM nginx:alpine AS run
 COPY --from=build  /code/dist/ /code/dist/
