@@ -18,11 +18,11 @@ import java.util.List;
 public class Board {
 
     @Id
-    @Column(name = "boardId")
+    @Column(name = "\"boardId\"")
     private String id;
-    @Column(name = "boardName")
+    @Column(name = "\"boardName\"")
     private String name;
-    @Column(name = "isCustomStatus", nullable = false)
+    @Column(name = "\"isCustomStatus\"", nullable = false)
     private Boolean isCustomStatus;
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility")
@@ -39,9 +39,9 @@ public class Board {
     @OneToMany(mappedBy = "board" , fetch = FetchType.EAGER)
     private List<Collaboration> collaborators;
 
-    @Column(name = "createdOn",updatable = false, insertable = false)
+    @Column(name = "\"createdOn\"",updatable = false, insertable = false)
     private ZonedDateTime createdOn;
-    @Column(name = "updatedOn",updatable = false, insertable = false)
+    @Column(name = "\"updatedOn\"",updatable = false, insertable = false)
     private ZonedDateTime updatedOn;
 
     public enum Visibility {
