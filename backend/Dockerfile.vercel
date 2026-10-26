@@ -17,4 +17,4 @@ COPY --from=build /code/target/*.jar /app/backend.jar
 ENV PORT=80
 EXPOSE 80
 
-ENTRYPOINT ["java", "-jar", "/app/backend.jar"]
+ENTRYPOINT ["sh", "-c", "exec java -jar /app/backend.jar --server.port=${PORT:-80}"]
