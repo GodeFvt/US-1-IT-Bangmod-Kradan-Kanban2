@@ -1,5 +1,5 @@
-FROM mysql/mysql-server
+FROM postgres:16-alpine
 
-COPY . /docker-entrypoint-initdb.d/
+COPY postgresql.sql /docker-entrypoint-initdb.d/001-schema.sql
 
-HEALTHCHECK --interval=2s --timeout=2s --retries=20 CMD /healthcheck.sh
+HEALTHCHECK --interval=5s --timeout=3s --retries=20 CMD-SHELL pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"

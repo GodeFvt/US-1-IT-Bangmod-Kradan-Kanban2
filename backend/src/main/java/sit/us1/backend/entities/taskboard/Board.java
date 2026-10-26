@@ -22,7 +22,7 @@ public class Board {
     private String id;
     @Column(name = "boardName")
     private String name;
-    @Column(name = "isCustomStatus",nullable = false, columnDefinition = "TINYINT", length = 1)
+    @Column(name = "isCustomStatus", nullable = false)
     private Boolean isCustomStatus;
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility")

@@ -39,12 +39,9 @@ services:
     container_name: us1-backend
     image: backend:v2
     environment:
-      - TASKBOARD_DB_USER=${TB_DB_USER}
-      - TASKBOARD_DB_PASSWORD=${TB_DB_PASSWORD}
-      - TASKBOARD_DB_URL=${TB_DB_URL}
-      - ACCOUNT_DB_USER=${AC_DB_USER}
-      - ACCOUNT_DB_PASSWORD=${AC_DB_PASSWORD}
-      - ACCOUNT_DB_URL=${AC_DB_URL}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${SECRET}
       - JWT_SECRET_REFRESH=${SECRET_REFRESH}
       - JWT_ISSUER=${ISSUER}
@@ -57,28 +54,10 @@ services:
       context: backend
     volumes:
       - ./task-files:/task-files
-    depends_on:
-      db:
-        condition: service_healthy
     networks:
-      mysql-net:
       taskproj-net:
         aliases:
           - backend
-    restart: unless-stopped
-
-  db:
-    container_name: us1-database
-    env_file: ../env.list
-    image: mysql/mysql-server
-    build:
-      context: database
-    volumes:
-      - db-vol:/var/lib/mysql
-    networks:
-      mysql-net:
-        aliases:
-          - database
     restart: unless-stopped
 
 configs:
@@ -90,10 +69,5 @@ configs:
     file: ../ssl/fullchain.pem
   keyssl:
     file: ../ssl/privkey.pem
-volumes:
-  db-vol:
-
-
 networks:
-  mysql-net:
   taskproj-net:

@@ -1,3 +1,6 @@
 
 backend/src/main/resources/application.properties
 /backend/task-files
+.env
+*.env
+!.env.example

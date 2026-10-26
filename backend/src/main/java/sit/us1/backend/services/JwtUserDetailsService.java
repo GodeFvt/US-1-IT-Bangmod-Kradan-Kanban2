@@ -15,6 +15,7 @@ import sit.us1.backend.entities.account.MsUser;
 import sit.us1.backend.entities.account.User;
 import sit.us1.backend.entities.taskboard.BoardUser;
 import sit.us1.backend.repositories.account.UserRepository;
+import sit.us1.backend.repositories.account.UserCredentialRepository;
 import sit.us1.backend.repositories.taskboard.BoardUserRepository;
 
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ public class JwtUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private UserCredentialRepository userCredentialRepository;
+    @Autowired
     private BoardUserRepository boardUserRepository;
 
     @Override
@@ -35,7 +38,10 @@ public class JwtUserDetailsService implements UserDetailsService {
             throw new InternalAuthenticationServiceException("Username or Password is incorrect.");
         }
         List<GrantedAuthority> authorities = getAuthorities(user.getRole().toString());
-        return new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail() ,user.getPassword(), user.getRole(), authorities);
+        String passwordHash = userCredentialRepository.findById(user.getOid())
+                .orElseThrow(() -> new InternalAuthenticationServiceException("This account does not have local login enabled."))
+                .getPasswordHash();
+        return new CustomUserDetails(userName,user.getName(), user.getOid(),user.getEmail(), passwordHash, user.getRole(), authorities);
     }
 
     public CustomUserDetails loadUserByOid(String oid) throws UsernameNotFoundException {
@@ -44,7 +50,10 @@ public class JwtUserDetailsService implements UserDetailsService {
             throw new InternalAuthenticationServiceException("Token is invalid.");
         }
         List<GrantedAuthority> authorities = getAuthorities(user.get().getRole().toString());
-        return new CustomUserDetails(user.get().getUsername(),user.get().getName(), user.get().getOid(),user.get().getEmail() ,user.get().getPassword(), user.get().getRole(), authorities);
+        String passwordHash = userCredentialRepository.findById(user.get().getOid())
+                .map(credential -> credential.getPasswordHash())
+                .orElse("");
+        return new CustomUserDetails(user.get().getUsername(),user.get().getName(), user.get().getOid(),user.get().getEmail(), passwordHash, user.get().getRole(), authorities);
     }
 
     public CustomUserDetails getUserDetailsMS(MsUser msUser) {
@@ -77,7 +86,10 @@ public class JwtUserDetailsService implements UserDetailsService {
         List<GrantedAuthority> authorities;
         if (userItbkk_Shared != null ){
             authorities = getAuthorities(userItbkk_Shared.getRole().toString());
-            userDetails = new CustomUserDetails(userItbkk_Shared.getUsername(), userItbkk_Shared.getName(), userItbkk_Shared.getOid(), userItbkk_Shared.getEmail(), userItbkk_Shared.getPassword(), userItbkk_Shared.getRole(),authorities);
+            String passwordHash = userCredentialRepository.findById(userItbkk_Shared.getOid())
+                    .map(credential -> credential.getPasswordHash())
+                    .orElse("");
+            userDetails = new CustomUserDetails(userItbkk_Shared.getUsername(), userItbkk_Shared.getName(), userItbkk_Shared.getOid(), userItbkk_Shared.getEmail(), passwordHash, userItbkk_Shared.getRole(),authorities);
         } else {
             authorities = getAuthorities("USER");
             userDetails = new CustomUserDetails(msUser.getName(), msUser.getName(), msUser.getOid(), msUser.getEmail(), "", null, authorities);
