@@ -38,6 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             final String requestTokenHeader = request.getHeader("Authorization");
             String username = null;
+            String userOid = null;
             String jwtToken = null;
             boolean isTokenValid = false;
             String tokenError = null;
@@ -56,6 +57,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             msUser = jwtTokenUtil.getMsUserFromToken(jwtToken);
                         } else {
                             username = jwtTokenUtil.getSubjectFromToken(jwtToken, false);
+                            userOid = jwtTokenUtil.getClaimFromToken(
+                                    jwtToken,
+                                    claims -> claims.get("oid", String.class),
+                                    false
+                            );
                         }
                         isTokenValid = true;
                     } catch (IllegalArgumentException e) {
@@ -75,7 +81,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (username != null) {
-                    UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
+                    UserDetails userDetails = jwtUserDetailsService.loadUserByOid(userOid);
                     if (jwtTokenUtil.validateToken(jwtToken, (CustomUserDetails) userDetails, false)) {
                         authenticationToken(userDetails, request);
                     }
