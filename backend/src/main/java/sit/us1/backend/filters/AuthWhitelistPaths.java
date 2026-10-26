@@ -4,7 +4,9 @@ public class AuthWhitelistPaths {
 
     public static final String[] WHITELISTED_PATHS = {
             "/login",
-            "/token"
+            "/token",
+            "/oauth2/",
+            "/login/oauth2/"
     };
 
     public static boolean isWhitelisted(String path) {

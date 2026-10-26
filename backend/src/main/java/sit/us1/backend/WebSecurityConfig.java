@@ -2,6 +2,7 @@ package sit.us1.backend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,7 @@ import sit.us1.backend.exceptions.ErrorResponse;
 import sit.us1.backend.filters.JwtAuthFilter;
 import sit.us1.backend.filters.BoardAccessFilter;
 import sit.us1.backend.services.JwtUserDetailsService;
+import sit.us1.backend.services.GoogleOAuthSuccessHandler;
 
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -36,6 +38,10 @@ public class WebSecurityConfig {
     JwtUserDetailsService jwtUserDetailsService;
     @Autowired
     BoardAccessFilter boardAccessFilter;
+    @Autowired
+    GoogleOAuthSuccessHandler googleOAuthSuccessHandler;
+    @Value("${app.oauth2.frontend-redirect-uri}")
+    String frontendOAuthRedirectUri;
 
 
     @Bean
@@ -44,6 +50,7 @@ public class WebSecurityConfig {
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/token").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v3/boards/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
@@ -51,6 +58,10 @@ public class WebSecurityConfig {
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler()))
+                .oauth2Login(oauth -> oauth
+                        .successHandler(googleOAuthSuccessHandler)
+                        .failureHandler((request, response, exception) ->
+                                response.sendRedirect(frontendOAuthRedirectUri + "#oauth_error=google_login_failed")))
                 .httpBasic(withDefaults());
         return httpSecurity.build();
     }
